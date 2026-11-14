@@ -559,7 +559,7 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){retur
 function clock(t){var d=new Date(t);function z(n){return String(n).padStart(2,"0")}return z(d.getHours())+":"+z(d.getMinutes())+":"+z(d.getSeconds())}
 function setState(st){S.status=st;S.reached[st]=1}
 /* Internal events are for the fraud desk and reviewers. They are shown only on the Audit (ops) view, marked "internal", and never saved. */
-var INTERNAL_EVENTS={FRAUD_DESK_REFERRAL:1,REVIEWER_DECISION:1};
+var INTERNAL_EVENTS={FRAUD_DESK_REFERRAL:1,REVIEWER_DECISION:1,ROUTED_TO_REVIEWER_DETAIL:1};
 function log(event,actor,note){S.events.push({t:Date.now(),state:S.status,round:S.round,event:event,actor:actor,note:note||"",audience:INTERNAL_EVENTS[event]?"internal":"applicant"})}
 function pill(cls,txt){return '<span class="pill '+cls+'">'+txt+'</span>'}
 /* ---------- Theme (warm light by default; dark on request, remembered in this browser if storage allows) ---------- */
@@ -1003,7 +1003,7 @@ function stepper(){
 function checklist(){
   var ab=function(k){return !!(S.docs[k]&&S.docs[k].status==="ok")},given=!!S.f.consent;
   return [
-    [given?"Consent under the DPDP Act, 2023: given"+(S.consentAt?" at "+clock(S.consentAt):""):"Consent under the DPDP Act, 2023: not given",given],
+    [given?"Consent under the DPDP Act, 2023: given"+(S.isSample?" (sample applicant)":S.consentAt?" at "+clock(S.consentAt):""):"Consent under the DPDP Act, 2023: not given",given],
     ["All six documents accepted",accepted()===6],
     ["Aadhaar kept as last four digits only",ab("AADHAAR_FRONT")||ab("AADHAAR_BACK")],
     ["Cross-document checks passed",!!S.reached.KYC_APPROVED],
@@ -1013,8 +1013,8 @@ function checklist(){
     ["Certificate issued",S.status==="CERTIFIED"]];
 }
 function checkCard(){
-  var c=checklist(),n=c.filter(function(x){return x[1]}).length;
-  return '<div class="card"><div><h2>Compliance checklist</h2><p class="small muted">'+n+' of '+c.length+' checks passed ('+Math.round(n/c.length*100)+'%)</p></div><div class="prog"><i style="width:'+(n/c.length*100)+'%"></i></div><ul class="cl">'+c.map(function(x){return '<li><span class="bx'+(x[1]?" on":"")+'">'+(x[1]?"✓":"")+'</span>'+x[0]+'</li>'}).join("")+'</ul></div>';
+  var c=checklist(),n=c.filter(function(x){return x[1]}).length,tot=c.filter(function(x){return x[1]!==null}).length; /* null = not checked in this demo: not counted */
+  return '<div class="card"><div><h2>Compliance checklist</h2><p class="small muted">'+n+' of '+tot+' checks passed ('+Math.round(n/tot*100)+'%)</p></div><div class="prog"><i style="width:'+(n/tot*100)+'%"></i></div><ul class="cl">'+c.map(function(x){return '<li><span class="bx'+(x[1]?" on":"")+'">'+(x[1]?"✓":"")+'</span>'+x[0]+'</li>'}).join("")+'</ul></div>';
 }
 var ARROW='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5"/></svg>';
 var DSHORT={PAN:["PAN card","PAN"],AADHAAR_FRONT:["Aadhaar","AF"],AADHAAR_BACK:["Aadhaar","AB"],CLASS10:["Class 10","10"],BANK:["Cheque","₹"],SELFIE:["Selfie","☺"]};
@@ -1048,7 +1048,7 @@ function renderDash(){
   var head='<div class="hello"><div><p class="muted small">'+fmtDate(new Date().toISOString().slice(0,10))+' · <span class="mono">'+S.appId+'</span></p><h1>'+(cert?"Congratulations, ":"Hello, ")+esc(started?fname():"there")+'</h1></div><div class="kpis">'+
     '<div class="kpi"><span>Onboarding progress</span><div class="row"><b class="num">'+pct+'%</b><span class="chip '+(cert?"":"n")+'">step '+Math.min(S.step+1,6)+'/6</span></div></div>'+
     '<div class="kpi"><span>Checks passed</span><div class="row"><b class="num">'+(tot?passed+"/"+tot:"—")+'</b>'+(tot?'<span class="chip '+(passed===tot?"":"w")+'">'+Math.round(passed/tot*100)+'%</span>':'')+(tot&&noted?'<span class="small muted">'+noted+' noted, not counted as passed</span>':'')+'</div></div>'+
-    '<div class="kpi"><span>Time to decision (this demo, on this device)</span><div class="row"><b class="num">'+(done?S.ttd+"s":"—")+'</b></div></div></div></div>';
+    '<div class="kpi"><span>Time to decision (this demo, on this device)</span><div class="row"><b class="num">'+(done?ttdText():"—")+'</b></div></div></div></div>';
   /* gauge */
   var gauge='<div class="box s4"><div class="bh"><div><h2>Onboarding progress</h2><p class="small muted">'+(cert?"Complete":"Step "+(S.step+1)+" · "+STEPS[S.step])+'</p></div><button class="cbtn" type="button" data-act="go-apply" aria-label="Open application">'+ARROW+'</button></div><div class="gauge">'+gaugeSvg(pct)+'</div><div style="text-align:center"><b class="num" style="font-size:2.6rem">'+pct+'%</b> <span class="chip '+(cert?"":"n")+'">'+(cert?"certified":(6-S.step)+" steps to go")+'</span></div></div>';
   /* next step */
@@ -1066,11 +1066,11 @@ function renderDash(){
   var rows=GROUPS.map(function(G){var gc=S.checks.filter(function(c){return c.doc===G.g});var exp={"PAN card":6,"Aadhaar":7,"Class 10 marksheet":5,"Bank account":3,"Selfie":2,"Exclusivity":1}[G.g];
     var dots=done&&gc.length?gc.map(function(c){var k=resCls(c.res);return '<span class="d '+k+'" title="'+esc(c.label+": "+c.res)+'">'+(k==="PASS"?"✓":k==="FIX"?"!":k==="HUMAN"?"?":k==="REJECT"?"×":k==="INFO"?"i":"")+'</span>'}).join(""):Array(exp+1).join('<span class="d"></span>');
     return '<span class="lb">'+G.g.replace(" marksheet","")+'</span><div class="dots">'+dots+'</div>'}).join("");
-  var pop='<div class="popc"><span class="small" style="opacity:.7">'+(done?"Round "+S.round:"Before you submit")+'</span><b style="font-family:var(--display);font-size:1.15rem;font-weight:500">'+(done?(S.decision==="APPROVE"?"Every check cleared":S.decision==="NEEDS_MORE_INFO"?"A few fixes to make":S.decision==="REJECT"?"Eligibility rules not met":"With a reviewer"):"Checks run on submit")+'</b><span class="chip" style="align-self:flex-start">'+(done?S.ttd+" s · this demo, on this device":"after you submit")+'</span><span class="small" style="opacity:.75">Each check cites the rulebook rule it used.</span></div>';
+  var pop='<div class="popc"><span class="small" style="opacity:.7">'+(done?"Round "+S.round:"Before you submit")+'</span><b style="font-family:var(--display);font-size:1.15rem;font-weight:500">'+(done?(S.decision==="APPROVE"?"Every check cleared":S.decision==="NEEDS_MORE_INFO"?"A few fixes to make":S.decision==="REJECT"?"Eligibility rules not met":"With a reviewer"):"Checks run on submit")+'</b><span class="chip" style="align-self:flex-start">'+(done?ttdText()+" · this demo, on this device":"after you submit")+'</span><span class="small" style="opacity:.75">Each check cites the rulebook rule it used.</span></div>';
   var dmap='<div class="box s6"><div class="bh"><div><h2>Checks map</h2><p class="small muted">Every check the engine runs, by document</p></div><button class="cbtn" type="button" data-act="go-review" aria-label="Open review console">'+ARROW+'</button></div><div style="display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px;align-items:center" class="dmw"><div class="dmap">'+rows+'</div>'+pop+'</div><div class="legend2"><span><i style="background:var(--ok)"></i>Passed</span><span><i style="background:var(--info)"></i>Noted</span><span><i style="background:var(--bad)"></i>To fix</span><span><i style="background:var(--lav)"></i>With a person</span><span><i style="border:1.5px dashed var(--dot)"></i>Not run yet</span></div></div>';
   /* compliance, training, agent */
-  var cl=checklist(),cn=cl.filter(function(x){return x[1]}).length;
-  var comp='<div class="box lime s4"><div class="bh"><div><h2>Compliance</h2><p class="small muted">'+cn+' of '+cl.length+' complete</p></div><b class="num" style="font-size:2rem">'+Math.round(cn/cl.length*100)+'%</b></div><ul class="clist">'+cl.map(function(x){return '<li><span class="ck'+(x[1]?" on":"")+'">'+(x[1]?"✓":"")+'</span>'+x[0]+'</li>'}).join("")+'</ul></div>';
+  var cl=checklist(),cn=cl.filter(function(x){return x[1]}).length,ctot=cl.filter(function(x){return x[1]!==null}).length;
+  var comp='<div class="box lime s4"><div class="bh"><div><h2>Compliance</h2><p class="small muted">'+cn+' of '+ctot+' complete</p></div><b class="num" style="font-size:2rem">'+Math.round(cn/ctot*100)+'%</b></div><ul class="clist">'+cl.map(function(x){return '<li><span class="ck'+(x[1]?" on":"")+'">'+(x[1]?"✓":"")+'</span>'+x[0]+'</li>'}).join("")+'</ul></div>';
   var trn='<div class="box s4"><div class="bh"><div><h2>Training</h2><p class="small muted">IRDAI requires 15 hours</p></div><span class="chip '+(hrs>=15?"":"n")+'">'+(hrs>=15?"done":Math.round(hrs/15*100)+"%")+'</span></div><div><b class="num" style="font-size:3rem">'+hrs+'.0</b><span class="muted"> / 15 h</span></div><div class="prog"><i style="width:'+(hrs/15*100)+'%"></i></div><div class="mods2">'+MODULES.map(function(m,i){return '<span class="'+(S.mods[i]?"on":"")+'">'+["Basics","Motor","Health","Life","Regulation"][i]+'</span>'}).join("")+'</div><div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center"><span class="small muted">Exam</span><b>'+(S.exam.score!==null?S.exam.score+"%":"not taken")+'</b></div></div>';
   var mins=Math.max(1,Math.round((Date.now()-S.started)/60000));
   var agent='<div class="box ink s4"><div class="bh"><div><p class="small muted">'+(cert?"Certified agent":"Your agent card")+'</p><h2 style="font-size:1.3rem;font-weight:500">'+esc(S.f.name||"New applicant")+'</h2><p class="small muted">'+esc((S.f.city||"City")+", "+(S.f.state||"State"))+'</p></div><span class="avatar" style="width:52px;height:52px"><span style="color:var(--ink)">'+esc(norm(S.f.name||"").split(" ").filter(Boolean).map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN")+'</span></span></div>'+
@@ -1244,7 +1244,7 @@ function verifyCard(G){
 function ring(){
   var total=S.checks.length,N=60,on=Math.round(S.shown/total*N),ln="",i,a,x1,y1,x2,y2,st=S.docs.SELFIE;
   for(i=0;i<N;i++){a=(i/N)*2*Math.PI-Math.PI/2;var r2=i<on?97:93;x1=100+Math.cos(a)*84;y1=100+Math.sin(a)*84;x2=100+Math.cos(a)*r2;y2=100+Math.sin(a)*r2;ln+='<line'+(i<on?' class="on"':'')+' x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'"/>'}
-  var ini=norm(S.f.name).split(" ").map(function(t){return t.charAt(0)}).slice(0,2).join("");
+  var ini=norm(S.f.name).split(" ").map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN";
   return '<div class="ring'+(S.shown>=total?" all":"")+'" role="img" aria-label="'+S.shown+' of '+total+' checks complete"><svg viewBox="0 0 200 200">'+ln+'</svg><div class="face">'+(st&&st.url?'<img src="'+st.url+'" alt="">':esc(ini))+'</div></div>';
 }
 function langSeg(){return '<div class="seg" role="group" aria-label="Message language"><button type="button" data-lang="en" aria-pressed="'+(S.lang==="en")+'">English</button><button type="button" data-lang="hi" aria-pressed="'+(S.lang==="hi")+'">हिन्दी</button></div>'}
@@ -1266,7 +1266,7 @@ function fixPanel(){
   return '<div class="panel"><div class="ophead"><div class="head"><h2>One message, everything we need</h2><p>Sent once by WhatsApp and SMS (simulated). Round '+S.fu.round+' of follow-up. Only these documents are read again; everything else carries over.</p></div>'+langSeg()+'</div>'+
     '<div class="msg" lang="'+(hi?"hi":"en")+'"><span class="from">PolicyNest · to '+esc(firstName())+'</span>'+esc(followupText(it,firstName(),S.lang,link))+'</div>'+
     '<div style="display:flex;flex-direction:column;gap:12px">'+rows+'</div>'+demo+
-    '<div class="actions"><span class="small muted">'+(ready?"All fixes received.":"Replace each item above to continue. For a demo, pick a clean specimen.")+'</span><button class="btn pri" type="button" data-act="resubmit"'+(ready?"":" disabled")+'>Send fixes for re-check</button></div></div>';
+    '<div class="actions"><span class="small muted">'+(ready?"All fixes received.":"Replace each item above to continue.")+'</span><button class="btn pri" type="button" data-act="resubmit"'+(ready?"":" disabled")+'>Send fixes for re-check</button></div></div>';
 }
 function rejectPanel(){
   var hi=S.lang==="hi";
@@ -1280,11 +1280,11 @@ function humanPanel(){
 }
 function stepVerify(){
   var total=S.checks.length,done=!S.rechecking&&S.shown>=total,D=S.decision,ok=D==="APPROVE";
-  var side='<aside class="side stick">'+ring()+'<div class="who"><h2>'+esc(S.f.name)+'</h2><span class="mono muted">'+S.appId+(S.round>1?' · round '+S.round:'')+'</span></div>'+
+  var side='<aside class="side stick">'+ring()+'<div class="who"><h2>'+esc(S.f.name||"New applicant")+'</h2><span class="mono muted">'+S.appId+(S.round>1?' · round '+S.round:'')+'</span></div>'+
    '<div class="slist">'+GROUPS.map(function(G){var gs=groupState(G.g),s=gs.st,bad=gs.idx.some(function(i){return S.checks[i].res!=="PASS"&&S.checks[i].res!=="INFO"});return '<div><span>'+G.side+'</span>'+(s==="done"?(bad?pill("bad","Review required"):pill("ok","Approved")):s==="run"?pill("run","In progress"):pill("","Queued"))+'</div>'}).join("")+'</div>'+
    (S.rechecking?'<p class="small muted">Re-checking the documents you replaced…</p>':!done?'<p class="small muted">Checking '+Math.min(S.shown+1,total)+' of '+total+'.</p>':
-    ok?'<div class="verdict"><h2>KYC approved</h2><span class="small">All checks passed'+(S.round>1?' after '+(S.round-1)+' follow-up round'+(S.round>2?"s":""):'')+'. Nothing needs a second look.</span></div><div class="stats"><div class="stat"><b>'+S.ttd+' s</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div><button class="btn pri wide" type="button" data-act="start-training">Start training</button><button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':
-    D==="NEEDS_MORE_INFO"?'<div class="verdict hold"><h2>'+(S.fu.items.length===1?"One thing":S.fu.items.length+" things")+' to fix</h2><span class="small">All of them are in one message. Fix them together and only those documents are checked again.</span></div><div class="stats"><div class="stat"><b>'+S.ttd+' s</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>':
+    ok?'<div class="verdict"><h2>KYC approved</h2><span class="small">All checks passed'+(S.round>1?' after '+(S.round-1)+' follow-up round'+(S.round>2?"s":""):'')+'. Nothing needs a second look.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div><button class="btn pri wide" type="button" data-act="start-training">Start training</button><button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':
+    D==="NEEDS_MORE_INFO"?'<div class="verdict hold"><h2>'+(S.fu.items.length===1?"One thing":S.fu.items.length+" things")+' to fix</h2><span class="small">All of them are in one message. Fix them together and only those documents are checked again.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>':
     D==="REJECT"?'<div class="verdict no"><h2>Not eligible</h2><span class="small">'+S.rej.length+' eligibility rule'+(S.rej.length>1?"s":"")+' not met. The reasons are listed in plain words.</span></div><button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':
     '<div class="verdict rev"><h2>With a reviewer</h2><span class="small">A decision the rulebook keeps with a person. Target: within 4 working hours.</span></div><button class="btn wide" type="button" data-act="go-review">Open review console (reviewer view)</button>')+'</aside>';
   var top=done&&D==="NEEDS_MORE_INFO"?fixPanel():done&&D==="REJECT"?rejectPanel():done&&D==="HUMAN_REVIEW"?humanPanel():"";
@@ -1429,15 +1429,16 @@ function judge(k,r,file){
 function addDoc(k,file){
   var old=S.docs[k]; if(old&&old.url&&old.url.indexOf("blob:")===0) try{URL.revokeObjectURL(old.url)}catch(e){}
   /* Specimens are built from the typed details, so a blank application cannot take one. */
-  if(!file&&(!S.f.name||!S.f.pan)){ S.docs[k]={status:"rejected",file:false,name:"Synthetic placeholder",url:null,ocr:null,reason:"Fill in your details first, or load the sample applicant in the demo controls, then use a specimen."}; render(); return; }
+  if(!file&&(!S.f.name||!S.f.pan)){ S.docs[k]={status:"rejected",file:false,name:"Synthetic placeholder",url:null,ocr:null,reason:"Fill in your details first (Back to details, then Demo controls, Load sample applicant), then use a specimen."}; render(); return; }
   if(S.decision==="NEEDS_MORE_INFO"&&!S.rechecking) S.changed[k]=true; /* a fix for the open follow-up */
   var d={status:"reading",file:!!file,name:file?file.name:"Synthetic placeholder",url:null,ocr:null,reason:""};
   S.docs[k]=d; render();
   if(!file){ setTimeout(function(){ if(S.docs[k]!==d) return;
       var vv=S.specv[k]||"clean",vl=(VARIANTS[k].filter(function(o){return o[0]===vv})[0]||["","Clean"])[1];
       var fl=k==="SELFIE"?{missing:[],face:vv==="borderline"?0.68:vv==="low"?0.52:null}:parseDoc(k,specimenText(k,S.f,vv),vv==="blurry"?0.61:0.97);
-      d.name=vl;
-      d.ocr={det:SLOT[k].want,detName:"Synthetic specimen ("+SLOT[k].n+", "+vl.toLowerCase()+")",src:k==="SELFIE"?"Specimen photo (synthetic)":"Specimen text",conf:0.97,words:0,found:[],fields:fl,spec:true};
+      var vlc=vl.replace(/\s*·\s*T\d+\s*$/,""); /* the test tag stays in the audit log only */
+      d.name=vlc;
+      d.ocr={det:SLOT[k].want,detName:"Synthetic specimen ("+SLOT[k].n+", "+vlc.toLowerCase()+")",src:k==="SELFIE"?"Specimen photo (synthetic)":"Specimen text",conf:0.97,words:0,found:[],fields:fl,spec:true};
       d.ocr.conf=vv==="blurry"?0.61:0.97; d.status="ok"; S.lastDocAt=Date.now(); afterDoc(k); cheerDoc(k); log((S.changed[k]?"DOC_REUPLOADED:":"DOC_UPLOADED:")+k,"APPLICANT","Specimen ("+vl+"): synthetic document text built from the typed details, read by the same parser"+(fl.missing.length?" · not read: "+fl.missing.join(", "):"")); render(); },500+Math.random()*400); return; }
   if(!/^image\//.test(file.type)&&file.type!=="application/pdf"&&!/\.pdf$/i.test(file.name)){ d.status="rejected"; d.reason="This file type is not supported. Upload a JPG, PNG or PDF."; render(); return; }
   ocrChain=ocrChain.then(function(){ if(S.docs[k]!==d) return null; curKey=k; return readDoc(k,file); }).then(function(r){
@@ -1448,24 +1449,26 @@ function addDoc(k,file){
     render();
   },function(e){
     curKey=null; if(S.docs[k]!==d) return;
-    d.status="rejected"; d.reason=(e&&(e.message==="load"||e.message==="timeout"))?"The OCR engine could not load here. Check your internet connection, or open the local copy of this page in your browser. You can also use a specimen.":"We could not open this file. Upload a JPG, PNG or PDF of the document."; afterDoc(k); render();
+    d.status="rejected"; d.reason=(e&&(e.message==="load"||e.message==="timeout"))?"The OCR engine could not load here. Check your internet connection, or open the local copy of this page in your browser.":"We could not open this file. Upload a JPG, PNG or PDF of the document."; afterDoc(k); render();
   });
 }
 /* FR-23: time to decision runs from t0 (the later of the last accepted document and Submit) to S.decAt,
    the moment the decision object exists. The reveal animation is not part of it. */
+/* One place for the time-to-decision text. The engine takes milliseconds, so anything under a second reads "under 1 s". */
+function ttdText(){ if(S.ttd==null||!isFinite(Number(S.ttd))) return "—"; var s=Number(S.ttd); return s<1?"under 1 s":s.toFixed(1)+" s"; }
 function finishDecision(t0){
   var end=(S.decAt&&S.decAt>=t0)?S.decAt:Date.now();
-  S.ttd=((end-t0)/1000).toFixed(1);
+  S.ttd=(end-t0)/1000;
   var codes=S.checks.filter(function(c){return c.res!=="PASS"&&c.res!=="INFO"&&c.res!=="PENDING"}).map(function(c){return c.code||c.res});
   var rec={round:S.round,decision:S.decision,t:Date.now(),items:[],rechecked:S.checks.filter(function(c){return !c.carried}).length,carried:S.checks.filter(function(c){return c.carried}).length,changed:Object.keys(S.changed)};
-  if(S.decision==="APPROVE"){setState("KYC_APPROVED"); cheer(S.touches?"good news: your application is approved.":"you are verified!",S.touches?"Our team has confirmed everything. On to training.":"Your 15 hours of training are unlocked.","star");log(S.touches?"KYC_APPROVED":"STP_PASS","SYSTEM",S.checks.length+" checks passed · decision APPROVE · "+S.touches+" human touch"+(S.touches===1?"":"es")+" · "+S.ttd+" s")}
+  if(S.decision==="APPROVE"){setState("KYC_APPROVED"); cheer(S.touches?"good news: your application is approved.":"you are verified!",S.touches?"Our team has confirmed everything. On to training.":"Your 15 hours of training are unlocked.","star");log(S.touches?"KYC_APPROVED":"STP_PASS","SYSTEM",S.checks.length+" checks passed · decision APPROVE · "+S.touches+" human touch"+(S.touches===1?"":"es")+" · "+ttdText())}
   else if(S.decision==="NEEDS_MORE_INFO"){
     setState("NEEDS_MORE_INFO"); log("DECISION","SYSTEM","Decision NEEDS_MORE_INFO · "+codes.join(", "));
     var items=followupItems(S.checks,S.ex); S.fu={items:items,round:S.round}; cheer("you are almost there.","Everything we need is in one message, so you can fix it in one go.","heart"); items.forEach(function(i){S.specv[i.key]="clean"}); rec.items=items; S.followups++; S.changed={};
     log("FOLLOWUP_SENT","SYSTEM","Round "+S.round+" · one consolidated message · "+items.length+" item"+(items.length>1?"s":"")+" ("+items.map(function(i){return DOC_LABEL[i.key]?DOC_LABEL[i.key][0]+": "+i.code:i.code}).join("; ")+") · WhatsApp and SMS, English and Hindi (simulated send)");
   }
-  else if(S.decision==="REJECT"){ setState("REJECTED"); S.rej=rejectReasons(S.checks,S.ex); log("DECISION","SYSTEM","Decision REJECT · "+codes.filter(function(c){return S.rej.some(function(r){return r.code===c})}).join(", ")+" · rule-based, decided automatically · applicant told in plain words"); }
-  else { setState("HUMAN_REVIEW"); openReview(false); log("ROUTED_TO_REVIEWER","SYSTEM","Decision HUMAN_REVIEW · "+codes.join(", ")+" · AI recommendation: "+S.review.rec+" · evidence laid out side by side in the review console"); }
+  else if(S.decision==="REJECT"){ setState("REJECTED"); S.rej=rejectReasons(S.checks,S.ex); log("DECISION","SYSTEM","Decision REJECT · "+codes.filter(function(c){return S.rej.some(function(r){return r.code===c})}).join(", ")+" · "+(S.touches>0?"decided by a person":"rule-based, decided automatically")+" · applicant told in plain words"); }
+  else { setState("HUMAN_REVIEW"); openReview(false); log("ROUTED_TO_REVIEWER","SYSTEM","Decision HUMAN_REVIEW · "+codes.join(", ")+" · evidence laid out side by side in the review console"); log("ROUTED_TO_REVIEWER_DETAIL","SYSTEM","Internal: AI recommendation: "+S.review.rec); }
   S.rounds.push(rec);
 }
 function animate(t0){
@@ -1533,7 +1536,7 @@ document.addEventListener("click",function(e){
     return render(); }
   var a=t.getAttribute("data-act"); if(!a) return;
   if(a==="clear"){ S.f=Object.assign({},BLANK); S.consentAt=null; S.isSample=false; S.errs={}; render(); }
-  else if(a==="sample"){ S.f=Object.assign({},SAMPLE); S.consentAt=Date.now(); S.isSample=true; S.errs={}; render(); }
+  else if(a==="sample"){ S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; /* no consent time for a tick nobody made */ S.errs={}; render(); }
   else if(a==="details-next"){ var all=validate(S.f),pg=DPAGES[S.dpage],lastPg=S.dpage===DPAGES.length-1; S.errs={}; Object.keys(all).forEach(function(f){ if(lastPg||pg.f.indexOf(f)>=0) S.errs[f]=all[f]; });
     if(Object.keys(S.errs).length){ if(lastPg){ var bad=-1; DPAGES.forEach(function(p,i){ if(bad<0&&p.f.some(function(f){return S.errs[f]})) bad=i; }); S.dpage=bad; }
       render(); var b=document.querySelector(".fld.bad input,.fld.bad select"); if(b) b.focus(); cpNudge("detail-err","A field on this page needs a fix: "+Object.keys(S.errs).map(function(f){return S.errs[f]}).join(" ")); return; }
@@ -1592,20 +1595,22 @@ function rvTime(){var s=Math.round((Date.now()-S.review.opened)/1000);return Mat
 function reviewerAct(a){
   var R=S.review,it=openItems(),note=(R.note||"").trim(),t0=Date.now(),tm=rvTime();
   if((a==="rv-reject"||a==="rv-uphold")&&!note) return;
+  /* The reviewer's note is reviewer-only: it goes to c.rnote and the internal log, never into c.ev (applicant screens). The draft is cleared after each action. */
+  R.note="";
   S.touches++;
-  if(a==="rv-uphold"){ log("REVIEWER_DECISION","REVIEWER","Dispute reviewed · rejection upheld · note: "+note+" · reviewer time "+tm); S.decision="REJECT"; setState("REJECTED"); S.disputed=false; S.review=null; S.rounds.push({round:S.round,decision:"REJECT",t:Date.now(),items:[],rechecked:0,carried:S.checks.length,changed:[],by:"reviewer"}); return render(); }
+  if(a==="rv-uphold"){ log("REVIEWER_DECISION","REVIEWER","Dispute reviewed · rejection upheld · note: "+note+" · reviewer time "+tm); log("DECISION","SYSTEM","Rejection confirmed by a person; applicant told in plain words"); S.decision="REJECT"; setState("REJECTED"); S.disputed=false; S.review=null; S.rounds.push({round:S.round,decision:"REJECT",t:Date.now(),items:[],rechecked:0,carried:S.checks.length,changed:[],by:"reviewer"}); return render(); }
   S.round++;
   if(a==="rv-approve"){
-    it.forEach(function(c){c.ev0=c.ev0||c.ev;c.res="PASS";c.reviewer=true;c.ev+=" · confirmed by reviewer"+(note?": "+note:"")});
+    it.forEach(function(c){c.ev0=c.ev0||c.ev;c.res="PASS";c.reviewer=true;c.ev+=" · confirmed by a reviewer";if(note)c.rnote=note});
     log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · "+(R.dispute?"dispute upheld for the applicant: ":"")+"approved "+it.map(function(c){return c.code}).join(", ")+(note?" · note: "+note:"")+" · reviewer time "+tm);
   } else if(a==="rv-ask"){
     var sel=it.filter(function(c,i){return R.ask[i]!==false});
     if(!sel.length) { S.round--; S.touches--; return; }
-    sel.forEach(function(c){var q=ASK[c.code]?ASK[c.code](c):{key:c.key,en:"Please upload your "+DOC_LABEL[c.key][0]+" again.",hi:"कृपया "+DOC_LABEL[c.key][1]+" दोबारा अपलोड करें।"};c.res="NEEDS_INFO";c.key=q.key;c.ask=q;c.code="REVIEWER_REQUEST";c.ev+=" · reviewer asked the applicant"+(note?": "+note:"")});
+    sel.forEach(function(c){var q=ASK[c.code]?ASK[c.code](c):{key:c.key,en:"Please upload your "+DOC_LABEL[c.key][0]+" again.",hi:"कृपया "+DOC_LABEL[c.key][1]+" दोबारा अपलोड करें।"};c.res="NEEDS_INFO";c.key=q.key;c.ask=q;c.code="REVIEWER_REQUEST";c.ev+=" · reviewer asked the applicant";if(note)c.rnote=note});
     log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · asked the applicant for more information on "+sel.map(function(c){return c.doc}).join(", ")+(note?" · note: "+note:"")+" · reviewer time "+tm);
   } else if(a==="rv-reject"){
     var fraud=it.some(function(c){return c.code==="NAME_MISMATCH"});
-    it.forEach(function(c){c.res="REJECT";c.reviewer=true;c.ev+=" · rejected by reviewer: "+note;c.code=c.code==="BOARD_UNLISTED"?"BOARD_NOT_RECOGNISED":"IDENTITY_NOT_CONFIRMED"});
+    it.forEach(function(c){c.res="REJECT";c.reviewer=true;c.ev+=" · rejected by a reviewer";if(note)c.rnote=note;c.code=c.code==="BOARD_UNLISTED"?"BOARD_NOT_RECOGNISED":"IDENTITY_NOT_CONFIRMED"});
     log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · REJECT confirmed by a person · note: "+note+" · reviewer time "+tm);
     if(fraud) log("FRAUD_DESK_REFERRAL","SYSTEM","Different-person name confirmed · referred to the fraud desk the same day (rulebook §5, §7). Internal only: never shown to the applicant");
   }
@@ -1644,7 +1649,7 @@ function renderOps(){
   var x=S.ex,sub=S.reached.SUBMITTED,done=sub&&!S.rechecking&&S.shown>=S.checks.length;
   var dec=!sub?pill("","Awaiting documents"):!done?pill("run","Engine running"):S.decision==="APPROVE"?pill("ok","APPROVE · straight-through"):pill(S.decision==="REJECT"?"bad":"info",S.decision);
   var h='<div class="card"><div class="ophead"><div><h1>'+esc(S.f.name||"New applicant")+'</h1><span class="mono muted">'+S.appId+' · Web · '+esc(S.f.city||"—")+', '+esc(S.f.state||"—")+'</span></div>'+dec+'</div>'+
-    '<div class="stats"><div class="stat"><b>'+(done?S.ttd+" s":"—")+'</b><span>Time to decision (target under 10 min)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div><div class="stat"><b>'+(done?S.checks.filter(function(c){return c.res==="PASS"||c.res==="INFO"}).length+" / "+S.checks.length:"—")+'</b><span>Checks cleared</span></div></div>'+
+    '<div class="stats"><div class="stat"><b>'+(done?ttdText():"—")+'</b><span>Time to decision (target under 10 min)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div><div class="stat"><b>'+(done?S.checks.filter(function(c){return c.res==="PASS"||c.res==="INFO"}).length+" / "+S.checks.length:"—")+'</b><span>Checks cleared</span></div></div>'+
     '<div class="track" aria-label="Lifecycle">'+STATES.map(function(s){return '<span class="'+(s===S.status?"cur":S.reached[s]?"hit":"")+'">'+s+'</span>'}).join("")+'</div></div>'+reviewCard();
   h+='<div class="card"><h2>Cross-document comparison</h2>';
   if(sub){
@@ -1661,7 +1666,7 @@ function renderOps(){
     '</tbody></table></div><p class="small muted">Every value above was read from the document by OCR (or from specimen text) and parsed, except the typed column. Face match '+(x.face!=null?x.face.toFixed(2)+" (simulated)":"—")+' · IRDAI registry: '+(x.registry?"hit":"no record")+' (simulated) · Aadhaar address state: '+(AB.state?esc(AB.state):"not read")+'</p>';
   } else h+='<div class="empty">Nothing submitted yet. Complete steps 1 and 2 in the Application section and the extracted fields appear here side by side.</div>';
   h+='</div><div class="card"><h2>Checks and rules applied</h2>';
-  if(sub) h+='<div class="scroll"><table><thead><tr><th>Area</th><th>Check</th><th>Rule</th><th>Result</th><th>Evidence</th></tr></thead><tbody>'+S.checks.slice(0,S.shown).map(function(c){return '<tr><td>'+c.doc+'</td><td><b>'+c.label+'</b></td><td class="mono">'+c.rule+'</td><td>'+pill(c.res==="PASS"?"ok":c.res==="INFO"||c.res==="HUMAN"?"info":c.res==="PENDING"?"":"bad",c.res)+'</td><td class="muted">'+esc(c.ev)+'</td></tr>'}).join("")+'</tbody></table></div>';
+  if(sub) h+='<div class="scroll"><table><thead><tr><th>Area</th><th>Check</th><th>Rule</th><th>Result</th><th>Evidence</th></tr></thead><tbody>'+S.checks.slice(0,S.shown).map(function(c){return '<tr><td>'+c.doc+'</td><td><b>'+c.label+'</b></td><td class="mono">'+c.rule+'</td><td>'+pill(c.res==="PASS"?"ok":c.res==="INFO"||c.res==="HUMAN"?"info":c.res==="PENDING"?"":"bad",c.res)+'</td><td class="muted">'+esc(c.ev)+(c.rnote?'<br><span class="small">Reviewer note (internal): '+esc(c.rnote)+'</span>':'')+'</td></tr>'}).join("")+'</tbody></table></div>';
   else h+='<div class="empty">The engine runs about 25 checks across PAN, Aadhaar, marksheet, bank, selfie and exclusivity once documents are submitted.</div>';
   $("view-ops").innerHTML=h+'</div>'+checkCard()+'<div class="card decide"><span class="small muted">'+ENGINE+'</span>'+(done?(S.decision==="APPROVE"?'<span><b>Decided automatically.</b> No reviewer action is needed on this application.</span>':'<span><b>'+(S.decision==="NEEDS_MORE_INFO"?"Waiting for the applicant.</b> One consolidated message was sent; only the re-uploaded documents will be re-checked.":S.decision==="REJECT"?"Rejected on fixed eligibility rules.</b> The applicant was told every reason in plain words.":"With a reviewer.</b> Use the reviewer task at the top of this page.")+'</span>'):'<span class="muted">No decision yet.</span>')+'</div>';
 }
@@ -1678,8 +1683,8 @@ function stepIntro(){
   '<h2>Keep these six ready</h2><ul class="need2">'+DOC_GUIDE.map(function(g){return '<li><b>'+g[0]+'</b><span>'+g[1]+'</span><em>'+g[2]+'</em></li>'}).join("")+'</ul>'+
   '<div class="obs"><b>Good photos pass first time</b><span>Use the original document, not a photocopy (a photocopy is accepted only for the bank document). Daylight, all four corners in the frame, no glare or fingers over the text. JPG, PNG or PDF. Rulebook §4.1.</span></div>'+
   '<h2>How it works</h2><ol class="steps"><li><b>Your details</b>: four short pages, typed exactly as on your PAN card.</li><li><b>Documents</b>: one at a time. Each is read on your device the moment you add it, and you see at once whether it is fine and, if not, exactly how to fix it.</li><li><b>Verification</b>: every document is checked against your PAN and the rulebook. If anything is missing you get one message that lists all of it.</li><li><b>Training</b>: 15 hours, required by IRDAI before the exam.</li><li><b>Exam</b>: pass mark 50%. A retake opens 24 hours after a failed attempt.</li><li><b>Certificate</b>: your POSP code.</li></ol>'+
-  '<div class="obs"><b>A focused 30-minute sitting</b><span>The sitting covers your details and documents only. Verification, training and the exam are not timed. Each sitting has a 30-minute timer. On a computer it can use full screen; you can start without it, hide the timer or turn the limit off. You can extend it by 10 minutes at a time. If you leave the screen we warn you but never wipe your work. Not finished? Your progress is kept and you continue in a new sitting.</span></div>'+
-  '<div class="obs"><b>What is saved on this device, and for how long</b><span>Only if you tick the box below: what you type, and what is read from your documents (Aadhaar last four digits only). Never saved: document images or the full text read from them. Kept up to 30 days while the application is a draft, or 14 days once a follow-up is open. You can delete it from the resume screen.</span></div>'+
+  '<div class="obs"><b>A focused 30-minute sitting</b><span>The sitting covers your details and documents only. Verification, training and the exam are not timed. Each sitting has a 30-minute timer. On a computer it can use full screen; you can start without it, hide the timer or turn the limit off. You can extend it by 10 minutes at a time. If you leave the screen we warn you but never wipe your work. Not finished? If you chose to save, you continue in a new sitting; otherwise closing this tab clears your progress.</span></div>'+
+  '<div class="obs"><b>What is saved on this device, and for how long</b><span>Only if you tick the box below: what you type, and what is read from your documents (Aadhaar last four digits only). Never saved: document images or the full text read from them. Kept up to 30 days; 14 days once a follow-up message is open. You can delete it from the resume screen.</span></div>'+
   '<div class="fld full"><label class="consent" for="f-save"><input id="f-save" type="checkbox"'+(S.saveOK?" checked":"")+'><span>Save my progress on this device so I can resume later, as described above. I can delete it any time.</span></label></div>'+
   '<div class="obs"><b>Language</b><span>Messages to you come in English or Hindi. The screens are in English.</span></div>'+
   '<div class="obs"><b>Shared device</b><span>On a shared phone or computer, leave saving off.</span></div>'+
@@ -1720,9 +1725,9 @@ function tick(){
   if(!s.ended&&el){ el.textContent=mmss(r); el.classList.toggle("low",r<=120e3); }
   if(!s.ended&&r<=0){ s.ended=true; log("SITTING_TIMEOUT","SYSTEM","Sitting "+s.n+" reached 30 minutes · progress saved"); persist(true); paintBar(); }
   if(modalOpen()) return;
-  if(s.ended){ if(!s.expShown){ s.expShown=true; showModal("Your 30-minute sitting has ended","Nothing is lost: everything you entered and every verified document is saved. Extend now, or continue in a new sitting any time within 30 days.",[["Extend 10 minutes","m-extend",1],["Save and continue later","m-later"]]); } return; }
-  if(r<=600e3&&!s.warned.t10){ s.warned.t10=1; announce("10 minutes left in this sitting."); showModal("10 minutes left","Your progress is saved either way. Keep working, or extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep working","m-close"]]); cpNudge("t10-"+s.n,"10 minutes left in this sitting. "+nextStepText()); return; }
-  if(r<=120e3&&r>0&&!s.warned.t2){ s.warned.t2=1; announce("2 minutes left in this sitting."); showModal("2 minutes left","Your progress is saved either way. Need more time? Extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep working","m-close"]]); }
+  if(s.ended){ if(!s.expShown){ s.expShown=true; showModal("Your 30-minute sitting has ended","Nothing is lost while this tab stays open; "+(S.saveOK?"you can also continue in a new sitting any time within 30 days.":"saving is off, so closing this tab clears it."),[["Extend 10 minutes","m-extend",1],["Save and continue later","m-later"]]); } return; }
+  if(r<=600e3&&!s.warned.t10){ s.warned.t10=1; announce("10 minutes left in this sitting."); showModal("10 minutes left","Your progress is "+(S.saveOK?"saved on this device":"kept only until you close this tab")+". Keep working, or extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep working","m-close"]]); cpNudge("t10-"+s.n,"10 minutes left in this sitting. "+nextStepText()); return; }
+  if(r<=120e3&&r>0&&!s.warned.t2){ s.warned.t2=1; announce("2 minutes left in this sitting."); showModal("2 minutes left","Your progress is "+(S.saveOK?"saved on this device":"kept only until you close this tab")+". Need more time? Extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep working","m-close"]]); }
 }
 /* Hide timer and turn off time limit: the choice is kept for this sitting (S.sess) and for later sittings (S.sessPref). */
 function setPref(k,v){ S.sessPref=Object.assign({},S.sessPref); S.sessPref[k]=v; if(S.sess) S.sess[k]=v; persist(); }
@@ -1792,7 +1797,7 @@ function modalAct(a){
   else if(a==="m-later"){ endSitting("SITTING_SAVED","Applicant chose to continue later"); leaveFocus(); render(); }
   else if(a==="m-refocus"){ if(S.sess) enterFocus(!S.sess.noFs); }
   else if(a==="m-newapp"){ newApplication(); }
-  else if(a==="m-delete"){ wipeSaved(); S.saveOK=false; log("SAVED_PROGRESS_DELETED","APPLICANT","Applicant deleted saved progress from this device"); render(); showModal("Saved progress deleted","Nothing from this application is kept on this device. Your reasons stay on this screen until you leave it.",[["OK","m-close",1]]); }
+  else if(a==="m-delete"){ wipeSaved(); S.saveOK=false; log("SAVED_PROGRESS_DELETED","APPLICANT","Applicant deleted saved progress from this device"); render(); showModal("Saved progress deleted","Nothing from this application is kept on this device. Your reasons stay on this screen until you close or leave it; nothing further is saved.",[["OK","m-close",1]]); }
 }
 document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!$("cp").hidden){ cpOpen(false); } });
 /* Leaving the focused screen: warn and log, never wipe. Opening the file picker or camera does not count. */
@@ -1820,13 +1825,20 @@ function persist(force){
   if(!S.saveOK||S.status==="IN_REVIEW"||S.rechecking) return;
   var now=Date.now(); if(!force&&now-lastSave<400) return; lastSave=now;
   /* Internal events (fraud desk, reviewer notes) are never saved; the in-memory copy keeps them for the Audit view. */
-  try{ localStorage.setItem(SAVEKEY,JSON.stringify({v:1,savedAt:now,S:S},function(k,v){ if(k==="url"||k==="thumb"||k==="text") return undefined; if(k==="events"&&Array.isArray(v)) return v.filter(function(e){return e.audience!=="internal"}); return v })) }catch(e){}
+  try{ localStorage.setItem(SAVEKEY,JSON.stringify({v:1,savedAt:now,S:S},function(k,v){ if(k==="url"||k==="thumb"||k==="text"||k==="rnote") return undefined; if(k==="note"&&this&&"ask" in this&&"rec" in this) return undefined; if(k==="events"&&Array.isArray(v)) return v.filter(function(e){return e.audience!=="internal"}); return v })) }catch(e){}
 }
 function restore(){
   var raw=null; try{ raw=localStorage.getItem(SAVEKEY) }catch(e){} if(!raw) return false;
   try{ var o=JSON.parse(raw),days=(Date.now()-o.savedAt)/864e5,lim=o.S.status==="NEEDS_MORE_INFO"?14:30;
     if(days>lim){ try{localStorage.removeItem(SAVEKEY)}catch(e){} DROPPED=true; return false; } /* state machine: INACTIVITY_TIMEOUT → DROPPED_OUT */
     S=o.S; S.focus=false; S.sess=null; S.rechecking=false; S.restored=true;
+    /* Saves from before the reviewer-note fix can hold internal events, reviewer notes and reviewer wording. Strip them on load. */
+    S.events=(S.events||[]).filter(function(e){return e.audience!=="internal"&&!INTERNAL_EVENTS[e.event]}).map(function(e){ if(e.event==="ROUTED_TO_REVIEWER"&&e.note) e.note=e.note.replace(/ · AI recommendation: .*? · evidence/," · evidence"); return e; });
+    var scrubEv=function(s){ return typeof s==="string"?s.replace(/ · confirmed by reviewer(: .*)?$/," · confirmed by a reviewer").replace(/ · rejected by reviewer(: .*)?$/," · rejected by a reviewer").replace(/ · reviewer asked the applicant: .*$/," · reviewer asked the applicant"):s; };
+    (S.checks||[]).forEach(function(c){ delete c.rnote; c.ev=scrubEv(c.ev); });
+    if(S.obs&&typeof S.obs==="object") Object.keys(S.obs).forEach(function(k){ S.obs[k]=scrubEv(S.obs[k]); });
+    if(S.review) S.review.note="";
+    S.consentAt=S.consentAt||null;
     Object.keys(S.docs).forEach(function(k){ var d=S.docs[k]; if(d.status==="reading") delete S.docs[k]; else d.restored=true; });
     if(S.status==="IN_REVIEW"&&S.checks.length){ S.shown=S.checks.length; }
     log("PROGRESS_RESTORED","SYSTEM","Saved progress restored on this device · "+Math.round(days*24)+" h since last save");
