@@ -1514,7 +1514,7 @@ function submit(){
   setState("SUBMITTED"); log("DOCS_UPLOADED","APPLICANT","All 6 required documents present");
   setState("IN_REVIEW"); log("TRIAGE_START","SYSTEM","Dispatched to policy engine");
   var tSub=Date.now();
-  var r=decide(S.f,S.ex,new Date(S.started)); S.decAt=Date.now(); S.checks=r.checks; S.decision=r.decision; S.obs=observe(r.checks,S.ex); S.shown=0;
+  var r=decide(S.f,S.ex,new Date(S.started)); S.decAt=Date.now(); S.checks=r.checks; S.decision=r.decision; faceRepeatRule(true); S.obs=observe(r.checks,S.ex); S.shown=0;
   go(2); animate(Math.max(S.lastDocAt||0,tSub));
 }
 /* Re-check after a follow-up: only the re-uploaded documents are read again. Checks that involve a changed
@@ -1531,7 +1531,7 @@ function recheck(){
     if(old&&old.reviewer&&old.res==="PASS"&&c.res==="HUMAN"&&old.ev0===c.ev){c.res="PASS";c.reviewer=true;c.ev0=old.ev0;c.ev=old.ev;c.carried=true;c.from=old.from||S.round-1;return} /* a person's approval stands while the evidence is unchanged */
     if(!touched&&old&&old.res===c.res&&old.ev===c.ev){c.carried=true;c.from=old.from||S.round-1}
   });
-  S.ex=x; S.checks=r.checks; S.decision=r.decision; S.decision=decisionOf(r.checks); S.obs=observe(r.checks,x); S.shown=0;
+  S.ex=x; S.checks=r.checks; S.decision=r.decision; S.decision=decisionOf(r.checks); faceRepeatRule(changed.indexOf("SELFIE")>=0); S.obs=observe(r.checks,x); S.shown=0;
   var re=r.checks.filter(function(c){return !c.carried}).length;
   log("RECHECK","SYSTEM","Round "+S.round+" · "+re+" checks re-run, "+(r.checks.length-re)+" carried over unchanged");
   render(); try{window.scrollTo(0,0)}catch(e){}
@@ -1613,8 +1613,28 @@ var ASK={
  NAME_MISMATCH:function(c){return {key:c.key,en:"We could not match the name on your "+DOC_LABEL[c.key][0]+" with your PAN card. Please upload a clear photo of your own "+DOC_LABEL[c.key][0]+".",hi:"आपके "+DOC_LABEL[c.key][1]+" पर लिखा नाम आपके पैन कार्ड से मेल नहीं खा सका। कृपया अपने "+DOC_LABEL[c.key][1]+" की साफ़ फ़ोटो अपलोड करें।"}},
  SURNAME_CHANGE:function(c){return {key:c.key,en:"Your surname on your "+DOC_LABEL[c.key][0]+" is different from your PAN card. If it changed after marriage, please upload your marriage certificate or gazette notification together with the "+DOC_LABEL[c.key][0]+".",hi:"आपके "+DOC_LABEL[c.key][1]+" पर उपनाम (सरनेम) पैन कार्ड से अलग है। अगर यह विवाह के बाद बदला है, तो कृपया "+DOC_LABEL[c.key][1]+" के साथ अपना विवाह प्रमाणपत्र या गज़ट अधिसूचना अपलोड करें।"}},
  FACE_MATCH_BORDERLINE:function(){return {key:"SELFIE",en:"We need a clearer selfie to match with the photo on your PAN card. Please take a fresh selfie in good light, facing the camera, with nothing covering your face.",hi:"पैन कार्ड की फ़ोटो से मिलान के लिए हमें आपकी एक और साफ़ सेल्फ़ी चाहिए। कृपया अच्छी रोशनी में, कैमरे की ओर देखते हुए, चेहरा बिना ढके नई सेल्फ़ी लें।"}},
+ FACE_MATCH_LOW_REPEAT:function(){return {key:"SELFIE",en:"We need a clearer selfie to match with the photo on your PAN card. Please take a fresh selfie in good light, facing the camera, with nothing covering your face.",hi:"पैन कार्ड की फ़ोटो से मिलान के लिए हमें आपकी एक और साफ़ सेल्फ़ी चाहिए। कृपया अच्छी रोशनी में, कैमरे की ओर देखते हुए, चेहरा बिना ढके नई सेल्फ़ी लें।"}},
  BOARD_UNLISTED:function(){return {key:"CLASS10",en:"We could not confirm the board on your Class 10 marksheet. Please upload your Class 10 pass certificate, or a marksheet from a state board, CBSE, CISCE or NIOS.",hi:"हम आपकी कक्षा 10 की मार्कशीट के बोर्ड की पुष्टि नहीं कर पाए। कृपया अपना कक्षा 10 उत्तीर्ण प्रमाणपत्र, या किसी राज्य बोर्ड, CBSE, CISCE या NIOS की मार्कशीट अपलोड करें।"}}};
-var REC={NAME_MISMATCH:"REJECT (a different person's name; never auto-rejected)",SURNAME_CHANGE:"ask for a marriage certificate or gazette notification",FACE_MATCH_BORDERLINE:"compare the photos; ask for a fresh selfie if unsure",BOARD_UNLISTED:"check whether the board is recognised"};
+var REC={FACE_MATCH_LOW_REPEAT:"compare the photos; the selfie scored below 0.60 twice in a row (rulebook §4.6), referred internally to the fraud desk",NAME_MISMATCH:"REJECT (a different person's name; never auto-rejected)",SURNAME_CHANGE:"ask for a marriage certificate or gazette notification",FACE_MATCH_BORDERLINE:"compare the photos; ask for a fresh selfie if unsure",BOARD_UNLISTED:"check whether the board is recognised"};
+/* ---------- Rulebook §4.6 and §7: two selfie failures in a row go to a person (FR-31) ----------
+   Counted OUTSIDE the engine block, so the pinned engine hash and the evaluation are unchanged.
+   S.faceRun is the number of consecutive selfie scores below 0.60 for this application, across rounds. */
+function nextFaceRun(prevRun,score,selfieIsNew){
+  /* prevRun: run before this decision; score: face-match score 0..1; selfieIsNew: the selfie was (re)uploaded for this decision.
+     Rulebook §4.6: below 0.60 is a failure, so 0.60 itself is not. A passing score ends the run. A carried-over selfie adds
+     nothing: only a new failing photo counts, so a fix to an unrelated document can never trigger a fraud-desk referral. */
+  if(score>=0.60) return 0;
+  return selfieIsNew?(prevRun|0)+1:(prevRun|0);
+}
+function faceRepeatRule(selfieIsNew){
+  var score=S.ex&&S.ex.face; if(score==null) return;
+  S.faceRun=nextFaceRun(S.faceRun||0,score,selfieIsNew);
+  if(S.faceRun<2||S.decision==="REJECT") return;
+  var c=S.checks.filter(function(k){return k.doc==="Selfie"&&/Face match/.test(k.label)})[0]; if(!c) return;
+  c.res="HUMAN"; c.code="FACE_MATCH_LOW_REPEAT"; c.rule="§4.6, §7"; c.ev+=" · second selfie in a row below 0.60: a person checks it (rulebook §4.6)";
+  S.decision="HUMAN_REVIEW";
+  log("FRAUD_DESK_REFERRAL","SYSTEM","Internal: two selfie face-match failures in a row (rulebook §4.6) · referred to the fraud desk the same day (§7). Never shown to the applicant");
+}
 function openItems(){ return S.disputed&&S.decision==="HUMAN_REVIEW"&&!S.checks.some(function(c){return c.res==="HUMAN"})?S.checks.filter(function(c){return c.res==="REJECT"}):S.checks.filter(function(c){return c.res==="HUMAN"}); }
 function openReview(dispute){
   var it=openItems(),codes=it.map(function(c){return c.code});
