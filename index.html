@@ -425,8 +425,11 @@ body.focus .nav,body.focus .top{display:none} body.focus .shell{grid-template-co
 .fb h4{margin:0;font-family:var(--display);font-size:.95rem} .fb ul,.fb ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .fb .good li::marker{content:"✓  ";color:var(--ok)} .fb.warn{box-shadow:inset 4px 0 0 var(--brand)} .fb.stop{box-shadow:inset 4px 0 0 var(--bad)} .fb.fine{box-shadow:inset 4px 0 0 var(--ok)}
 .fb .why{color:var(--muted)}
-.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(10,10,10,.55)}
-.modal[hidden]{display:none}
+dialog#modal{border:0;padding:0;margin:auto;max-width:440px;width:calc(100% - 32px);background:transparent;color:var(--ink);overflow:visible}
+dialog#modal::backdrop{background:rgba(10,10,10,.55)}
+.fsbanner{position:fixed;left:16px;right:16px;bottom:16px;z-index:65;max-width:560px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;border-radius:22px;background:var(--surface);color:var(--ink);box-shadow:0 18px 40px -18px rgba(0,0,0,.45)}
+.fsbanner[hidden]{display:none}
+.fsbanner span{flex:1;min-width:180px}
 .mbox{background:var(--surface);color:var(--ink);border-radius:26px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
 .mbox h2{margin:0;font-family:var(--display)} .mbox p{margin:0;color:var(--muted)} .mbox .actions{justify-content:flex-end;flex-wrap:wrap}
 /* Onboarding Copilot */
@@ -481,7 +484,8 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   <span id="flowmeta" class="small"></span>
   <div class="tools"><button class="iconbtn" type="button" data-act="theme" id="themebtn" aria-label="Switch to dark mode"></button><span class="avatar" title="Applicant"><span id="avatar"></span></span></div>
 </div></header>
-<div class="fbar" id="focusbar" hidden><b>PolicyNest onboarding</b><span class="fstep" id="fb-step"></span><span class="ftime" id="fb-time" role="timer" aria-label="Time left in this sitting"></span><button type="button" data-act="cp-open">Ask Copilot</button><button type="button" data-act="fb-exit">Save and exit</button></div>
+<div class="fbar" id="focusbar" hidden><b>PolicyNest onboarding</b><span class="fstep" id="fb-step"></span><span class="ftime" id="fb-time" role="timer" aria-live="off" aria-label="Time left in this sitting"></span><button type="button" id="fb-extend" data-act="m-extend" hidden>Extend 10 minutes</button><button type="button" id="fb-hide" data-act="timer-hide">Hide timer</button><button type="button" id="fb-off" data-act="timer-off">Turn off time limit</button><button type="button" data-act="cp-open">Ask Copilot</button><button type="button" data-act="fb-exit">Save and exit</button></div>
+<div class="fsbanner" id="fs-banner" role="status" hidden><span>Full screen closed. Your sitting carries on.</span><button type="button" class="btn pri" data-act="fs-return">Return to full screen</button><button type="button" class="btn" data-act="fs-dismiss">Dismiss</button></div>
 <div class="sr-only" id="sr-status" role="status" aria-live="polite"></div>
 <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
 <main class="wrap" id="main" tabindex="-1">
@@ -500,7 +504,7 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   <form id="cp-form" autocomplete="off"><label class="sr-only" for="cp-q">Ask a question</label><input id="cp-q" maxlength="600" placeholder="Ask about your documents or the steps"><button class="btn sm pri" type="submit">Send</button></form>
   <p class="cp-foot">Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.</p>
 </aside>
-<div class="modal" id="modal" hidden><div class="mbox" role="alertdialog" aria-modal="true" aria-labelledby="m-t" aria-describedby="m-b"><h2 id="m-t"></h2><p id="m-b"></p><div class="actions" id="m-a"></div></div></div>
+<dialog id="modal" role="alertdialog" aria-labelledby="m-t" aria-describedby="m-b"><div class="mbox"><h2 id="m-t"></h2><p id="m-b"></p><div class="actions" id="m-a"></div></div></dialog>
 
 <script>
 (function(){
@@ -1419,7 +1423,7 @@ function animate(t0){
   },fast?60:320);
 }
 function submit(){
-  endSitting("SITTING_COMPLETE","Documents submitted");
+  endSitting("SITTING_COMPLETE","Documents submitted"); leaveFocus();
   S.ex=buildX();
   setState("SUBMITTED"); log("DOCS_UPLOADED","APPLICANT","All 6 required documents present");
   setState("IN_REVIEW"); log("TRIAGE_START","SYSTEM","Dispatched to policy engine");
@@ -1481,8 +1485,13 @@ document.addEventListener("click",function(e){
     S.dk=Math.max(0,nextDocIndexFrom(0)); go(1); }
   else if(a==="details-back"){ if(S.dpage>0){ S.dpage--; S.errs={}; render(); } }
   else if(a==="back-details"){ S.dpage=DPAGES.length-1; go(0); }
-  else if(a==="begin"){ beginOnboarding(); }
-  else if(a==="resume"){ startSitting(true); }
+  else if(a==="begin"){ beginOnboarding(true); }
+  else if(a==="begin-nofs"){ beginOnboarding(false); }
+  else if(a==="resume"){ startSitting(true,true); }
+  else if(a==="fs-return"){ fsBanner(false); requestFs(); }
+  else if(a==="fs-dismiss"){ fsBanner(false); }
+  else if(a==="timer-hide"){ setPref("hideT",!(S.sessPref&&S.sessPref.hideT)); focusUI(); }
+  else if(a==="timer-off"){ limitOff(); }
   else if(a==="forget"){ forgetSaved(); }
   else if(a==="fb-exit"){ askExit(); }
   else if(a==="cp-open"){ cpOpen(true); }
@@ -1608,9 +1617,9 @@ function stepIntro(){
   '<h2>Keep these ready</h2><ul class="need2">'+DOC_GUIDE.map(function(g){return '<li><b>'+g[0]+'</b><span>'+g[1]+'</span><em>'+g[2]+'</em></li>'}).join("")+'</ul>'+
   '<div class="obs"><b>Good photos pass first time</b><span>Use the original document, not a photocopy (a photocopy is accepted only for the bank document). Daylight, all four corners in the frame, no glare or fingers over the text. JPG, PNG or PDF. Rulebook §4.1.</span></div>'+
   '<h2>How it works</h2><ol class="steps"><li><b>Your details</b>: four short pages, typed exactly as on your PAN card.</li><li><b>Documents</b>: one at a time. Each is read on your device the moment you add it, and you see at once whether it is fine and, if not, exactly how to fix it.</li><li><b>Verification</b>: every document is checked against your PAN and the rulebook. If anything is missing you get one message that lists all of it.</li><li><b>Training</b>: 15 hours, required by IRDAI before the exam.</li><li><b>Exam</b>: pass mark 50%. A retake opens 24 hours after a failed attempt.</li><li><b>Certificate</b>: your POSP code.</li></ol>'+
-  '<div class="obs"><b>A focused 30-minute sitting</b><span>Your details and documents are done in a full-screen sitting with a 30-minute timer, like an online test. You can extend it, and if you leave the screen we warn you but never wipe your work. Not finished? Your progress is saved and you continue in a new sitting, any time within 30 days.</span></div>'+
+  '<div class="obs"><b>A focused 30-minute sitting</b><span>Your details and documents are done in a focused sitting with a 30-minute timer. On a computer it can use full screen; you can start without it, and you can hide the timer or turn the time limit off. You can extend it by 10 minutes at a time. If you leave the screen we warn you but never wipe your work. Not finished? Your progress is saved and you continue in a new sitting, any time within 30 days.</span></div>'+
   '<div class="fld full"><label class="consent" for="f-save"><input id="f-save" type="checkbox"'+(S.saveOK?" checked":"")+'><span>Save my progress on this device so I can resume later. Saved: what I type and what is read from my documents (Aadhaar masked to the last four digits). Never saved: the document images or the full text read from them. I can delete it any time.</span></label></div>'+
-  '<div class="actions"><span class="small muted">Questions at any point? Tap <b>Ask Copilot</b>.</span><button class="btn pri" type="button" data-act="begin">Start onboarding (30 min)</button></div></div>';
+  '<div class="actions"><span class="small muted">Questions at any point? Tap <b>Ask Copilot</b>.</span><button class="btn" type="button" data-act="begin-nofs">Start without full screen</button><button class="btn pri" type="button" data-act="begin">Start onboarding (30 min)</button></div></div>';
 }
 function stepResume(){
   var n=accepted(),pg=S.step===0?"Your details, page "+(S.dpage+1)+" of "+DPAGES.length:n+" of 6 documents verified";
@@ -1620,68 +1629,113 @@ function stepResume(){
 }
 /* ---------- Focus mode and the 30-minute sitting ---------- */
 var SITTING_MS=30*60e3,EXTEND_MS=10*60e3,tickT=null,PICKING=false,awayAt=0,MODAL=null;
-function beginOnboarding(){
+function beginOnboarding(wantFs){
   var c=$("f-save"); S.saveOK=!!(c&&c.checked); S.begun=true;
   log("ONBOARDING_OPENED","APPLICANT","First-visit checklist read · save on this device: "+(S.saveOK?"yes (consent)":"no"));
-  startSitting(false);
+  startSitting(false,wantFs);
 }
-function startSitting(resumed){
-  S.sittings++; S.sess={start:Date.now(),limit:SITTING_MS,warned:{},ended:false,n:S.sittings};
-  log(resumed?"SITTING_RESUMED":"SITTING_START","APPLICANT","Sitting "+S.sittings+" · 30-minute timer · "+(S.step===0?"details page "+(S.dpage+1):accepted()+" of 6 documents in"));
-  S.restored=false; enterFocus(); render(); tick();
+/* wantFs is true only when called from a click on Start or Resume; the full-screen request is made synchronously there. */
+function startSitting(resumed,wantFs){
+  var pref=S.sessPref||{}, fs=!!wantFs&&!isTouch();
+  S.sittings++; S.sess={start:Date.now(),limit:SITTING_MS,warned:{},ended:false,expShown:false,n:S.sittings,hideT:!!pref.hideT,off:!!pref.off,noFs:!fs};
+  log(resumed?"SITTING_RESUMED":"SITTING_START","APPLICANT","Sitting "+S.sittings+" · "+(S.sess.off?"no time limit":"30-minute timer")+" · "+(fs?"full screen requested":"no full screen")+" · "+(S.step===0?"details page "+(S.dpage+1):accepted()+" of 6 documents in"));
+  S.restored=false; enterFocus(fs); render(); tick();
   if(!tickT) tickT=setInterval(tick,1000);
   cpNudge("start-"+S.sittings,(resumed?"Welcome back. ":"Hi, I'm your onboarding Copilot. ")+nextStepText());
 }
 function remaining(){return S.sess?S.sess.start+S.sess.limit-Date.now():0}
 function mmss(ms){ms=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(ms/60)).padStart(2,"0")+":"+String(ms%60).padStart(2,"0")}
+function modalOpen(){ var d=$("modal"); return !!(d&&d.open) }
+/* Warnings at 10 and 2 minutes are the only timer messages a screen reader hears. Each waits until any open dialog is closed. */
 function tick(){
-  if(!S.sess||S.sess.ended||!S.focus) return;
-  var r=remaining(),el=$("fb-time"); if(el){ el.textContent=mmss(r); el.classList.toggle("low",r<=120e3); }
-  if(r<=600e3&&!S.sess.warned.t10){ S.sess.warned.t10=1; cpNudge("t10-"+S.sess.n,"10 minutes left in this sitting. "+nextStepText()); }
-  if(r<=120e3&&r>0&&!S.sess.warned.t2){ S.sess.warned.t2=1; showModal("2 minutes left","Your progress is saved either way. Need more time? Extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep going","m-close"]]); }
-  if(r<=0){ S.sess.ended=true; log("SITTING_TIMEOUT","SYSTEM","Sitting "+S.sess.n+" reached 30 minutes · progress saved"); persist(true);
-    showModal("Your 30-minute sitting has ended","Nothing is lost: everything you entered and every verified document is saved. Extend now, or continue in a new sitting any time within 30 days.",[["Extend 10 minutes","m-extend",1],["Save and continue later","m-later"]]); }
+  var s=S.sess; if(!s) return;
+  var el=$("fb-time");
+  if(s.off){ if(el){ el.textContent="No time limit"; el.classList.remove("low"); } return; }
+  if(!S.focus) return;
+  var r=remaining();
+  if(!s.ended&&el){ el.textContent=mmss(r); el.classList.toggle("low",r<=120e3); }
+  if(!s.ended&&r<=0){ s.ended=true; log("SITTING_TIMEOUT","SYSTEM","Sitting "+s.n+" reached 30 minutes · progress saved"); persist(true); paintBar(); }
+  if(modalOpen()) return;
+  if(s.ended){ if(!s.expShown){ s.expShown=true; showModal("Your 30-minute sitting has ended","Nothing is lost: everything you entered and every verified document is saved. Extend now, or continue in a new sitting any time within 30 days.",[["Extend 10 minutes","m-extend",1],["Save and continue later","m-later"]]); } return; }
+  if(r<=600e3&&!s.warned.t10){ s.warned.t10=1; showModal("10 minutes left","Your progress is saved either way. Keep working, or extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep working","m-close"]]); announce("10 minutes left in this sitting."); cpNudge("t10-"+s.n,"10 minutes left in this sitting. "+nextStepText()); return; }
+  if(r<=120e3&&r>0&&!s.warned.t2){ s.warned.t2=1; showModal("2 minutes left","Your progress is saved either way. Need more time? Extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep working","m-close"]]); announce("2 minutes left in this sitting."); }
 }
+/* Hide timer and turn off time limit: the choice is kept for this sitting (S.sess) and for later sittings (S.sessPref). */
+function setPref(k,v){ S.sessPref=Object.assign({},S.sessPref); S.sessPref[k]=v; if(S.sess) S.sess[k]=v; persist(); }
+function limitOff(){
+  if(!S.sess||S.sess.off) return;
+  S.sess.off=true; S.sess.ended=false; setPref("off",true);
+  log("SITTING_LIMIT_OFF","APPLICANT","Sitting "+S.sess.n+" · time limit turned off · no countdown, warnings or timeout");
+  focusUI();
+}
+function isTouch(){ try{ return !!(window.matchMedia&&window.matchMedia("(pointer: coarse)").matches) }catch(e){ return false } }
+/* Full screen is requested only from a click and never on touch devices. A refusal is ignored quietly. */
+function requestFs(){
+  if(isTouch()) return;
+  try{ var el=document.documentElement; if(el.requestFullscreen&&!document.fullscreenElement){ var p=el.requestFullscreen(); if(p&&p.catch) p.catch(function(){}); } }catch(e){}
+}
+function fsBanner(on){ var b=$("fs-banner"); if(b) b.hidden=!on; }
 function endSitting(ev,note){ if(!S.sess) return; var used=Date.now()-S.sess.start; log(ev,"APPLICANT","Sitting "+S.sess.n+" · "+note+" · "+mmss(used)+" used"); S.sess=null; }
-function enterFocus(){ S.focus=true; document.body.classList.add("focus"); var el=document.documentElement; try{ if(el.requestFullscreen&&!document.fullscreenElement) el.requestFullscreen().catch(function(){}) }catch(e){} }
-function leaveFocus(){ S.focus=false; document.body.classList.remove("focus"); try{ if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(function(){}) }catch(e){} }
+function enterFocus(wantFs){ S.focus=true; document.body.classList.add("focus"); if(wantFs) requestFs(); }
+function leaveFocus(){ S.focus=false; document.body.classList.remove("focus"); fsBanner(false); try{ if(document.fullscreenElement&&document.exitFullscreen){ var p=document.exitFullscreen(); if(p&&p.catch) p.catch(function(){}); } }catch(e){} }
 function focusUI(){
   var on=S.focus&&VIEW==="apply"; if(!on&&S.focus&&VIEW!=="apply") { /* navigating away ends focus */ endSitting("SITTING_PAUSED","Left the application view"); leaveFocus(); }
   document.body.classList.toggle("focus",S.focus&&VIEW==="apply");
   var fb=$("focusbar"); if(fb) fb.hidden=!(S.focus&&VIEW==="apply");
   var st=$("fb-step"); if(st) st.textContent=S.step===0?"Your details · page "+(S.dpage+1)+" of "+DPAGES.length:S.step===1?"Documents · "+accepted()+" of 6 verified":STEPS[S.step];
-  var tm=$("fb-time"); if(tm&&!S.sess) tm.textContent=S.step>=2?"Done":"--:--";
+  paintBar();
   if(S.focus&&S.step>=2&&!S.sess){ leaveFocus(); var b=$("focusbar"); if(b) b.hidden=true; }
 }
+/* The focus bar's timer and controls. The countdown text itself is painted by tick(). */
+function paintBar(){
+  var s=S.sess, pref=S.sessPref||{}, tm=$("fb-time"), hb=$("fb-hide"), ob=$("fb-off"), eb=$("fb-extend");
+  if(tm){ tm.hidden=!!pref.hideT; if(!s){ tm.textContent=S.step>=2?"Done":"--:--"; tm.classList.remove("low"); } }
+  if(hb) hb.textContent=pref.hideT?"Show timer":"Hide timer";
+  if(ob){ ob.hidden=!s||!!s.off; }
+  if(eb){ eb.hidden=!(s&&s.ended&&!s.off); }
+}
 function askExit(){ showModal("Leave this sitting?","Your progress is saved"+(S.saveOK?" on this device":" until you close this tab (you chose not to save on this device)")+". You can resume in a new 30-minute sitting.",[["Save and exit","m-later",1],["Stay","m-close"]]); }
+/* Native <dialog>: showModal() traps focus. Escape fires "cancel", which means keep working (the sitting carries on). */
+/* A dialog that is already open is never replaced: the new one waits in DQ and opens when the current one closes. */
+var DQ=[];
 function showModal(title,body,btns){
+  if(modalOpen()){ DQ.push([title,body,btns]); return; }
+  var d=$("modal");
   MODAL={prev:document.activeElement}; $("m-t").textContent=title; $("m-b").textContent=body;
   $("m-a").innerHTML=btns.map(function(b){return '<button class="btn'+(b[2]?" pri":"")+'" type="button" data-act="'+b[1]+'">'+esc(b[0])+'</button>'}).join("");
-  $("modal").hidden=false; var f=$("m-a").querySelector("button"); if(f) f.focus();
+  try{ d.showModal(); }catch(e){ MODAL=null; return; }
+  var f=$("m-a").querySelector("button"); if(f) f.focus();
 }
-function closeModal(){ $("modal").hidden=true; var p=MODAL&&MODAL.prev; MODAL=null; if(p&&p.focus) try{p.focus()}catch(e){} }
+function closeModal(){
+  var d=$("modal"), p=MODAL&&MODAL.prev; MODAL=null; if(d.open) d.close(); if(p&&p.focus) try{p.focus()}catch(e){}
+  if(DQ.length){ var n=DQ.shift(); setTimeout(function(){ showModal(n[0],n[1],n[2]); },0); }
+}
+$("modal").addEventListener("cancel",function(e){ e.preventDefault(); closeModal(); });
 function modalAct(a){
   closeModal();
-  if(a==="m-extend"&&S.sess){ S.sess.limit+=EXTEND_MS; S.sess.ended=false; S.sess.warned.t2=0; log("SITTING_EXTENDED","APPLICANT","Sitting "+S.sess.n+" extended by 10 minutes"); if(!S.focus) enterFocus(); tick(); }
+  if(a==="m-extend"&&S.sess){ var s=S.sess; s.limit+=EXTEND_MS; s.ended=false; s.expShown=false; s.warned.t2=0; s.warned.t10=0; log("SITTING_EXTENDED","APPLICANT","Sitting "+s.n+" extended by 10 minutes"); enterFocus(!s.noFs); tick(); paintBar(); }
   else if(a==="m-later"){ endSitting("SITTING_SAVED","Applicant chose to continue later"); leaveFocus(); render(); }
-  else if(a==="m-refocus"){ enterFocus(); }
+  else if(a==="m-refocus"){ enterFocus(!!(S.sess&&!S.sess.noFs)); }
 }
-document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!$("modal").hidden&&MODAL){ if($("m-a").querySelector('[data-act="m-close"]')) closeModal(); } else if(e.key==="Escape"&&!$("cp").hidden){ cpOpen(false); } });
+document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!$("cp").hidden){ cpOpen(false); } });
 /* Leaving the focused screen: warn and log, never wipe. Opening the file picker or camera does not count. */
 document.addEventListener("click",function(e){ if(e.target.closest&&e.target.closest('label[for^="up-"],input[type=file]')){ PICKING=true; setTimeout(function(){PICKING=false},60000); } },true);
 window.addEventListener("focus",function(){ setTimeout(function(){PICKING=false},1500); });
 function watching(){return S.focus&&S.sess&&!S.sess.ended&&S.step<2&&VIEW==="apply"}
+/* Desktop only: a hidden page during a sitting is a focus exit. Touch devices get no exit warnings. No duration is logged. */
 document.addEventListener("visibilitychange",function(){
+  if(isTouch()) { awayAt=0; return; }
   if(document.hidden){ if(watching()&&!PICKING) awayAt=Date.now(); return; }
-  if(!awayAt) return; var secs=Math.round((Date.now()-awayAt)/1000); awayAt=0; if(!watching()) return;
-  S.exits++; log("FOCUS_EXIT","APPLICANT","Left the onboarding screen for "+secs+" s · warning shown · nothing reset"); persist(true);
-  showModal("You left the onboarding screen","You were away for "+secs+" second"+(secs===1?"":"s")+" and the timer kept running. Your work is saved. Stay on this screen to finish your sitting.",[["Continue","m-refocus",1]]);
+  if(!awayAt) return; awayAt=0; if(!watching()) return;
+  S.exits++; log("FOCUS_EXIT","APPLICANT","Left the onboarding screen · warning shown · nothing reset"); persist(true);
+  showModal("You left the onboarding screen","Your work is saved and nothing was reset. Stay on this screen to finish your sitting.",[["Continue","m-refocus",1]]);
   cpNudge("exit-"+S.exits,"Welcome back. "+nextStepText());
 });
+/* Closing full screen is not an exit: no FOCUS_EXIT and no exit count. A small banner offers to return. */
 document.addEventListener("fullscreenchange",function(){
-  if(document.fullscreenElement||!watching()||PICKING||!$("modal").hidden) return;
-  S.exits++; log("FOCUS_EXIT","APPLICANT","Full screen closed · warning shown · nothing reset"); persist(true);
-  showModal("Full screen was closed","Your progress is saved and the timer is still running. Return to full screen to keep your focus, or save and continue later.",[["Return to full screen","m-refocus",1],["Save and exit","m-later"]]);
+  if(document.fullscreenElement){ fsBanner(false); return; }
+  if(!watching()||isTouch()) return;
+  fsBanner(true);
 });
 /* ---------- Autosave and resume (only with consent; never images or raw OCR text) ---------- */
 var SAVEKEY="pn-onboarding-v1",lastSave=0;
@@ -1744,7 +1798,7 @@ function retrieve(q,n){
 function copilotContext(){
   var hrs=0; S.mods.forEach(function(m,i){if(m)hrs+=MODULES[i][1]});
   return {first_name:fname(),stage:S.begun?STEPS[S.step]:"Before you start",details_page:S.step===0&&S.begun?DPAGES[S.dpage].t:null,application_status:S.status,
-    minutes_left_in_sitting:S.sess?Math.max(0,Math.round(remaining()/60000)):null,sittings:S.sittings,
+    minutes_left_in_sitting:S.sess&&!S.sess.off?Math.max(0,Math.round(remaining()/60000)):null,sittings:S.sittings,
     documents:DOCS.map(function(d){var st=S.docs[d.k],fb=S.fb[d.k];return {document:d.label,status:st?st.status:"not uploaded",refusal_reason:st&&st.status==="rejected"?st.reason:null,open_issues:fb?fb.codes:[]}}),
     field_errors:Object.keys(S.errs),decision:S.decision,follow_up_items:S.fu?S.fu.items.map(function(i){return {document:DOC_LABEL[i.key]?DOC_LABEL[i.key][0]:i.key,issue:i.code}}):[],
     round:S.round,training_hours:hrs,exam_score:S.exam.score,suggested_next_step:nextStepText()};
