@@ -11,7 +11,7 @@
 :root{
   /* Single light theme by request: white surfaces, warm neutrals. */
   --bg:#fffdfa; --surface:#ffffff; --sunken:#faf5ec; --ink:#2b2118; --muted:#7b6b5a; --line:#efe6d8; --dot:#e6d9c4;
-  --brand:#c8501a; --brand-ink:#ffffff; --brand-soft:#fdebdd; --accent:#e39a2b; --accent-soft:#fdf2da;
+  --brand:#c8501a; --brand-ink:#141414; --brand-soft:#fdebdd; --accent:#e39a2b; --accent-soft:#fdf2da;
   --ok:#1c7c4c; --ok-soft:#e4f4e9; --info:#a2610a; --info-soft:#fdf1d8; --bad:#b3372b; --bad-soft:#fbe6e3;
   --shadow:0 1px 2px rgba(74,48,20,.05),0 12px 30px -16px rgba(74,48,20,.22);
   color-scheme:light;
@@ -25,7 +25,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15p
 h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.015em}
 h1{font-size:1.5rem;font-weight:600} h2{font-size:1.08rem;font-weight:600} h3{font-size:.98rem;font-weight:600}
 p{margin:0} button,input,select{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .mono{font-family:var(--mono);font-size:.86em;font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)} .small{font-size:.82rem}
 
@@ -63,9 +63,9 @@ p{margin:0} button,input,select{font:inherit;color:inherit}
 .nav{background:var(--surface);border-right:1px solid var(--line);padding:18px 14px 18px max(16px,env(safe-area-inset-left,0px))}
 .nav-in{position:sticky;top:18px;display:flex;flex-direction:column;gap:18px}
 .menu{display:flex;flex-direction:column;gap:4px}
-.menu button{display:flex;gap:10px;align-items:center;border:0;background:none;padding:10px 12px;border-radius:10px;font-weight:700;font-size:.9rem;color:var(--muted);cursor:pointer;text-align:left;white-space:nowrap}
-.menu button:hover{background:var(--sunken);color:var(--ink)}
-.menu button[aria-current="page"]{background:var(--brand);color:var(--brand-ink)}
+.menu a{display:flex;gap:10px;align-items:center;border:0;background:none;padding:10px 12px;border-radius:10px;font-weight:700;font-size:.9rem;color:var(--muted);cursor:pointer;text-align:left;white-space:nowrap;text-decoration:none}
+.menu a:hover{background:var(--sunken);color:var(--ink)}
+.menu a[aria-current="page"]{background:var(--brand);color:var(--brand-ink)}
 .menu svg,.nic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .help{background:var(--accent-soft);border-radius:12px;padding:12px;font-size:.8rem;display:flex;flex-direction:column;gap:4px}
 .main{min-width:0}
@@ -114,7 +114,7 @@ p{margin:0} button,input,select{font:inherit;color:inherit}
 .fld label{font-size:.82rem;font-weight:700}
 .fld input,.fld select{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px;min-height:42px}
 .fld input:hover,.fld select:hover{border-color:var(--muted)}
-.fld input:focus,.fld select:focus{border-color:var(--brand);outline:3px solid var(--brand-soft);outline-offset:0}
+.fld input:focus,.fld select:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:1px}
 .fld .hint{font-size:.78rem;color:var(--muted)} .fld .err{font-size:.78rem;color:var(--bad);font-weight:700}
 .fld.bad input,.fld.bad select{border-color:var(--bad)}
 .legend{font-family:var(--display);font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);grid-column:1/-1;padding-top:10px;border-top:1px solid var(--line)}
@@ -142,6 +142,7 @@ p{margin:0} button,input,select{font:inherit;color:inherit}
 .vcard.wait{opacity:.6}
 .vhead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:start}
 .vhead .meta{font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}
+.vhead h2{font-size:.98rem;font-weight:600}
 .thumb{width:60px;height:60px;border-radius:12px;background:var(--sunken);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:.64rem;color:var(--muted);overflow:hidden;text-align:center;line-height:1.25}
 .thumb img{width:100%;height:100%;object-fit:cover}
 .vrows{display:flex;flex-direction:column;border-top:1px solid var(--line)}
@@ -229,9 +230,9 @@ td .pill{margin-top:4px}
    Dark = near-black canvas, graphite cards, orange + lime + lavender. Same tokens drive both. ===== */
 :root{
   --bg:#eceef1; --surface:#ffffff; --sunken:#f3f4f6; --ink:#141414; --muted:#5d626b; --line:#e4e6ea; --dot:#d6d9df;
-  --brand:#ff6b1a; --brand-ink:#ffffff; --brand-soft:#ffe8da; --accent:#d4f25a; --accent-soft:#f2fad2; --lav:#b9a6ff; --lav-soft:#efeaff; --sky:#8ec5ff; --sky-soft:#e6f2ff;
+  --brand:#ff6b1a; --brand-ink:#141414; --brand-soft:#ffe8da; --accent:#d4f25a; --accent-soft:#f2fad2; --lav:#b9a6ff; --lav-soft:#efeaff; --sky:#8ec5ff; --sky-soft:#e6f2ff;
   --night:#17171a; --night-ink:#ffffff;
-  --ok:#1f9d55; --ok-soft:#e1f5e8; --info:#b7791f; --info-soft:#fdf2d8; --bad:#e5484d; --bad-soft:#fde7e7;
+  --ok:#17753f; --ok-soft:#e1f5e8; --info:#8a5a10; --info-soft:#fdf2d8; --bad:#e5484d; --bad-soft:#fde7e7;
   --shadow:0 1px 2px rgba(20,20,20,.04),0 10px 30px -18px rgba(20,20,20,.18);
   --r:26px; --hero:linear-gradient(135deg,#ff8a3d,#ff6b1a); --glass:rgba(236,238,241,.82);
   --display:"Plus Jakarta Sans","Segoe UI",system-ui,sans-serif; --body:"Manrope","Segoe UI",system-ui,sans-serif;
@@ -239,7 +240,7 @@ td .pill{margin-top:4px}
 }
 html[data-theme="dark"]{
   --bg:#0e0e12; --surface:#1b1b21; --sunken:#25252d; --ink:#f3f3f6; --muted:#b4b4c0; --line:rgba(255,255,255,.08); --dot:rgba(255,255,255,.14);
-  --brand:#ff7a2e; --brand-ink:#ffffff; --brand-soft:rgba(255,122,46,.18); --accent:#d7f45f; --accent-soft:rgba(215,244,95,.14); --lav:#b9a6ff; --lav-soft:rgba(185,166,255,.16); --sky:#8ec5ff; --sky-soft:rgba(142,197,255,.14);
+  --brand:#ff7a2e; --brand-ink:#141414; --brand-soft:rgba(255,122,46,.18); --accent:#d7f45f; --accent-soft:rgba(215,244,95,.14); --lav:#b9a6ff; --lav-soft:rgba(185,166,255,.16); --sky:#8ec5ff; --sky-soft:rgba(142,197,255,.14);
   --night:#f3f3f6; --night-ink:#111114;
   --ok:#5fe0a0; --ok-soft:rgba(95,224,160,.14); --info:#f6c86e; --info-soft:rgba(246,200,110,.14); --bad:#ff7d7d; --bad-soft:rgba(255,125,125,.15);
   --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 20px 40px -24px rgba(0,0,0,.8);
@@ -293,7 +294,7 @@ html[data-theme="dark"] .box{border:1px solid var(--line)}
 .cbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .num{font-family:var(--display);font-weight:400;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
 .chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:.72rem;font-weight:800;background:var(--ok-soft);color:var(--ok);white-space:nowrap}
-.chip.w{background:var(--info-soft);color:var(--info)} .chip.b{background:var(--bad-soft);color:var(--bad)} .chip.n{background:var(--sunken);color:var(--muted)} .chip.l{background:var(--accent);color:#141414} .chip.o{background:var(--brand);color:#fff}
+.chip.w{background:var(--info-soft);color:var(--info)} .chip.b{background:var(--bad-soft);color:var(--bad)} .chip.n{background:var(--sunken);color:var(--muted)} .chip.l{background:var(--accent);color:#141414} .chip.o{background:var(--brand);color:#141414}
 .hello{display:flex;gap:16px 28px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
 .hello h1{font-size:clamp(1.9rem,3.4vw,2.7rem);font-weight:500;letter-spacing:-.035em}
 .kpis{display:flex;gap:28px;flex-wrap:wrap}
@@ -302,7 +303,7 @@ html[data-theme="dark"] .box{border:1px solid var(--line)}
 .kpi .num{font-size:2.3rem}
 .kpi .row{display:flex;align-items:center;gap:8px}
 /* Coloured feature cards */
-.box.hot{background:var(--hero);color:#fff} .box.hot .cbtn{border-color:rgba(255,255,255,.5)} .box.hot .muted{color:rgba(255,255,255,.8)}
+.box.hot{background:var(--hero);color:#141414} .box.hot .cbtn{border-color:rgba(20,20,20,.5)} .box.hot .muted{color:rgba(20,20,20,.75)}
 .box.lime{background:var(--accent);color:#141414} .box.lime .muted{color:rgba(20,20,20,.6)} .box.lime .cbtn{border-color:rgba(20,20,20,.25)}
 .box.ink{background:var(--night);color:var(--night-ink)} .box.ink .muted{color:inherit;opacity:.65} .box.ink .cbtn{border-color:currentColor;opacity:.9}
 html[data-theme="dark"] .box.ink{background:#2a2540;color:#f3f3f6;border-color:transparent}
@@ -320,7 +321,7 @@ html[data-theme="dark"] .box.ink{background:#2a2540;color:#f3f3f6;border-color:t
 .dtile b{font-size:.9rem;display:block;line-height:1.25;overflow-wrap:anywhere} .dtile small{font-size:.78rem;color:var(--ink);opacity:.75;display:block;line-height:1.3;font-weight:600}
 .dtile .badge{position:absolute;top:-4px;left:34px;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;font-size:.62rem;font-weight:800;color:#fff;padding:0 4px;border:2px solid var(--surface)}
 .c-PAN{background:var(--brand-soft)} .c-AADHAAR_FRONT,.c-AADHAAR_BACK{background:var(--lav-soft)} .c-CLASS10{background:var(--accent-soft)} .c-BANK{background:var(--sky-soft)} .c-SELFIE{background:var(--info-soft)}
-.i-PAN{background:var(--brand);color:#fff!important} .i-AADHAAR_FRONT,.i-AADHAAR_BACK{background:var(--lav)} .i-CLASS10{background:var(--accent)} .i-BANK{background:var(--sky)} .i-SELFIE{background:#ffcf7a}
+.i-PAN{background:var(--brand);color:#141414!important} .i-AADHAAR_FRONT,.i-AADHAAR_BACK{background:var(--lav)} .i-CLASS10{background:var(--accent)} .i-BANK{background:var(--sky)} .i-SELFIE{background:#ffcf7a}
 @media (max-width:560px){.dtiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 html[data-theme="dark"] .dtile{color:var(--ink)}
 /* Hatched bars */
@@ -341,7 +342,7 @@ html[data-theme="dark"] .dtile{color:var(--ink)}
 .legend2{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);font-weight:700}
 .legend2 i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .popc{background:var(--night);color:var(--night-ink);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:8px}
-.popc .chip{background:var(--brand);color:#fff}
+.popc .chip{background:var(--brand);color:#141414}
 @media (max-width:760px){.dmw{grid-template-columns:minmax(0,1fr)!important}}
 /* Compliance list on lime */
 .clist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:.86rem;font-weight:700}
@@ -359,7 +360,7 @@ html[data-theme="dark"] .dtile{color:var(--ink)}
 .sp::before{display:none}
 .sc{width:30px;height:30px;border:0;background:var(--sunken);font-size:.8rem;flex:none}
 .sp.done .sc{background:var(--accent);color:#141414}
-.sp.now{background:var(--night);color:var(--night-ink)} .sp.now .sc{background:var(--brand);color:#fff;outline:0}
+.sp.now{background:var(--night);color:var(--night-ink)} .sp.now .sc{background:var(--brand);color:#141414;outline:0}
 html[data-theme="dark"] .sp.now{background:var(--lav);color:#141414}
 @media (max-width:900px){.stepper{grid-template-columns:repeat(6,auto);overflow-x:auto} .sp .sl{display:none} .sp.now .sl{display:block}}
 .vcard{border:0}
@@ -372,7 +373,7 @@ html[data-theme="dark"] .sp.now{background:var(--lav);color:#141414}
 /* Evaluation */
 .heat{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:8px;align-items:center}
 .heat .h{border-radius:16px;padding:14px 8px;text-align:center;font-family:var(--display);font-size:1.4rem;background:var(--sunken)}
-.heat .h.diag{background:var(--brand);color:#fff} .heat .h.err{background:var(--bad);color:#fff}
+.heat .h.diag{background:var(--brand);color:#141414} .heat .h.err{background:var(--bad);color:#fff}
 .heat .lab{font-size:.7rem;color:var(--muted);font-weight:800;text-align:center}
 .heat .rl{font-size:.7rem;color:var(--muted);font-weight:800;text-align:right;padding-right:4px}
 .hbar{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:.8rem}
@@ -400,7 +401,7 @@ html[data-theme="dark"] .hbar .tr i{background:var(--accent)}
 .toast .ti{width:36px;height:36px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#141414}
 .toast .ti svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .toast b{font-family:var(--display);font-size:.92rem;display:block} .toast span{font-size:.84rem;opacity:.75}
-.toast button{border:0;background:none;color:inherit;opacity:.6;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 4px}
+.toast button{border:0;background:none;color:inherit;opacity:.6;cursor:pointer;font-size:1.1rem;line-height:1;padding:0;min-width:24px;min-height:24px;display:inline-grid;place-items:center}
 .toast.out{animation:tout .3s ease-in forwards}
 @keyframes tin{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes tout{to{opacity:0;transform:translateY(8px)}}
@@ -445,11 +446,24 @@ body.focus .nav,body.focus .top{display:none} body.focus .shell{grid-template-co
 .cp form{display:flex;gap:8px;padding:0 16px 10px} .cp form input{flex:1;min-width:0;font:inherit;border:1px solid var(--line);border-radius:999px;padding:10px 14px;background:var(--surface);color:inherit}
 .cp-foot{margin:0;padding:0 16px 14px;font-size:.72rem;color:var(--muted)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Accessibility (PRD FR-41 to FR-44) */
+.skip{position:absolute;left:12px;top:-64px;z-index:100;background:var(--night);color:var(--night-ink);border-radius:999px;padding:10px 18px;font-weight:700;font-size:.9rem;text-decoration:none}
+.skip:focus{top:12px;outline:3px solid var(--ink);outline-offset:2px}
+h1[tabindex="-1"]:focus{outline:none}
+/* A file input stays in the tab order; its visible label shows the focus ring */
+label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline-offset:3px}
+@media (max-width:600px){
+  .top-in{padding-block:8px;gap:6px 10px}
+  #flowmeta{display:none}
+  .top .iconbtn,.top .avatar{width:32px;height:32px}
+  .top .tools{gap:6px}
+}
 </style>
 </head>
 <body style="margin:0">
 
 
+<a class="skip" href="#main">Skip to content</a>
 <div class="shell"><aside class="nav"><div class="nav-in">
   <div class="brand">
     <svg width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15a12 12 0 0 0 24 0" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><path d="M8 15a7 7 0 0 0 14 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="15" cy="9" r="3.4" fill="var(--brand)"/></svg>
@@ -468,10 +482,11 @@ body.focus .nav,body.focus .top{display:none} body.focus .shell{grid-template-co
   <div class="tools"><button class="iconbtn" type="button" data-act="theme" id="themebtn" aria-label="Switch to dark mode"></button><span class="avatar" title="Applicant"><span id="avatar"></span></span></div>
 </div></header>
 <div class="fbar" id="focusbar" hidden><b>PolicyNest onboarding</b><span class="fstep" id="fb-step"></span><span class="ftime" id="fb-time" role="timer" aria-label="Time left in this sitting"></span><button type="button" data-act="cp-open">Ask Copilot</button><button type="button" data-act="fb-exit">Save and exit</button></div>
+<div class="sr-only" id="sr-status" role="status" aria-live="polite"></div>
 <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
-<main class="wrap">
+<main class="wrap" id="main" tabindex="-1">
   <section id="view-dash"></section>
-  <section id="view-apply" aria-live="polite" hidden></section>
+  <section id="view-apply" hidden></section>
   <section id="view-ops" class="ops" hidden></section>
   <section id="view-audit" class="ops" hidden></section>
   <section id="view-eval" class="ops" hidden></section>
@@ -945,7 +960,7 @@ function flow(){
   if($("sb-ph")) $("sb-ph").innerHTML=sf&&sf.url?'<img src="'+sf.url+'" alt="">':esc(ini);
   if($("sb-name")) $("sb-name").textContent=S.f.name||"New applicant"; if($("sb-id")) $("sb-id").textContent=S.appId;
   var av=$("avatar"); if(av) av.textContent=norm(S.f.name||"").split(" ").filter(Boolean).map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN";
-  $("menu").innerHTML=NAV.map(function(n){return '<button type="button" data-view="'+n[0]+'"'+(VIEW===n[0]?' aria-current="page"':'')+'>'+ico(n[2])+n[1]+'</button>'}).join("");
+  $("menu").innerHTML=NAV.map(function(n){return '<a href="#'+HASH[n[0]]+'"'+(VIEW===n[0]?' aria-current="page"':'')+'>'+ico(n[2])+n[1]+'</a>'}).join("");
 }
 function stepper(){
   return '<div class="stepper" aria-label="Application steps">'+STEPS.map(function(s,i){var st=stepState(i);return '<div class="sp '+st+'"'+(st==="now"?' aria-current="step"':'')+'><span class="sc">'+(st==="done"?"✓":i+1)+'</span><span class="sl">'+s+'</span></div>'}).join("")+'</div>';
@@ -1071,7 +1086,7 @@ function renderAudit(){
 /* ---------- Applicant view ---------- */
 function fld(id,label,type,hint,full,extra){
   var v=S.f[id],e=S.errs[id];
-  return '<div class="fld'+(full?" full":"")+(e?" bad":"")+'"><label for="f-'+id+'">'+label+'</label><input id="f-'+id+'" data-f="'+id+'" type="'+type+'" value="'+esc(v)+'" '+(extra||"")+'>'+(e?'<span class="err">'+e+'</span>':hint?'<span class="hint">'+hint+'</span>':'')+'</div>';
+  return '<div class="fld'+(full?" full":"")+(e?" bad":"")+'"><label for="f-'+id+'">'+label+'</label><input id="f-'+id+'" data-f="'+id+'" type="'+type+'" value="'+esc(v)+'" '+(extra||"")+(e?' aria-invalid="true" aria-describedby="err-'+id+'"':'')+'>'+(e?'<span class="err" id="err-'+id+'">'+e+'</span>':hint?'<span class="hint">'+hint+'</span>':'')+'</div>';
 }
 /* Progressive details: one small group of fields per page; every keystroke is autosaved (with consent). */
 var DPAGES=[
@@ -1089,9 +1104,9 @@ function fieldHtml(id){
   if(id==="city") return fld("city","City","text","");
   if(id==="acct") return fld("acct","Account number","text","Savings or current account in your own name",false,'inputmode="numeric" maxlength="18" autocomplete="off"');
   if(id==="ifsc") return fld("ifsc","IFSC","text","Four letters, a zero, six characters",false,'maxlength="11" style="text-transform:uppercase" autocomplete="off"');
-  if(id==="education") return '<div class="fld'+(S.errs.education?" bad":"")+'"><label for="f-education">Highest education</label><select id="f-education" data-f="education"><option value="">Choose</option>'+["Class 8 or below","Class 10","Class 12","Graduate","Post-graduate"].map(function(s){return '<option'+(s===S.f.education?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.education?'<span class="err">'+S.errs.education+'</span>':'<span class="hint">Class 10 pass is the minimum</span>')+'</div>';
-  if(id==="state") return '<div class="fld'+(S.errs.state?" bad":"")+'"><label for="f-state">State</label><select id="f-state" data-f="state"><option value="">Choose</option>'+STATE_LIST.map(function(s){return '<option'+(s===S.f.state?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.state?'<span class="err">'+S.errs.state+'</span>':'')+'</div>';
-  if(id==="consent") return '<div class="fld full"><label class="consent" for="f-consent"><input id="f-consent" data-f="consent" type="checkbox"'+(S.f.consent?" checked":"")+'><span>I consent to PolicyNest processing my identity, education and bank documents solely to assess and register me as a Point of Sales Person, as described under the Digital Personal Data Protection Act, 2023. I can withdraw consent at any time.</span></label>'+(S.errs.consent?'<span class="err">'+S.errs.consent+'</span>':'')+'</div>';
+  if(id==="education") return '<div class="fld'+(S.errs.education?" bad":"")+'"><label for="f-education">Highest education</label><select id="f-education" data-f="education"'+(S.errs.education?' aria-invalid="true" aria-describedby="err-education"':'')+'><option value="">Choose</option>'+["Class 8 or below","Class 10","Class 12","Graduate","Post-graduate"].map(function(s){return '<option'+(s===S.f.education?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.education?'<span class="err" id="err-education">'+S.errs.education+'</span>':'<span class="hint">Class 10 pass is the minimum</span>')+'</div>';
+  if(id==="state") return '<div class="fld'+(S.errs.state?" bad":"")+'"><label for="f-state">State</label><select id="f-state" data-f="state"'+(S.errs.state?' aria-invalid="true" aria-describedby="err-state"':'')+'><option value="">Choose</option>'+STATE_LIST.map(function(s){return '<option'+(s===S.f.state?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.state?'<span class="err" id="err-state">'+S.errs.state+'</span>':'')+'</div>';
+  if(id==="consent") return '<div class="fld full"><label class="consent" for="f-consent"><input id="f-consent" data-f="consent" type="checkbox"'+(S.f.consent?" checked":"")+(S.errs.consent?' aria-invalid="true" aria-describedby="err-consent"':'')+'><span>I consent to PolicyNest processing my identity, education and bank documents solely to assess and register me as a Point of Sales Person, as described under the Digital Personal Data Protection Act, 2023. I can withdraw consent at any time.</span></label>'+(S.errs.consent?'<span class="err" id="err-consent">'+S.errs.consent+'</span>':'')+'</div>';
   return "";
 }
 function stepDetails(){
@@ -1107,11 +1122,11 @@ function fileKind(st){ if(!st.file) return "Specimen"; var m=/\.([a-z0-9]+)$/i.e
 function thumb(k,code){var st=k&&S.docs[k];return '<div class="thumb">'+(st&&st.url?'<img src="'+st.url+'" alt="">':esc(code).replace("\n","<br>"))+'</div>'}
 function specCtl(k){
   var v=S.specv[k]||"clean";
-  return '<select class="sel" data-specv="'+k+'" aria-label="Specimen variant for '+SLOT[k].n+'">'+VARIANTS[k].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===v?" selected":"")+'>'+o[1]+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-spec="'+k+'">Use specimen</button>';
+  return '<select class="sel" data-specv="'+k+'" aria-label="Specimen variant for '+SLOT[k].n+'">'+VARIANTS[k].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===v?" selected":"")+'>'+o[1]+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-spec="'+k+'">Use specimen<span class="sr-only"> for '+SLOT[k].n+'</span></button>';
 }
 function docCard(d){
   var st=S.docs[d.k],rd=st&&st.status==="reading",ok=st&&st.status==="ok",rej=st&&st.status==="rejected",o=st&&st.ocr;
-  var head='<div class="vhead">'+thumb(d.k,d.code)+'<div><h3>'+d.label+'</h3><div class="meta">'+(st?"Uploaded · "+fileKind(st)+"<br>"+esc(st.name):d.hint)+'</div></div>'+(ok?pill("ok","Verified"):rej?pill("bad","Not accepted"):rd?'<span class="pill run" id="ocr-'+d.k+'">Reading text</span>':pill("","Required"))+'</div>';
+  var head='<div class="vhead">'+thumb(d.k,d.code)+'<div><h2>'+d.label+'</h2><div class="meta">'+(st?"Uploaded · "+fileKind(st)+"<br>"+esc(st.name):d.hint)+'</div></div>'+(ok?pill("ok","Verified"):rej?pill("bad","Not accepted"):rd?'<span class="pill run" id="ocr-'+d.k+'">Reading text</span>':pill("","Required"))+'</div>';
   var body="";
   function row(l,p,ev){return '<div class="vrow"><span>'+l+'</span>'+p+(ev?'<span class="ev">'+esc(ev)+'</span>':'')+'</div>'}
   if(rd) body='<div class="vrows">'+row("Document classification",pill("run","In progress"))+row("Text readability",pill("run","In progress"))+row("Field detection",pill("run","In progress"))+'</div>';
@@ -1123,7 +1138,7 @@ function docCard(d){
   if(ok) body+=fbHtml(S.fb[d.k]);
   if(st&&st.restored&&ok) body+='<p class="small muted">Verified in an earlier sitting. The image itself was not saved, only what was read from it.</p>';
   var nx=ok&&S.step===1?nextDocIndex():-1;
-  return '<article class="vcard k-'+d.k+(rej?" rej":"")+'">'+head+body+'<div class="vbtns"><label class="btn sm" for="up-'+d.k+'">'+(st?"Replace":"Upload file")+'</label><input type="file" id="up-'+d.k+'" data-up="'+d.k+'" accept="image/*,application/pdf">'+specCtl(d.k)+(nx>=0?'<button class="btn sm pri" type="button" data-dk="'+nx+'">Next: '+DOCS[nx].label+' →</button>':'')+'</div></article>';
+  return '<article class="vcard k-'+d.k+(rej?" rej":"")+'">'+head+body+'<div class="vbtns"><label class="btn sm" for="up-'+d.k+'">'+(st?"Replace":"Upload file")+'<span class="sr-only">, '+d.label+'</span></label><input type="file" id="up-'+d.k+'" data-up="'+d.k+'" accept="image/*,application/pdf">'+specCtl(d.k)+(nx>=0?'<button class="btn sm pri" type="button" data-dk="'+nx+'">Next: '+DOCS[nx].label+' →</button>':'')+'</div></article>';
 }
 /* Instant feedback after each upload: the same rule engine runs on what has been read so far, and only the
    checks that involve this document are shown, in plain words with the exact fix. Nothing here decides. */
@@ -1170,7 +1185,7 @@ function groupState(g){
 function verifyCard(G){
   var gs=groupState(G.g),bad=gs.idx.some(function(i){return i<S.shown&&S.checks[i].res!=="PASS"&&S.checks[i].res!=="INFO"});
   var st=G.doc&&S.docs[G.doc];
-  var head='<div class="vhead">'+thumb(G.doc,G.code)+'<div><h3>'+G.g+' verification</h3><div class="meta">'+(st?"Uploaded · "+fileKind(st):"Registry lookup")+'<br>Applicant: <span class="mono">'+S.appId+'</span></div></div>'+(gs.st==="done"?(bad?pill("bad","Review required"):pill("ok","Approved")):gs.st==="run"?pill("run","In progress"):pill("","Queued"))+'</div>';
+  var head='<div class="vhead">'+thumb(G.doc,G.code)+'<div><h2>'+G.g+' verification</h2><div class="meta">'+(st?"Uploaded · "+fileKind(st):"Registry lookup")+'<br>Applicant: <span class="mono">'+S.appId+'</span></div></div>'+(gs.st==="done"?(bad?pill("bad","Review required"):pill("ok","Approved")):gs.st==="run"?pill("run","In progress"):pill("","Queued"))+'</div>';
   var rows=gs.idx.map(function(i){var c=S.checks[i],done=i<S.shown,run=i===S.shown;
     var rt=S.round>1&&done?(c.carried?'<span class="rnd"> · carried over from round '+c.from+'</span>':'<span class="rnd"> · re-checked in round '+S.round+'</span>'):'';
     return '<div class="vrow"><span>'+c.label+'<span class="rule">'+c.rule+'</span>'+rt+'</span>'+(done?(c.res==="PASS"?pill("ok","Passed"):c.res==="INFO"?pill("info","Noted"):c.res==="PENDING"?pill("","Not checked"):c.res==="HUMAN"?pill("info","Reviewer"):pill("bad",c.res)):run?pill("run","Checking"):pill("","Queued"))+(done?'<span class="ev">'+esc(c.ev)+'</span>':'')+'</div>'}).join("");
@@ -1194,7 +1209,7 @@ function fixPanel(){
       '<ul class="small" style="margin:0;padding-left:18px">'+mine.map(function(i){return '<li>'+esc(hi?i.hi:i.en)+'</li>'}).join("")+'</ul>'+
       (ch&&d.status==="ok"?'<p class="small muted">Read from the new copy: '+docSummaryX(k,d.ocr&&d.ocr.fields)+'</p>':'')+
       (ch&&d.status==="rejected"?'<div class="obs bad"><b>What to fix</b><span>'+esc(d.reason)+'</span></div>':'')+
-      '<div class="vbtns"><label class="btn sm" for="up-'+k+'">Upload new photo</label><input type="file" id="up-'+k+'" data-up="'+k+'" accept="image/*,application/pdf">'+specCtl(k)+'</div></div>';
+      '<div class="vbtns"><label class="btn sm" for="up-'+k+'">Upload new photo<span class="sr-only">, '+DOC_LABEL[k][0]+'</span></label><input type="file" id="up-'+k+'" data-up="'+k+'" accept="image/*,application/pdf">'+specCtl(k)+'</div></div>';
   }).join("");
   var ready=fixesReady();
   return '<div class="panel"><div class="ophead"><div class="head"><h2>One message, everything we need</h2><p>Sent once by WhatsApp and SMS (simulated). Round '+S.fu.round+' of follow-up. Only these documents are read again; everything else carries over.</p></div>'+langSeg()+'</div>'+
@@ -1257,7 +1272,19 @@ function render(){
   else if(VIEW==="ops") renderOps();
   else if(VIEW==="eval") renderEval();
   else renderAudit();
-  focusUI(); persist();
+  focusUI(); persist(); stepChanged();
+}
+/* Screen readers hear each application step once, and focus moves to the step heading (FR-43) */
+var LASTST=null;
+function announce(msg){ var s=$("sr-status"); if(!s) return; s.textContent=""; setTimeout(function(){ s.textContent=msg },60); }
+function stepChanged(){
+  if(VIEW!=="apply") return;
+  if(LASTST===null){ LASTST=S.step; return; }
+  if(S.step===LASTST) return;
+  LASTST=S.step;
+  announce("Step "+(S.step+1)+" of "+STEPS.length+": "+STEPS[S.step]);
+  var h=$("view-apply")&&$("view-apply").querySelector("h1");
+  if(h){ h.setAttribute("tabindex","-1"); try{ h.focus({preventScroll:true}) }catch(e){} }
 }
 function go(n){S.step=n;render();try{window.scrollTo(0,0)}catch(e){}}
 
