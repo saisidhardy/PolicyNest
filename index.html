@@ -139,6 +139,7 @@ details.demo .demo-body{display:flex;flex-direction:column;gap:10px;margin-top:1
 .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px 2px 8px;font-size:.74rem;font-weight:700;white-space:nowrap;background:var(--sunken);color:var(--muted)}
 .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
 .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.info{background:var(--info-soft);color:var(--info)} .pill.bad{background:var(--bad-soft);color:var(--bad-ink)} .pill.run{background:var(--info-soft);color:var(--info)}
+.pill.warn{background:var(--brand-soft);color:var(--brand-ink)}
 .pill.run::before{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.pill.run::before{animation:none}}
@@ -483,7 +484,7 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   <div class="who2"><span class="ph"><span id="sb-ph"></span></span><b id="sb-name">New applicant</b><small id="sb-id"></small></div>
   <span class="env" title="Documents are read by OCR inside this browser. Government, bank and face-match services are simulated: none is called. Only questions you ask the Copilot, with your first name and progress (never your ID numbers or images), are sent to the AI service."><i></i>Demo environment · on-device OCR</span>
   <nav class="menu" id="menu" aria-label="Sections"></nav>
-  <div class="help"><b>Need help?</b><span>Clean applications are decided in seconds. A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
+  <div class="help"><b>Need help?</b><span>A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
 </div></aside>
 <div class="main">
 <header class="top"><div class="top-in">
@@ -579,12 +580,18 @@ function cheer(title,body,icon){
 }
 var DOC_CHEER={PAN:"your PAN card is verified.",AADHAAR_FRONT:"the front of your Aadhaar is verified.",AADHAAR_BACK:"the back of your Aadhaar is verified.",CLASS10:"your Class 10 marksheet is verified.",BANK:"your bank document is verified.",SELFIE:"your selfie looks good."};
 var docBatch=[],docTimer=null;
+/* FR-16: a document counts as verified only when its instant feedback has nothing to fix and nothing stopping.
+   The feedback is computed by afterDoc(k), which runs before cheerDoc(k). */
+function docFb(k){ if(!S.fb[k]&&S.docs[k]&&S.docs[k].status==="ok") S.fb[k]=feedbackFor(k); return S.fb[k]; }
+function docClean(k){ var st=S.docs[k],fb=docFb(k); return !!(st&&st.status==="ok"&&fb&&!fb.stop.length&&!fb.fix.length); }
+function docFixLabel(k){ var fb=docFb(k); if(!fb) return "Needs a fix"; if(fb.stop.length) return "Rule not met"; return fb.fix.some(function(i){return i.steps})?"Needs a clearer photo":"Needs a fix"; }
 function cheerDoc(k){
   docBatch.push(k); clearTimeout(docTimer);
   docTimer=setTimeout(function(){
-    var n=accepted(),ks=docBatch; docBatch=[];
-    if(S.reached.SUBMITTED){ if(S.decision==="NEEDS_MORE_INFO"&&fixesReady()) cheer("all your fixes are in.","Send them for a re-check. Only these documents will be checked again.","up"); else if(ks.length) cheer("got it.","We read your new "+(DOC_LABEL[ks[0]]?DOC_LABEL[ks[0]][0]:"document")+".","ok"); return; }
-    if(n===6) cheer("all six documents are in!","Submit when you are ready. Clean applications are decided in seconds.","star");
+    var ks=docBatch.filter(docClean), n=DOCS.filter(docClean).length; docBatch=[];
+    if(S.reached.SUBMITTED){ if(S.decision==="NEEDS_MORE_INFO"&&fixesReady()&&S.fu.items.every(function(i){return docClean(i.key)})) cheer("all your fixes are in.","Send them for a re-check. Only these documents will be checked again.","up"); else if(ks.length) cheer("got it.","We read your new "+(DOC_LABEL[ks[0]]?DOC_LABEL[ks[0]][0]:"document")+".","ok"); return; }
+    if(!ks.length) return;
+    if(n===6) cheer("all six documents are in!","Submit when you are ready.","star");
     else if(ks.length===1) cheer(DOC_CHEER[ks[0]],n+" of 6 done. "+(n>=4?"Nearly there.":"Great start, keep going."),"ok");
     else cheer(ks.length+" documents verified.",n+" of 6 done. Keep going.","ok");
   },700);
@@ -968,7 +975,15 @@ var VIEW="dash";
 var NAV=[["dash","Dashboard",'<rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>'],["apply","Application",ICONS[1]],["ops","Review console",ICONS[2]],["eval","Evaluation",'<path d="M2.5 13.5h11M4 11V7.5M7 11V4.5M10 11V6M13 11V3"/>'],["audit","Audit trail",'<path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.4 4h.4M2.4 8h.4M2.4 12h.4"/>']];
 function ico(p){return '<svg viewBox="0 0 16 16" aria-hidden="true">'+p+'</svg>'}
 function stepState(i){return S.status==="CERTIFIED"||i<S.step?"done":i===S.step?"now":"next"}
-function pctDone(){return S.status==="CERTIFIED"?100:Math.round(S.step/6*100)}
+/* One progress measure for applicant screens. journeyFrac gives each of the six steps a share from 0 to 1 (done steps 1, future steps 0,
+   the current step its own partial). pctDone is the mean of those shares; the gauge, header bar and journey bars all read these two. */
+function journeyFrac(){
+  var cert=S.status==="CERTIFIED",sub=S.reached.SUBMITTED,hrs=0;
+  S.mods.forEach(function(m,i){if(m)hrs+=MODULES[i][1]});
+  var part=[S.begun?Math.min(1,S.dpage/4):0,accepted()/6,S.reached.KYC_APPROVED?1:sub&&S.checks.length?S.shown/S.checks.length:0,hrs/15,S.reached.EXAM_PASSED?1:S.reached.EXAM_IN_PROGRESS?0.5:0,cert?1:0];
+  return part.map(function(f,i){ if(cert||i<S.step) return 1; if(i>S.step) return 0; return Math.max(0,Math.min(1,f)); });
+}
+function pctDone(){ if(S.status==="CERTIFIED") return 100; return Math.round(journeyFrac().reduce(function(a,b){return a+b},0)/6*100); }
 function accepted(){return DOCS.filter(function(d){return S.docs[d.k]&&S.docs[d.k].status==="ok"}).length}
 function flow(){
   var cert=S.status==="CERTIFIED",p=pctDone();
@@ -1014,12 +1029,12 @@ function gaugeSvg(p){
 function nextInfo(){
   var cert=S.status==="CERTIFIED",D=S.decision;
   if(cert) return ["All done","Your POSP code is active. You can start selling.","View certificate"];
-  if(S.step===0) return ["Your details","Name, PAN, bank and education, as on your PAN card. About 2 minutes.","Start application"];
+  if(S.step===0) return ["Your details","Name, PAN, bank and education, as on your PAN card.","Start application"];
   if(S.step===1) return ["Upload documents",(6-accepted())+" of 6 still to add. Each is read on your device.","Continue"];
   if(S.step===2){ if(D==="NEEDS_MORE_INFO") return ["Fix and re-send",S.fu.items.length+" item"+(S.fu.items.length>1?"s":"")+" in one message. Only those are checked again.","Open fixes"];
     if(D==="HUMAN_REVIEW") return ["With a reviewer","A person is checking a few details. Expect a reply within 4 working hours.","See status"];
     if(D==="REJECT") return ["Not eligible","The reasons are listed in plain words. You can dispute them.","See reasons"];
-    return ["Start training","Verified with no queue. 15 hours across five modules.","Continue"]; }
+    return ["Start training","Checks complete. 15 hours across five modules.","Continue"]; }
   if(S.step===3) return ["Training","Log the remaining modules to unlock the exam.","Continue"];
   if(S.step===4) return ["Exam","Five questions. The pass mark is 50%.","Take the exam"];
   return ["Certificate","Your POSP code is ready.","View"];
@@ -1027,13 +1042,13 @@ function nextInfo(){
 function renderDash(){
   var cert=S.status==="CERTIFIED",sub=S.reached.SUBMITTED,done=sub&&!S.rechecking&&S.shown>=S.checks.length,hrs=0,acc=accepted(),pct=pctDone();
   S.mods.forEach(function(m,i){if(m)hrs+=MODULES[i][1]});
-  var cs=done?S.checks:[],passed=cs.filter(function(c){return c.res==="PASS"||c.res==="INFO"}).length,tot=cs.length;
+  var cs=done?S.checks:[],passed=cs.filter(function(c){return c.res==="PASS"}).length,noted=cs.filter(function(c){return c.res==="INFO"}).length,tot=cs.length;
   var started=S.events.length>0,nx=nextInfo();
   /* header with KPIs */
   var head='<div class="hello"><div><p class="muted small">'+fmtDate(new Date().toISOString().slice(0,10))+' · <span class="mono">'+S.appId+'</span></p><h1>'+(cert?"Congratulations, ":"Hello, ")+esc(started?fname():"there")+'</h1></div><div class="kpis">'+
     '<div class="kpi"><span>Onboarding progress</span><div class="row"><b class="num">'+pct+'%</b><span class="chip '+(cert?"":"n")+'">step '+Math.min(S.step+1,6)+'/6</span></div></div>'+
-    '<div class="kpi"><span>Checks passed</span><div class="row"><b class="num">'+(tot?passed+"/"+tot:"—")+'</b>'+(tot?'<span class="chip '+(passed===tot?"":"w")+'">'+Math.round(passed/tot*100)+'%</span>':'')+'</div></div>'+
-    '<div class="kpi"><span>Time to decision</span><div class="row"><b class="num">'+(done?S.ttd+"s":"—")+'</b><span class="chip '+(done?"":"n")+'">today 17.3 h</span></div></div></div></div>';
+    '<div class="kpi"><span>Checks passed</span><div class="row"><b class="num">'+(tot?passed+"/"+tot:"—")+'</b>'+(tot?'<span class="chip '+(passed===tot?"":"w")+'">'+Math.round(passed/tot*100)+'%</span>':'')+(tot&&noted?'<span class="small muted">'+noted+' noted, not counted as passed</span>':'')+'</div></div>'+
+    '<div class="kpi"><span>Time to decision (this demo, on this device)</span><div class="row"><b class="num">'+(done?S.ttd+"s":"—")+'</b></div></div></div></div>';
   /* gauge */
   var gauge='<div class="box s4"><div class="bh"><div><h2>Onboarding progress</h2><p class="small muted">'+(cert?"Complete":"Step "+(S.step+1)+" · "+STEPS[S.step])+'</p></div><button class="cbtn" type="button" data-act="go-apply" aria-label="Open application">'+ARROW+'</button></div><div class="gauge">'+gaugeSvg(pct)+'</div><div style="text-align:center"><b class="num" style="font-size:2.6rem">'+pct+'%</b> <span class="chip '+(cert?"":"n")+'">'+(cert?"certified":(6-S.step)+" steps to go")+'</span></div></div>';
   /* next step */
@@ -1041,17 +1056,17 @@ function renderDash(){
   /* documents */
   var dt=DOCS.map(function(d){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected",rd=st&&st.status==="reading";
     var fix=S.fu&&S.decision==="NEEDS_MORE_INFO"&&S.fu.items.some(function(i){return i.key===d.k})&&!S.changed[d.k];
-    return '<div class="dtile c-'+d.k+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&!fix?'<span class="badge" style="background:var(--ok)">✓</span>':bad||fix?'<span class="badge" style="background:var(--bad)">!</span>':rd?'<span class="badge" style="background:var(--brand)">…</span>':'')+'<div style="min-width:0"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(fix?"fix requested":ok?(st.ocr&&st.ocr.spec?"specimen":"read"):bad?"not accepted":rd?"reading":"to upload")+'</small></div></div>'}).join("");
+    return '<div class="dtile c-'+d.k+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&!fix&&docClean(d.k)?'<span class="badge" style="background:var(--ok)">✓</span>':bad||fix||ok?'<span class="badge" style="background:var(--bad)">!</span>':rd?'<span class="badge" style="background:var(--brand)">…</span>':'')+'<div style="min-width:0"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(fix?"fix requested":ok?(docClean(d.k)?(st.ocr&&st.ocr.spec?"specimen":"read"):docFixLabel(d.k)):bad?"not accepted":rd?"reading":"to upload")+'</small></div></div>'}).join("");
   var docs='<div class="box s5"><div class="bh"><div><h2>Documents</h2><p class="small muted">'+acc+' of 6 accepted</p></div><button class="cbtn" type="button" data-act="go-apply" aria-label="Open documents">'+ARROW+'</button></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(st&&st.status==="ok"?"on":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div><div class="dtiles">'+dt+'</div></div>';
   /* journey bars */
-  var frac=[started?1:0,acc/6,S.reached.KYC_APPROVED?1:sub&&S.checks.length?S.shown/S.checks.length:0,hrs/15,S.reached.EXAM_PASSED?1:S.reached.EXAM_IN_PROGRESS?0.5:0,cert?1:0];
+  var frac=journeyFrac();
   var bars='<div class="box s6"><div class="bh"><div><h2>Your journey</h2><p class="small muted">Six steps, filled as you go</p></div><span class="chip '+(cert?"":"o")+'">'+(cert?"complete":STEPS[S.step])+'</span></div><div class="hbars">'+STEPS.map(function(n,i){var f=Math.max(0,Math.min(1,frac[i])),now=i===S.step&&!cert;
     return '<div class="b">'+(now?'<span class="tip">'+Math.round(f*100)+'%</span>':'')+'<i style="height:100%;overflow:hidden;display:flex;align-items:flex-end'+(now?';border-color:var(--brand)':'')+'"><em style="display:block;width:100%;height:'+Math.round(f*100)+'%;border-radius:999px;background:'+(now?"var(--brand)":"var(--night)")+'"></em></i><span>'+["Details","Documents","Verification","Training","Exam","Certificate"][i]+'</span></div>'}).join("")+'</div></div>';
   /* dot map of checks */
   var rows=GROUPS.map(function(G){var gc=S.checks.filter(function(c){return c.doc===G.g});var exp={"PAN card":6,"Aadhaar":7,"Class 10 marksheet":5,"Bank account":3,"Selfie":2,"Exclusivity":1}[G.g];
     var dots=done&&gc.length?gc.map(function(c){var k=resCls(c.res);return '<span class="d '+k+'" title="'+esc(c.label+": "+c.res)+'">'+(k==="PASS"?"✓":k==="FIX"?"!":k==="HUMAN"?"?":k==="REJECT"?"×":k==="INFO"?"i":"")+'</span>'}).join(""):Array(exp+1).join('<span class="d"></span>');
     return '<span class="lb">'+G.g.replace(" marksheet","")+'</span><div class="dots">'+dots+'</div>'}).join("");
-  var pop='<div class="popc"><span class="small" style="opacity:.7">'+(done?"Round "+S.round:"Before you submit")+'</span><b style="font-family:var(--display);font-size:1.15rem;font-weight:500">'+(done?(S.decision==="APPROVE"?"Every check cleared":S.decision==="NEEDS_MORE_INFO"?"A few fixes to make":S.decision==="REJECT"?"Eligibility rules not met":"With a reviewer"):"Checks run in seconds")+'</b><span class="chip" style="align-self:flex-start">'+(done?S.ttd+" s · no queue":"about "+(S.checks.length||24)+" checks")+'</span><span class="small" style="opacity:.75">Each check cites the rulebook rule it used.</span></div>';
+  var pop='<div class="popc"><span class="small" style="opacity:.7">'+(done?"Round "+S.round:"Before you submit")+'</span><b style="font-family:var(--display);font-size:1.15rem;font-weight:500">'+(done?(S.decision==="APPROVE"?"Every check cleared":S.decision==="NEEDS_MORE_INFO"?"A few fixes to make":S.decision==="REJECT"?"Eligibility rules not met":"With a reviewer"):"Checks run on submit")+'</b><span class="chip" style="align-self:flex-start">'+(done?S.ttd+" s · this demo, on this device":"after you submit")+'</span><span class="small" style="opacity:.75">Each check cites the rulebook rule it used.</span></div>';
   var dmap='<div class="box s6"><div class="bh"><div><h2>Checks map</h2><p class="small muted">Every check the engine runs, by document</p></div><button class="cbtn" type="button" data-act="go-review" aria-label="Open review console">'+ARROW+'</button></div><div style="display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px;align-items:center" class="dmw"><div class="dmap">'+rows+'</div>'+pop+'</div><div class="legend2"><span><i style="background:var(--ok)"></i>Passed</span><span><i style="background:var(--info)"></i>Noted</span><span><i style="background:var(--bad)"></i>To fix</span><span><i style="background:var(--lav)"></i>With a person</span><span><i style="border:1.5px dashed var(--dot)"></i>Not run yet</span></div></div>';
   /* compliance, training, agent */
   var cl=checklist(),cn=cl.filter(function(x){return x[1]}).length;
@@ -1059,7 +1074,7 @@ function renderDash(){
   var trn='<div class="box s4"><div class="bh"><div><h2>Training</h2><p class="small muted">IRDAI requires 15 hours</p></div><span class="chip '+(hrs>=15?"":"n")+'">'+(hrs>=15?"done":Math.round(hrs/15*100)+"%")+'</span></div><div><b class="num" style="font-size:3rem">'+hrs+'.0</b><span class="muted"> / 15 h</span></div><div class="prog"><i style="width:'+(hrs/15*100)+'%"></i></div><div class="mods2">'+MODULES.map(function(m,i){return '<span class="'+(S.mods[i]?"on":"")+'">'+["Basics","Motor","Health","Life","Regulation"][i]+'</span>'}).join("")+'</div><div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center"><span class="small muted">Exam</span><b>'+(S.exam.score!==null?S.exam.score+"%":"not taken")+'</b></div></div>';
   var mins=Math.max(1,Math.round((Date.now()-S.started)/60000));
   var agent='<div class="box ink s4"><div class="bh"><div><p class="small muted">'+(cert?"Certified agent":"Your agent card")+'</p><h2 style="font-size:1.3rem;font-weight:500">'+esc(S.f.name||"New applicant")+'</h2><p class="small muted">'+esc((S.f.city||"City")+", "+(S.f.state||"State"))+'</p></div><span class="avatar" style="width:52px;height:52px"><span style="color:var(--ink)">'+esc(norm(S.f.name||"").split(" ").filter(Boolean).map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN")+'</span></span></div>'+
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:auto"><div><b class="num" style="font-size:1.6rem">'+S.touches+'</b><p class="small muted">human touches</p></div><div><b class="num" style="font-size:1.6rem">'+S.followups+'</b><p class="small muted">follow-ups</p></div><div><b class="num" style="font-size:1.6rem">'+mins+'m</b><p class="small muted">so far · today 8.4 days</p></div></div>'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:auto"><div><b class="num" style="font-size:1.6rem">'+S.touches+'</b><p class="small muted">human touches</p></div><div><b class="num" style="font-size:1.6rem">'+S.followups+'</b><p class="small muted">follow-ups</p></div><div><b class="num" style="font-size:1.6rem">'+mins+'m</b><p class="small muted">so far</p></div></div>'+
     '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(127,127,127,.3);padding-top:10px"><span class="small muted">POSP code</span><b class="mono">'+(S.posp||"after the exam")+'</b></div></div>';
   $("view-dash").innerHTML=head+'<div class="bento">'+gauge+nxt+docs+bars+dmap+comp+trn+agent+'</div>';
 }
@@ -1160,12 +1175,12 @@ function demoBox(inner){
 }
 function docCard(d){
   var st=S.docs[d.k],rd=st&&st.status==="reading",ok=st&&st.status==="ok",rej=st&&st.status==="rejected",o=st&&st.ocr;
-  var head='<div class="vhead">'+thumb(d.k,d.code)+'<div><h2>'+d.label+'</h2><div class="meta">'+(st?"Uploaded · "+fileKind(st)+"<br>"+esc(st.name):d.hint)+'</div></div>'+(ok?pill("ok","Verified"):rej?pill("bad","Not accepted"):rd?'<span class="pill run" id="ocr-'+d.k+'">Reading text</span>':pill("","Required"))+'</div>';
+  var head='<div class="vhead">'+thumb(d.k,d.code)+'<div><h2>'+d.label+'</h2><div class="meta">'+(st?"Uploaded · "+fileKind(st)+"<br>"+esc(st.name):d.hint)+'</div></div>'+(ok?(docClean(d.k)?pill("ok","Verified"):pill("warn",docFixLabel(d.k))):rej?pill("bad","Not accepted"):rd?'<span class="pill run" id="ocr-'+d.k+'">Reading text</span>':pill("","Required"))+'</div>';
   var body="";
   function row(l,p,ev){return '<div class="vrow"><span>'+l+'</span>'+p+(ev?'<span class="ev">'+esc(ev)+'</span>':'')+'</div>'}
   if(rd) body='<div class="vrows">'+row("Document classification",pill("run","In progress"))+row("Text readability",pill("run","In progress"))+row("Field detection",pill("run","In progress"))+'</div>';
   else if(ok&&o){ var miss=o.fields&&o.fields.missing||[];
-    body='<div class="vrows">'+row("Document classification",pill(o.spec?"info":"ok",o.spec?"Specimen":"Passed"),"Recognised as: "+o.detName)+row("Text readability",pill("ok","Passed"),o.src+" · confidence "+o.conf.toFixed(2)+(o.spec?"":" · "+o.words+" words"))+
+    body='<div class="vrows">'+row("Document classification",pill(o.spec?"info":"ok",o.spec?"Specimen":"Passed"),"Recognised as: "+o.detName)+row("Text readability",o.conf<0.75?pill("warn","Unclear"):pill("ok","Passed"),o.src+" · confidence "+o.conf.toFixed(2)+(o.spec?"":" · "+o.words+" words"))+
     (d.k==="SELFIE"?row("Field detection",pill("ok","Passed"),"No identifiers expected on this item"):'<div class="vrow"><span>Fields read</span>'+(miss.length?pill("bad","Not all read"):pill("ok","Passed"))+'<span class="ev">'+docSummaryX(d.k,o.fields)+'</span></div>')+'</div>'+
     (miss.length?'<div class="obs bad"><b>Could not read</b><span>'+esc(miss.join(", "))+'. Replace it with a sharper photo in daylight, all four corners visible, for a decision without a follow-up.</span></div>':''); }
   else if(rej) body='<div class="vrows">'+row("Document classification",pill("bad","Failed"),o?(TYPE_NAME[o.det]?"Looks like: "+TYPE_NAME[o.det]:"Type not recognised")+" · confidence "+o.conf.toFixed(2)+" · "+o.words+" words":"")+'</div>'+fbHtml(rejectFeedback(st.reason));
@@ -1204,10 +1219,10 @@ function fbHtml(fb){
 function nextDocIndex(){ for(var i=1;i<=DOCS.length;i++){ var j=(S.dk+i)%DOCS.length,st=S.docs[DOCS[j].k]; if(!st||st.status!=="ok") return j; } return -1; }
 function allDocs(){return DOCS.every(function(d){return S.docs[d.k]&&S.docs[d.k].status==="ok"})}
 function stepDocs(){
-  var n=DOCS.filter(function(d){return S.docs[d.k]&&S.docs[d.k].status==="ok"}).length;
+  var n=DOCS.filter(function(d){return docClean(d.k)}).length;
   return '<div class="panel"><div class="ophead"><div class="head"><h1>Upload your documents</h1><p>Six items. Each file is read by OCR on your device as soon as you add it, and is accepted only if it is the right document for that slot. JPG, PNG or PDF.</p></div><div class="actions"><button class="btn" type="button" data-act="back-details">Back</button><button class="btn pri" type="button" data-act="submit"'+(allDocs()?"":" disabled")+'>Submit for verification</button></div></div>'+
-  '<div class="bento"><div class="box s4" style="background:var(--sunken);box-shadow:none"><span class="small muted">Verified on your device</span><div><b class="num" style="font-size:3.2rem">'+n+'</b><span class="muted" style="font-size:1.4rem"> / 6</span></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(st&&st.status==="ok"?"on":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div></div>'+
-  '<div class="box s8" style="background:var(--sunken);box-shadow:none"><div class="dtiles">'+DOCS.map(function(d,i){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected";return '<button type="button" data-dk="'+i+'" aria-current="'+(i===S.dk?"step":"false")+'" class="dtile c-'+d.k+(i===S.dk?" cur":"")+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok?'<span class="badge" style="background:var(--ok)">✓</span>':bad?'<span class="badge" style="background:var(--bad)">!</span>':'')+'<span style="min-width:0;display:block"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(ok?"verified":bad?"not accepted":st?"reading":"to upload")+'</small></span></button>'}).join("")+'</div></div></div>'+
+  '<div class="bento"><div class="box s4" style="background:var(--sunken);box-shadow:none"><span class="small muted">Verified on your device</span><div><b class="num" style="font-size:3.2rem">'+n+'</b><span class="muted" style="font-size:1.4rem"> / 6</span></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(docClean(d.k)?"on":st&&st.status==="ok"?"bad":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div></div>'+
+  '<div class="box s8" style="background:var(--sunken);box-shadow:none"><div class="dtiles">'+DOCS.map(function(d,i){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected";return '<button type="button" data-dk="'+i+'" aria-current="'+(i===S.dk?"step":"false")+'" class="dtile c-'+d.k+(i===S.dk?" cur":"")+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&docClean(d.k)?'<span class="badge" style="background:var(--ok)">✓</span>':ok||bad?'<span class="badge" style="background:var(--bad)">!</span>':'')+'<span style="min-width:0;display:block"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(ok?(docClean(d.k)?"verified":docFixLabel(d.k)):bad?"not accepted":st?"reading":"to upload")+'</small></span></button>'}).join("")+'</div></div></div>'+
   '<div class="note"><span><b>'+n+' of 6 verified.</b> Document '+(S.dk+1)+' of 6 is open below; pick any tile to switch.</span></div>'+
   demoBox('<p class="small muted">No documents to hand? Specimens are synthetic document text built from your typed details and go through the same field reader as a real upload.</p><div class="demo-rows">'+DOCS.map(function(d){return '<div class="demo-row"><b>'+d.label+'</b>'+specCtl(d.k)+'</div>'}).join("")+'</div><button class="btn sm" type="button" data-act="spec-all">Use specimens for all</button>')+
   '<div class="cards">'+docCard(DOCS[S.dk]||DOCS[0])+'</div></div>';
@@ -1267,9 +1282,9 @@ function stepVerify(){
   var total=S.checks.length,done=!S.rechecking&&S.shown>=total,D=S.decision,ok=D==="APPROVE";
   var side='<aside class="side stick">'+ring()+'<div class="who"><h2>'+esc(S.f.name)+'</h2><span class="mono muted">'+S.appId+(S.round>1?' · round '+S.round:'')+'</span></div>'+
    '<div class="slist">'+GROUPS.map(function(G){var gs=groupState(G.g),s=gs.st,bad=gs.idx.some(function(i){return S.checks[i].res!=="PASS"&&S.checks[i].res!=="INFO"});return '<div><span>'+G.side+'</span>'+(s==="done"?(bad?pill("bad","Review required"):pill("ok","Approved")):s==="run"?pill("run","In progress"):pill("","Queued"))+'</div>'}).join("")+'</div>'+
-   (S.rechecking?'<p class="small muted">Re-checking the documents you replaced…</p>':!done?'<p class="small muted">Checking '+Math.min(S.shown+1,total)+' of '+total+'. This takes a few seconds.</p>':
-    ok?'<div class="verdict"><h2>KYC approved</h2><span class="small">All checks passed'+(S.round>1?' after '+(S.round-1)+' follow-up round'+(S.round>2?"s":""):'')+'. Nothing needs a second look.</span></div><div class="stats"><div class="stat"><b>'+S.ttd+' s</b><span>Time to decision</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div><button class="btn pri wide" type="button" data-act="start-training">Start training</button><button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':
-    D==="NEEDS_MORE_INFO"?'<div class="verdict hold"><h2>'+(S.fu.items.length===1?"One thing":S.fu.items.length+" things")+' to fix</h2><span class="small">All of them are in one message. Fix them together and only those documents are checked again.</span></div><div class="stats"><div class="stat"><b>'+S.ttd+' s</b><span>Time to decision</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>':
+   (S.rechecking?'<p class="small muted">Re-checking the documents you replaced…</p>':!done?'<p class="small muted">Checking '+Math.min(S.shown+1,total)+' of '+total+'.</p>':
+    ok?'<div class="verdict"><h2>KYC approved</h2><span class="small">All checks passed'+(S.round>1?' after '+(S.round-1)+' follow-up round'+(S.round>2?"s":""):'')+'. Nothing needs a second look.</span></div><div class="stats"><div class="stat"><b>'+S.ttd+' s</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div><button class="btn pri wide" type="button" data-act="start-training">Start training</button><button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':
+    D==="NEEDS_MORE_INFO"?'<div class="verdict hold"><h2>'+(S.fu.items.length===1?"One thing":S.fu.items.length+" things")+' to fix</h2><span class="small">All of them are in one message. Fix them together and only those documents are checked again.</span></div><div class="stats"><div class="stat"><b>'+S.ttd+' s</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>':
     D==="REJECT"?'<div class="verdict no"><h2>Not eligible</h2><span class="small">'+S.rej.length+' eligibility rule'+(S.rej.length>1?"s":"")+' not met. The reasons are listed in plain words.</span></div><button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':
     '<div class="verdict rev"><h2>With a reviewer</h2><span class="small">A decision the rulebook keeps with a person. Target: within 4 working hours.</span></div><button class="btn wide" type="button" data-act="go-review">Open review console (reviewer view)</button>')+'</aside>';
   var top=done&&D==="NEEDS_MORE_INFO"?fixPanel():done&&D==="REJECT"?rejectPanel():done&&D==="HUMAN_REVIEW"?humanPanel():"";
@@ -1298,7 +1313,7 @@ function stepCert(){
   '<div class="cert"><span class="eyebrow">PolicyNest Insurance Brokers · Point of Sales Person</span><div><div class="small muted">This certifies that</div><div class="name">'+esc(norm(S.f.name))+'</div><div class="small muted">has completed the prescribed training and passed the POSP examination.</div></div>'+
   '<div class="kv"><div><span>POSP code</span><b class="mono">'+S.posp+'</b></div><div><span>PAN</span><b class="mono">'+maskPan(S.f.pan)+'</b></div><div><span>Issued</span><b>'+fmtDate(new Date().toISOString().slice(0,10))+'</b></div><div><span>Training</span><b>15.0 hours</b></div><div><span>Exam score</span><b>'+S.exam.score+'%</b></div><div><span>Location</span><b>'+esc(S.f.city)+', '+esc(S.f.state)+'</b></div></div>'+
   '<div class="stampline">Demonstration certificate for a fictional broker. Not a valid IRDAI credential.</div></div>'+
-  '<div class="stats"><div class="stat"><b>'+mins+' min</b><span>Start to certificate (today\'s median: 8.4 days)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches (today: 3.3)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>'+
+  '<div class="stats"><div class="stat"><b>'+mins+' min</b><span>Start to certificate (this demo, on this device)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>'+
   '<div class="actions"><button class="btn" type="button" data-act="go-ops">See the audit trail</button><button class="btn pri" type="button" data-act="reset">Start a new application</button></div></div>';
 }
 function render(){
@@ -1423,12 +1438,12 @@ function addDoc(k,file){
       var fl=k==="SELFIE"?{missing:[],face:vv==="borderline"?0.68:vv==="low"?0.52:null}:parseDoc(k,specimenText(k,S.f,vv),vv==="blurry"?0.61:0.97);
       d.name=vl;
       d.ocr={det:SLOT[k].want,detName:"Synthetic specimen ("+SLOT[k].n+", "+vl.toLowerCase()+")",src:k==="SELFIE"?"Specimen photo (synthetic)":"Specimen text",conf:0.97,words:0,found:[],fields:fl,spec:true};
-      d.ocr.conf=vv==="blurry"?0.61:0.97; d.status="ok"; cheerDoc(k); afterDoc(k); log((S.changed[k]?"DOC_REUPLOADED:":"DOC_UPLOADED:")+k,"APPLICANT","Specimen ("+vl+"): synthetic document text built from the typed details, read by the same parser"+(fl.missing.length?" · not read: "+fl.missing.join(", "):"")); render(); },500+Math.random()*400); return; }
+      d.ocr.conf=vv==="blurry"?0.61:0.97; d.status="ok"; S.lastDocAt=Date.now(); afterDoc(k); cheerDoc(k); log((S.changed[k]?"DOC_REUPLOADED:":"DOC_UPLOADED:")+k,"APPLICANT","Specimen ("+vl+"): synthetic document text built from the typed details, read by the same parser"+(fl.missing.length?" · not read: "+fl.missing.join(", "):"")); render(); },500+Math.random()*400); return; }
   if(!/^image\//.test(file.type)&&file.type!=="application/pdf"&&!/\.pdf$/i.test(file.name)){ d.status="rejected"; d.reason="This file type is not supported. Upload a JPG, PNG or PDF."; render(); return; }
   ocrChain=ocrChain.then(function(){ if(S.docs[k]!==d) return null; curKey=k; return readDoc(k,file); }).then(function(r){
     curKey=null; if(!r||S.docs[k]!==d) return;
     var v=judge(k,r,file); if(r.thumb) d.url=r.thumb;
-    d.ocr=v; d.status=v.ok?"ok":"rejected"; d.reason=v.msg; if(v.ok) cheerDoc(k); afterDoc(k);
+    d.ocr=v; d.status=v.ok?"ok":"rejected"; d.reason=v.msg; if(v.ok) S.lastDocAt=Date.now(); afterDoc(k); if(v.ok) cheerDoc(k);
     log((v.ok?(S.changed[k]?"DOC_REUPLOAD_ACCEPTED:":"DOC_ACCEPTED:"):"DOC_REJECTED:")+k,"SYSTEM",v.ok?"Recognised as "+v.detName+" · "+v.src+" · confidence "+v.conf.toFixed(2)+(v.fields&&v.fields.missing.length?" · not read: "+v.fields.missing.join(", "):""):"Wrong or unreadable document"+(TYPE_NAME[v.det]?" (looks like "+TYPE_NAME[v.det]+")":"")+" · applicant asked to re-upload");
     render();
   },function(e){
@@ -1436,11 +1451,14 @@ function addDoc(k,file){
     d.status="rejected"; d.reason=(e&&(e.message==="load"||e.message==="timeout"))?"The OCR engine could not load here. Check your internet connection, or open the local copy of this page in your browser. You can also use a specimen.":"We could not open this file. Upload a JPG, PNG or PDF of the document."; afterDoc(k); render();
   });
 }
+/* FR-23: time to decision runs from t0 (the later of the last accepted document and Submit) to S.decAt,
+   the moment the decision object exists. The reveal animation is not part of it. */
 function finishDecision(t0){
-  S.ttd=((Date.now()-t0)/1000).toFixed(1);
+  var end=(S.decAt&&S.decAt>=t0)?S.decAt:Date.now();
+  S.ttd=((end-t0)/1000).toFixed(1);
   var codes=S.checks.filter(function(c){return c.res!=="PASS"&&c.res!=="INFO"&&c.res!=="PENDING"}).map(function(c){return c.code||c.res});
   var rec={round:S.round,decision:S.decision,t:Date.now(),items:[],rechecked:S.checks.filter(function(c){return !c.carried}).length,carried:S.checks.filter(function(c){return c.carried}).length,changed:Object.keys(S.changed)};
-  if(S.decision==="APPROVE"){setState("KYC_APPROVED"); cheer(S.touches?"good news: your application is approved.":"you are verified!",S.touches?"Our team has confirmed everything. On to training.":"No queue and no waiting. Your 15 hours of training are unlocked.","star");log(S.touches?"KYC_APPROVED":"STP_PASS","SYSTEM",S.checks.length+" checks passed · decision APPROVE · "+S.touches+" human touch"+(S.touches===1?"":"es")+" · "+S.ttd+" s")}
+  if(S.decision==="APPROVE"){setState("KYC_APPROVED"); cheer(S.touches?"good news: your application is approved.":"you are verified!",S.touches?"Our team has confirmed everything. On to training.":"Your 15 hours of training are unlocked.","star");log(S.touches?"KYC_APPROVED":"STP_PASS","SYSTEM",S.checks.length+" checks passed · decision APPROVE · "+S.touches+" human touch"+(S.touches===1?"":"es")+" · "+S.ttd+" s")}
   else if(S.decision==="NEEDS_MORE_INFO"){
     setState("NEEDS_MORE_INFO"); log("DECISION","SYSTEM","Decision NEEDS_MORE_INFO · "+codes.join(", "));
     var items=followupItems(S.checks,S.ex); S.fu={items:items,round:S.round}; cheer("you are almost there.","Everything we need is in one message, so you can fix it in one go.","heart"); items.forEach(function(i){S.specv[i.key]="clean"}); rec.items=items; S.followups++; S.changed={};
@@ -1463,8 +1481,9 @@ function submit(){
   S.ex=buildX();
   setState("SUBMITTED"); log("DOCS_UPLOADED","APPLICANT","All 6 required documents present");
   setState("IN_REVIEW"); log("TRIAGE_START","SYSTEM","Dispatched to policy engine");
-  var r=decide(S.f,S.ex,new Date(S.started)); S.checks=r.checks; S.decision=r.decision; S.obs=observe(r.checks,S.ex); S.shown=0;
-  go(2); animate(Date.now());
+  var tSub=Date.now();
+  var r=decide(S.f,S.ex,new Date(S.started)); S.decAt=Date.now(); S.checks=r.checks; S.decision=r.decision; S.obs=observe(r.checks,S.ex); S.shown=0;
+  go(2); animate(Math.max(S.lastDocAt||0,tSub));
 }
 /* Re-check after a follow-up: only the re-uploaded documents are read again. Checks that involve a changed
    document (or the PAN anchor, if the PAN changed) are re-run; every other check is carried over from the last round. */
@@ -1473,7 +1492,7 @@ function recheck(){
   var changed=Object.keys(S.changed),prev=S.checks,t0=Date.now();
   S.round++; S.rechecking=true; setState("IN_REVIEW");
   log("RECHECK_START","SYSTEM","Round "+S.round+" · re-reading only: "+changed.map(function(k){return DOC_LABEL[k][0]}).join(", "));
-  var x=buildX(),r=decide(S.f,x,new Date(S.started)),anchor=changed.indexOf("PAN")>=0;
+  var x=buildX(),r=decide(S.f,x,new Date(S.started)),anchor=changed.indexOf("PAN")>=0; S.decAt=Date.now();
   r.checks.forEach(function(c){
     var old=prev.filter(function(o){return o.doc===c.doc&&o.label===c.label})[0];
     var touched=(c.key&&changed.indexOf(c.key)>=0)||(anchor&&(c.rule==="§5"||/Date of birth|Age|Penny|Exclusivity|registration/.test(c.label)))||!old;
@@ -1547,7 +1566,7 @@ document.addEventListener("click",function(e){
   else if(a==="retry"){ S.exam={ans:{},score:null}; setState("EXAM_IN_PROGRESS"); log("EXAM_START","APPLICANT","Re-attempt (24-hour cooldown waived in demo)"); render(); }
   else if(a==="submit-exam"){ var ok=0; QUIZ.forEach(function(q,i){ if(S.exam.ans[i]===q.a) ok++; }); S.exam.score=Math.round(ok/QUIZ.length*100);
     if(S.exam.score>=50){ setState("EXAM_PASSED"); log("EXAM_SUBMIT","SYSTEM","Score "+S.exam.score+"% · pass mark 50%"); S.posp="PN-POSP-"+S.appId.slice(-5); setState("CERTIFIED"); cheer("congratulations, you are certified!","You scored "+S.exam.score+"%. Your POSP code "+S.posp+" is active. Welcome to PolicyNest.","star"); log("ISSUE_CREDENTIAL","SYSTEM","POSP code "+S.posp+" issued · registry notification simulated"); go(5); }
-    else { setState("TRAINING_COMPLETED"); log("EXAM_FAIL","SYSTEM","Score "+S.exam.score+"%"); cheer("not this time, and that is fine.","Many agents pass on their second try. Review the modules and try again.","heart"); render(); } }
+    else { setState("TRAINING_COMPLETED"); log("EXAM_FAIL","SYSTEM","Score "+S.exam.score+"%"); cheer("not this time, and that is fine.","You can retake the exam after 24 hours (rulebook §2). Review the modules before you try again.","heart"); render(); } }
   else if(a==="go-ops"){ show("audit"); }
   else if(a==="go-apply"){ show("apply"); }
   else if(a==="go-review"){ show("ops"); }
@@ -1769,7 +1788,7 @@ function dlgClose(d){ if(!d||!d.open) return; if(typeof d.close==="function") d.
 $("modal").addEventListener("cancel",function(e){ e.preventDefault(); closeModal(); });
 function modalAct(a){
   closeModal();
-  if(a==="m-extend"&&S.sess){ var s=S.sess, r=remaining(); if(r<=0) s.limit=(Date.now()-s.start)+EXTEND_MS; else s.limit+=EXTEND_MS; s.ended=false; s.expShown=false; s.warned.t2=0; s.warned.t10=0; log("SITTING_EXTENDED","APPLICANT","Sitting "+s.n+" extended by 10 minutes"); enterFocus(!s.noFs); tick(); paintBar(); }
+  if(a==="m-extend"&&S.sess){ var s=S.sess, r=remaining(); if(r<=0){ s.limit=(Date.now()-s.start)+EXTEND_MS; s.warned.t10=1; } else s.limit+=EXTEND_MS; s.ended=false; s.expShown=false; s.warned.t2=0; if(r>0) s.warned.t10=0; log("SITTING_EXTENDED","APPLICANT","Sitting "+s.n+" extended by 10 minutes"); enterFocus(!s.noFs); tick(); paintBar(); }
   else if(a==="m-later"){ endSitting("SITTING_SAVED","Applicant chose to continue later"); leaveFocus(); render(); }
   else if(a==="m-refocus"){ if(S.sess) enterFocus(!S.sess.noFs); }
   else if(a==="m-newapp"){ newApplication(); }
@@ -1879,7 +1898,7 @@ function intentAnswer(q){
   }
   if(/photo|blur|clear|picture|image|camera|glare|scan/i.test(q)) return "For a photo that passes first time (rulebook §4.1):\n1. Use the original, not a photocopy (a photocopy is accepted only for the bank document).\n2. "+PHOTO_STEPS[0]+"\n3. "+PHOTO_STEPS[1]+"\n4. Make sure every word is sharp; if any field cannot be read, we ask for a new photo.";
   if(/which doc|documents? (do i )?need|required|keep ready|what do i need/i.test(q)) return "You need six items:\n"+DOC_GUIDE.map(function(g,i){return (i+1)+". "+g[0]+": "+g[1]}).join("\n");
-  if(/after|submit|then what|training|exam|certif|how long/i.test(q)) return "After you submit: every document is checked against your PAN and the rulebook in seconds. If anything is missing you get one message listing all of it. Then 15 hours of training (IRDAI), the exam (pass mark 50%, retake after 24 hours), and your POSP certificate.";
+  if(/after|submit|then what|training|exam|certif|how long/i.test(q)) return "After you submit: every document is checked against your PAN and the rulebook. If anything is missing you get one message listing all of it. Then 15 hours of training (IRDAI), the exam (pass mark 50%, retake after 24 hours), and your POSP certificate.";
   if(/next|what now|kya karu|aage|stuck|help/i.test(q)) return nextStepText();
   return null;
 }
