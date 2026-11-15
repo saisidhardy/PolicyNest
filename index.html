@@ -172,6 +172,23 @@ details.demo .demo-body{display:flex;flex-direction:column;gap:10px;margin-top:1
 .sel{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 8px;min-height:32px;font-size:.8rem;max-width:100%}
 .msg{background:var(--sunken);border:1px solid var(--line);border-radius:12px;padding:14px 16px;white-space:pre-wrap;font-size:.9rem;line-height:1.55;overflow-wrap:anywhere}
 .msg .from{display:block;font-size:.72rem;color:var(--muted);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em}
+/* C7 phone-style message preview and C6 read-aloud controls */
+.phonewrap{display:flex;flex-direction:column;gap:10px;min-width:0}
+.phonewrap>p{margin:0}
+.phone{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:12px;min-width:0}
+.phone .msg{border-radius:18px 18px 18px 6px;margin:0}
+.msgacts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sms{border-top:1px solid var(--line);padding-top:10px}
+.sms summary{cursor:pointer;font-weight:700;font-size:.9rem;min-height:32px;display:flex;align-items:center}
+.sms .msg{margin:8px 0}
+.sms p{margin:0 0 6px}
+.speak{align-self:flex-start;margin-top:6px}
+.spk-bars{display:inline-flex;gap:2px;align-items:flex-end;height:12px;margin-right:4px}
+.spk-bars i{display:block;width:3px;height:100%;background:currentColor;border-radius:2px;transform-origin:50% 100%;animation:spkbar .9s ease-in-out infinite alternate}
+.spk-bars i:nth-child(2){animation-delay:.2s}
+.spk-bars i:nth-child(3){animation-delay:.4s}
+@keyframes spkbar{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){.spk-bars i{animation:none;transform:scaleY(.7)}}
 .fix{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
 .fix:first-child{border-top:0;padding-top:0}
 .fixh{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
@@ -1248,7 +1265,8 @@ function photoHold(k,codes){
 function goodHint(k){
   var sel=k==="SELFIE",items=sel?["Face the camera","Good light, no harsh shadows","Nothing covering your face"]:["All four corners in the frame","Daylight, no flash glare","Nothing covering the text"],
     ic='<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7"/></svg>';
-  return '<div class="goodhint"><p class="small"><b>'+(sel?"Good selfie":"Good photo")+'</b></p><ul>'+items.map(function(t){return '<li>'+ic+'<span>'+esc(t)+'</span></li>'}).join("")+'</ul></div>';
+  var txt=(sel?"Good selfie":"Good photo")+". "+items.map(sentence).join(" ");
+  return '<div class="goodhint"><p class="small"><b>'+(sel?"Good selfie":"Good photo")+'</b></p><ul>'+items.map(function(t){return '<li>'+ic+'<span>'+esc(t)+'</span></li>'}).join("")+'</ul>'+speakBtn(txt,"en","photo check result")+'</div>';
 }
 function versionLine(vs){
   return '<p class="small muted vers"><b>Version history</b> '+vs.map(function(e,i){return 'v'+e.v+' · round '+e.round+' · '+esc(e.status)+(i>0?' · replaced v'+vs[i-1].v:'')}).join(' → ')+'</p>';
@@ -1281,7 +1299,7 @@ function fbHtml(fb){
   if(fb.human.length) h+='<h4>Checked by a person later</h4><ul>'+fb.human.map(function(i){return '<li>'+esc(i.what)+'</li>'}).join("")+'</ul>';
   if(fb.good.length) h+='<h4>'+(cls==="fine"?"All good":"What is fine")+'</h4><ul class="good">'+fb.good.map(function(g){return '<li>'+esc(g)+'</li>'}).join("")+'</ul>';
   if(fb.later.length) h+='<p class="why">Checked once the other documents are in: '+esc(fb.later.join(", "))+'.</p>';
-  return h+'</div>';
+  return h+speakBtn(fbSpeechText(fb),"en","guidance for this document")+'</div>';
 }
 function nextDocIndex(){ for(var i=1;i<=DOCS.length;i++){ var j=(S.dk+i)%DOCS.length,st=S.docs[DOCS[j].k]; if(!st||st.status!=="ok") return j; } return -1; }
 function allDocs(){return DOCS.every(function(d){return S.docs[d.k]&&S.docs[d.k].status==="ok"})}
@@ -1314,6 +1332,95 @@ function ring(){
   var ini=norm(S.f.name).split(" ").map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN";
   return '<div class="ring'+(S.shown>=total?" all":"")+'" role="img" aria-label="'+S.shown+' of '+total+' checks complete"><svg viewBox="0 0 200 200">'+ln+'</svg><div class="face">'+(st&&st.url?'<img src="'+st.url+'" alt="">':esc(ini))+'</div></div>';
 }
+/* C6 read aloud (Web Speech API, on-device) and C7 message preview helpers. Nothing here is sent over the network. */
+var SPEECH_OK=(typeof window!=="undefined")&&("speechSynthesis" in window)&&(typeof window.SpeechSynthesisUtterance!=="undefined");
+var SPK=null,SPK_TOK=0;
+/* The visible label stays "Read aloud" (it is inside the accessible name, WCAG 2.5.3). Playing is shown by the bars and aria-pressed; clicking again stops. */
+function speakInner(on){return (on?'<span class="spk-bars" aria-hidden="true"><i></i><i></i><i></i></span>':'')+'Read aloud'}
+function speakBtn(text,lang,ctx){
+  if(!SPEECH_OK||!text) return "";
+  var on=SPK!==null&&SPK===text;
+  return '<button type="button" class="btn sm speak" data-speak="'+esc(text)+'" data-speak-lang="'+(lang==="hi"?"hi-IN":"en-IN")+'" aria-pressed="'+(on?"true":"false")+'" aria-label="Read aloud: '+esc(ctx||"this text")+'">'+speakInner(on)+'</button>';
+}
+function paintSpeak(){
+  var bs=document.querySelectorAll("button.speak");
+  for(var i=0;i<bs.length;i++){ var b=bs[i],on=SPK!==null&&b.getAttribute("data-speak")===SPK;
+    b.setAttribute("aria-pressed",on?"true":"false"); b.innerHTML=speakInner(on); }
+}
+function stopSpeech(){
+  SPK_TOK++;
+  try{ if(SPEECH_OK) window.speechSynthesis.cancel(); }catch(e){}
+  SPK=null; paintSpeak();
+}
+function toggleSpeak(text,lang){
+  if(!SPEECH_OK) return;
+  var same=SPK!==null&&SPK===text;
+  stopSpeech();
+  if(same) return;
+  try{
+    var tag=lang||"en-IN",u=new SpeechSynthesisUtterance(text),vs=window.speechSynthesis.getVoices()||[],v=null,i,my;
+    u.lang=tag;
+    for(i=0;i<vs.length;i++){ if(vs[i].lang===tag){v=vs[i];break} }
+    if(!v) for(i=0;i<vs.length;i++){ if(vs[i].lang&&vs[i].lang.slice(0,2)===tag.slice(0,2)){v=vs[i];break} }
+    if(v) u.voice=v;
+    u.rate=0.95;
+    my=++SPK_TOK;
+    var done=function(){ if(my===SPK_TOK){ SPK=null; paintSpeak(); } };
+    u.onend=done; u.onerror=done;
+    SPK=text; paintSpeak();
+    window.speechSynthesis.speak(u);
+  }catch(e){ SPK=null; paintSpeak(); }
+}
+function copyText(text,btn){
+  var ok=function(good){
+    announce(good?"Message copied":"Copy did not work. Select the text and copy it by hand.");
+    if(good&&btn){ btn.textContent="Message copied"; setTimeout(function(){ if(btn.isConnected) btn.textContent="Copy message"; },2000); }
+  };
+  var fallback=function(){
+    var ta=document.createElement("textarea"),good=false;
+    ta.value=text; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0"; ta.style.left="-9999px";
+    document.body.appendChild(ta); ta.select();
+    try{ good=document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta); ok(good);
+  };
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ok(true)},fallback); return; } }catch(e){}
+  fallback();
+}
+/* SMS version: at most 160 characters, built from the same items. Only document names; no PAN, Aadhaar, account or other people's names. */
+function smsText(items,lang){
+  var hi=lang==="hi",keys=[],link="policynest.embarko.app/#apply";
+  items.forEach(function(i){if(keys.indexOf(i.key)<0)keys.push(i.key)});
+  var names=keys.map(function(k){return DOC_LABEL[k]?DOC_LABEL[k][hi?1:0]:k}).join(hi?", ":", ");
+  var nCount=keys.length===1?"1 document":keys.length+" documents";
+  var cands=hi
+    ?["PolicyNest: कृपया ये दोबारा अपलोड करें: "+names+"। ऐप खोलें: "+link,"PolicyNest: "+names+" दोबारा अपलोड करें: "+link,"PolicyNest: "+keys.length+" दस्तावेज़ दोबारा अपलोड करें: "+link]
+    :["PolicyNest: please upload again: "+names+". Open the app to upload: "+link,"PolicyNest: please upload again: "+names+". "+link,"PolicyNest: please upload "+nCount+" again: "+link];
+  for(var c=0;c<cands.length;c++){ if(Array.from(cands[c]).length<=160) return cands[c]; }
+  return Array.from(cands[cands.length-1]).slice(0,160).join("");
+}
+/* C7 phone-style preview: header, chat bubble, Copy, Open in WhatsApp (a link the applicant opens), Read aloud, SMS disclosure. */
+function msgBlock(items,link){
+  var hi=S.lang==="hi",lang=hi?"hi":"en",txt=followupText(items,firstName(),S.lang,link),sms=smsText(items,S.lang),n=Array.from(sms).length,
+    wa="https://wa.me/?text="+encodeURIComponent(txt);
+  return '<section class="phonewrap" aria-labelledby="pv-h"><p class="small muted" id="pv-h"><b>PolicyNest · WhatsApp and SMS (simulated send)</b></p>'+
+    '<div class="phone"><div class="msg" lang="'+lang+'"><span class="from">PolicyNest · to '+esc(firstName())+'</span>'+esc(txt)+'</div></div>'+
+    '<div class="msgacts"><button class="btn sm" type="button" data-copy="'+esc(txt)+'">Copy message</button>'+
+    '<a class="btn sm" href="'+esc(wa)+'" target="_blank" rel="noopener">Open in WhatsApp<span class="sr-only"> (opens in a new tab; you decide whether to send)</span></a>'+speakBtn(txt,S.lang,"WhatsApp message")+'</div>'+
+    '<p class="small muted">'+(hi?'यह संदेश आपके दस्तावेज़ों के नाम और तारीखें शामिल करता है। इसे केवल भरोसेमंद लोगों के साथ साझा करें।':'This message includes names and dates from your documents. Share it only with people you trust.')+'</p>'+
+    '<details class="sms"><summary>'+(hi?'SMS version ('+n+' characters; may send as several parts)':'SMS version ('+n+'/160 characters)')+'</summary><div class="msg" lang="'+lang+'">'+esc(sms)+'</div>'+
+    '<p class="small muted">'+(hi?'Hindi is Unicode, so a real SMS carries fewer characters per part.':'Plain text. It holds no PAN, Aadhaar or account numbers.')+'</p>'+speakBtn(sms,S.lang,"SMS version")+'</details></section>';
+}
+/* Text of a feedback card, for Read aloud (English, the feedback language). */
+function sentence(s){ s=String(s==null?"":s).trim(); return /[.!?।]$/.test(s)?s:s+"."; }
+function fbSpeechText(fb){
+  var p=[];
+  fb.stop.forEach(function(i){p.push(sentence(i.what))});
+  fb.fix.forEach(function(i){p.push(sentence(i.what)); (i.steps||[]).forEach(function(s){p.push(sentence(s))})});
+  fb.human.forEach(function(i){p.push(sentence(i.what))});
+  if(fb.good.length) p.push(sentence((fb.stop.length||fb.fix.length?"What is fine":"All good")+": "+fb.good.join(", ")));
+  if(fb.later.length) p.push(sentence("Checked once the other documents are in: "+fb.later.join(", ")));
+  return p.join(" ");
+}
 function langSeg(){return '<div class="seg" role="group" aria-label="Message language"><button type="button" data-lang="en" aria-pressed="'+(S.lang==="en")+'">English</button><button type="button" data-lang="hi" aria-pressed="'+(S.lang==="hi")+'">हिन्दी</button></div>'}
 function firstName(){return (S.ex&&S.ex.PAN&&S.ex.PAN.name?S.ex.PAN.name:norm(S.f.name)).split(" ")[0].replace(/^(.)(.*)$/,function(_,a,b){return a+b.toLowerCase()})}
 function fixPanel(){
@@ -1332,7 +1439,7 @@ function fixPanel(){
   var demo=demoBox('<div class="demo-rows">'+keys.map(function(k){return '<div class="demo-row"><b>'+DOC_LABEL[k][0]+'</b>'+specCtl(k)+'</div>'}).join("")+'</div>');
   var ready=fixesReady();
   return '<div class="panel"><div class="ophead"><div class="head"><h2>One message, everything we need</h2><p>Sent once by WhatsApp and SMS (simulated). Round '+S.fu.round+' of follow-up. Only these documents are read again; everything else carries over.</p></div>'+langSeg()+'</div>'+
-    '<div class="msg" lang="'+(hi?"hi":"en")+'"><span class="from">PolicyNest · to '+esc(firstName())+'</span>'+esc(followupText(it,firstName(),S.lang,link))+'</div>'+
+    msgBlock(it,link)+
     '<div style="display:flex;flex-direction:column;gap:12px">'+rows+'</div>'+demo+
     '<div class="actions"><span class="small muted">'+(ready?"All fixes received.":"Replace each item above to continue.")+'</span><button class="btn pri" type="button" data-act="resubmit"'+(ready?"":" disabled")+'>Send fixes for re-check</button></div></div>';
 }
@@ -1391,6 +1498,7 @@ function render(){
   else if(VIEW==="ops") renderOps();
   else if(VIEW==="eval") renderEval();
   else renderAudit();
+  if(SPK!==null){ var spkLive=false; document.querySelectorAll("button.speak").forEach(function(b){ if(b.getAttribute("data-speak")===SPK) spkLive=true; }); if(!spkLive) stopSpeech(); }
   focusUI(); persist(); stepChanged();
 }
 /* Screen readers hear each application step once, and focus moves to the step heading (FR-43) */
@@ -1671,7 +1779,9 @@ document.addEventListener("click",function(e){
   var t=e.target.closest("button"); if(!t) return;
   if(t.getAttribute("data-view")) return show(t.getAttribute("data-view"));
   if(t.getAttribute("data-audf")){ AUDF=t.getAttribute("data-audf"); return render(); }
-  if(t.getAttribute("data-lang")){ S.lang=t.getAttribute("data-lang"); return render(); }
+  if(t.hasAttribute("data-copy")) return copyText(t.getAttribute("data-copy"),t);
+  if(t.hasAttribute("data-speak")) return toggleSpeak(t.getAttribute("data-speak"),t.getAttribute("data-speak-lang"));
+  if(t.getAttribute("data-lang")){ stopSpeech(); S.lang=t.getAttribute("data-lang"); return render(); }
   if(t.getAttribute("data-spec")) return addDoc(t.getAttribute("data-spec"),null);
   if(t.getAttribute("data-dk")!==null){ S.dk=Number(t.getAttribute("data-dk")); render(); var cd=document.querySelector("#view-apply .cards"); if(cd&&cd.scrollIntoView) try{cd.scrollIntoView({block:"nearest"})}catch(_){} return; }
   if(t.getAttribute("data-cpq")) return cpAsk(t.getAttribute("data-cpq"));
@@ -2120,6 +2230,7 @@ function idleReset(){ clearTimeout(CP.idleT); CP.idleT=setTimeout(function(){ if
 ["click","keydown","input","pointerdown"].forEach(function(ev){ document.addEventListener(ev,idleReset,true) });
 var HASH={dash:"dashboard",apply:"apply",ops:"review",audit:"audit",eval:"evaluation"};
 function show(v){
+  stopSpeech();
   VIEW=v; ["dash","apply","ops","audit","eval"].forEach(function(k){$("view-"+k).hidden=k!==v});
   render();
   try{ if(location.hash!=="#"+HASH[v]) location.hash=HASH[v]; window.scrollTo(0,0) }catch(e){}
