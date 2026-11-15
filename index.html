@@ -182,7 +182,7 @@ details.demo .demo-body{display:flex;flex-direction:column;gap:10px;margin-top:1
 .ring{position:relative;width:min(200px,100%);aspect-ratio:1;margin-inline:auto}
 .ring svg{position:absolute;inset:0;width:100%;height:100%}
 .ring line{stroke:var(--line);stroke-width:2.2;stroke-linecap:round} .ring line.on{stroke:var(--brand)} .ring.all line.on{stroke:var(--ok)}
-.ring .face{position:absolute;inset:16%;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:2.2rem;overflow:hidden}
+.ring .face{position:absolute;inset:16%;border-radius:50%;background:var(--brand-soft);color:var(--ink);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:2.2rem;overflow:hidden}
 .ring .face img{width:100%;height:100%;object-fit:cover}
 .who{text-align:center;display:flex;flex-direction:column;gap:2px} .who h2{overflow-wrap:anywhere}
 .slist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
@@ -563,7 +563,7 @@ var INTERNAL_EVENTS={FRAUD_DESK_REFERRAL:1,REVIEWER_DECISION:1,ROUTED_TO_REVIEWE
 /* FR-56: decision events carry the engine version, the running engine hash (first 12 hex) and the rules behind them. */
 var DECISION_EVENTS={DECISION:1,ROUTED_TO_REVIEWER:1,FOLLOWUP_SENT:1,RECHECK:1,REVIEWER_DECISION:1,DISPUTE_RAISED:1,FRAUD_DESK_REFERRAL:1,KYC_APPROVED:1,STP_PASS:1};
 var ENG_HASH="";
-function ruleTrail(){var out=[];(S.checks||[]).forEach(function(c){if(c.reviewer){var t0=(c.code||c.label||"check")+" "+c.rule+" (reviewer-confirmed)";if(out.indexOf(t0)<0)out.push(t0);return}if(c.res==="PASS"||c.res==="INFO"||c.res==="PENDING")return;var t=(c.code||c.res)+" "+c.rule;if(out.indexOf(t)<0)out.push(t)});return out.length?out.join("; "):"every check passed or was noted (§2, §4)"}
+function ruleTrail(){var out=[];var cd=function(c){return c.code==='FACE_MATCH_LOW_REPEAT'?'FACE_MATCH_LOW':c.code};(S.checks||[]).forEach(function(c){if(c.reviewer){var t0=(cd(c)||c.label||"check")+" "+c.rule+" (reviewer-confirmed)";if(out.indexOf(t0)<0)out.push(t0);return}if(c.res==="PASS"||c.res==="INFO"||c.res==="PENDING")return;var t=(cd(c)||c.res)+" "+c.rule;if(out.indexOf(t)<0)out.push(t)});return out.length?out.join("; "):"every check passed or was noted (§2, §4)"}
 var PEND=[];
 function log(event,actor,note){var e={t:Date.now(),state:S.status,round:S.round,event:event,actor:actor,note:note||"",audience:INTERNAL_EVENTS[event]?"internal":"applicant"};if(DECISION_EVENTS[event]){e.engine=ENGINE;e.hash=ENG_HASH?ENG_HASH.slice(0,12):"not computed";e.rules=ruleTrail();if(!ENG_HASH&&ENG_STATE==="pending")PEND.push(e)}S.events.push(e)}
 function pill(cls,txt){return '<span class="pill '+cls+'">'+txt+'</span>'}
@@ -593,7 +593,7 @@ function docFixLabel(k){ var fb=docFb(k); if(!fb) return "Needs a fix"; if(fb.st
 function cheerDoc(k){
   docBatch.push(k); clearTimeout(docTimer);
   docTimer=setTimeout(function(){
-    var ks=docBatch.filter(docClean), n=DOCS.filter(docClean).length; docBatch=[];
+    var ks=docBatch.filter(docClean), n=DOCS.filter(function(d){return docClean(d.k)}).length; docBatch=[];
     if(S.reached.SUBMITTED){ if(S.decision==="NEEDS_MORE_INFO"&&fixesReady()&&S.fu.items.every(function(i){return docClean(i.key)})) cheer("all your fixes are in.","Send them for a re-check. Only these documents will be checked again.","up"); else if(ks.length) cheer("got it.","We read your new "+(DOC_LABEL[ks[0]]?DOC_LABEL[ks[0]][0]:"document")+".","ok"); return; }
     if(!ks.length&&n<6) return;
     if(n===6) cheer("all six documents are in!","Submit when you are ready.","star");
@@ -948,11 +948,15 @@ function buildX(){
   x.face=x.SELFIE?(x.SELFIE.face!=null?x.SELFIE.face:SIM.face):null; x.registry=SIM.registry;
   return x;
 }
+/* GR-4 / FR-29: the applicant never sees another person's name, a name tier or the AI's recommendation.
+   The review console keeps the full evidence (c.ev); applicant screens and the saved copy use applicantEv(c). */
+var NEUTRAL_CODES={NAME_MISMATCH:1,IDENTITY_NOT_CONFIRMED:1,FACE_MATCH_LOW_REPEAT:1};
+function applicantEv(c){ if(c.reviewer) return "Checked by a person on our team."; if(c.res==="HUMAN"||NEUTRAL_CODES[c.code]) return "A person on our team checks this document."; return c.ev; }
 function observe(checks,x){
   var P=x.PAN||{},C=x.CLASS10||{},o={};
   GROUPS.forEach(function(G){
     var cs=checks.filter(function(c){return c.doc===G.g}),bad=cs.filter(function(c){return c.res!=="PASS"&&c.res!=="INFO"});
-    if(bad.length){o[G.g]=bad.map(function(c){return c.label+": "+(c.res==="PENDING"?"waiting for a readable copy":c.ev)}).join(" · ");return}
+    if(bad.length){o[G.g]=bad.map(function(c){return c.label+": "+(c.res==="PENDING"?"waiting for a readable copy":applicantEv(c))}).join(" · ");return}
     var mt=C.name&&P.name?nameTier(P.name,C.name):null;
     o[G.g]={"PAN card":"A valid individual PAN, read from the card. Its name ("+(P.name||"")+") and date of birth are the reference for every other document.",
       "Aadhaar":"Name and date of birth read from the Aadhaar agree with the PAN. Only the last four digits of the Aadhaar number were kept.",
@@ -1037,7 +1041,7 @@ function nextInfo(){
   if(S.step===0) return ["Your details","Name, PAN, bank and education, as on your PAN card.","Start application"];
   if(S.step===1) return ["Upload documents",(6-accepted())+" of 6 still to add. Each is read on your device.","Continue"];
   if(S.step===2){ if(D==="NEEDS_MORE_INFO") return ["Fix and re-send",S.fu.items.length+" item"+(S.fu.items.length>1?"s":"")+" in one message. Only those are checked again.","Open fixes"];
-    if(D==="HUMAN_REVIEW") return ["With a reviewer","A person is checking a few details. Expect a reply within 4 working hours.","See status"];
+    if(D==="HUMAN_REVIEW") return ["With a reviewer","A person is checking a few details. We aim to reply within 4 working hours (our service target).","See status"];
     if(D==="REJECT") return ["Not eligible","The reasons are listed in plain words. You can dispute them.","See reasons"];
     return ["Start training","Checks complete. 15 hours across five modules.","Continue"]; }
   if(S.step===3) return ["Training","Log the remaining modules to unlock the exam.","Continue"];
@@ -1061,8 +1065,8 @@ function renderDash(){
   /* documents */
   var dt=DOCS.map(function(d){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected",rd=st&&st.status==="reading";
     var fix=S.fu&&S.decision==="NEEDS_MORE_INFO"&&S.fu.items.some(function(i){return i.key===d.k})&&!S.changed[d.k];
-    return '<div class="dtile c-'+d.k+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&!fix&&docClean(d.k)?'<span class="badge" style="background:var(--ok)">✓</span>':bad||fix||ok?'<span class="badge" style="background:var(--bad)">!</span>':rd?'<span class="badge" style="background:var(--brand)">…</span>':'')+'<div style="min-width:0"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(fix?"fix requested":ok?(docClean(d.k)?(st.ocr&&st.ocr.spec?"specimen":"read"):docFixLabel(d.k)):bad?"not accepted":rd?"reading":"to upload")+'</small></div></div>'}).join("");
-  var docs='<div class="box s5"><div class="bh"><div><h2>Documents</h2><p class="small muted">'+acc+' of 6 accepted</p></div><button class="cbtn" type="button" data-act="go-apply" aria-label="Open documents">'+ARROW+'</button></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(st&&st.status==="ok"?"on":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div><div class="dtiles">'+dt+'</div></div>';
+    return '<div class="dtile c-'+d.k+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&!fix&&docClean(d.k)?'<span class="badge" aria-hidden="true" style="background:var(--ok)">✓</span>':bad||fix||ok?'<span class="badge" aria-hidden="true" style="background:var(--bad)">!</span>':rd?'<span class="badge" aria-hidden="true" style="background:var(--brand)">…</span>':'')+'<div style="min-width:0"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(fix?"fix requested":ok?(docClean(d.k)?(st.ocr&&st.ocr.spec?"specimen":"read"):docFixLabel(d.k)):bad?"not accepted":rd?"reading":"to upload")+'</small></div></div>'}).join("");
+  var docs='<div class="box s5"><div class="bh"><div><h2>Documents</h2><p class="small muted">'+DOCS.filter(function(d){return docClean(d.k)}).length+' of 6 verified</p></div><button class="cbtn" type="button" data-act="go-apply" aria-label="Open documents">'+ARROW+'</button></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(st&&st.status==="ok"?"on":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div><div class="dtiles">'+dt+'</div></div>';
   /* journey bars */
   var frac=journeyFrac();
   var bars='<div class="box s6"><div class="bh"><div><h2>Your journey</h2><p class="small muted">Six steps, filled as you go</p></div><span class="chip '+(cert?"":"o")+'">'+(cert?"complete":STEPS[S.step])+'</span></div><div class="hbars">'+STEPS.map(function(n,i){var f=Math.max(0,Math.min(1,frac[i])),now=i===S.step&&!cert;
@@ -1148,7 +1152,7 @@ var AUDF="ALL";
 function renderAudit(){
   var ev=S.events,act={};ev.forEach(function(e){act[e.actor]=(act[e.actor]||0)+1});
   var head='<div class="hello"><div><p class="muted small"><span class="mono">'+S.appId+'</span> · '+esc(ENGINE)+'</p><h1>Audit trail</h1><p class="small muted">Ops and compliance view (this demo shows both roles)</p></div><div class="kpis">'+
-    '<div class="kpi"><span>Events</span><div class="row"><b class="num">'+ev.length+'</b></div></div><div class="kpi"><span>Decision rounds</span><div class="row"><b class="num">'+S.rounds.length+'</b></div></div><div class="kpi"><span>Human touches</span><div class="row"><b class="num">'+S.touches+'</b><span class="chip n">today 3.3</span></div></div></div></div>';
+    '<div class="kpi"><span>Events</span><div class="row"><b class="num">'+ev.length+'</b></div></div><div class="kpi"><span>Decision rounds</span><div class="row"><b class="num">'+S.rounds.length+'</b></div></div><div class="kpi"><span>Human touches</span><div class="row"><b class="num">'+S.touches+'</b></div></div></div></div>';
   if(!ev.length){ $("view-audit").innerHTML=head+'<div class="box"><div class="empty">No events yet. Every applicant action and engine decision is recorded here with its rule and engine version.</div></div>'; return; }
   var rounds=S.rounds.length?'<div class="rounds">'+S.rounds.map(function(r,i){var c=r.decision==="APPROVE"?"lime":r.decision==="REJECT"?"ink":r.decision==="NEEDS_MORE_INFO"?"hot":"lav";return '<div class="box '+c+'" style="padding:16px"><div class="bh"><span class="small muted">Round '+r.round+(r.by?" · "+r.by:"")+'</span><span class="mono small">'+clock(r.t)+'</span></div><b style="font-family:var(--display);font-size:1.2rem;font-weight:500">'+r.decision.replace(/_/g," ").toLowerCase().replace(/^./,function(x){return x.toUpperCase()})+'</b><span class="small muted">'+(r.round===1?"All six documents read":r.changed&&r.changed.length?"Re-read: "+r.changed.map(function(k){return DOC_LABEL[k][0]}).join(", "):"No documents re-read")+' · '+r.rechecked+' checks run, '+r.carried+' carried over</span>'+(r.items.length?'<span class="small">'+r.items.length+' item'+(r.items.length>1?"s":"")+' asked in one message</span>':'')+'</div>'}).join("")+'</div>':'';
   var F=[["ALL","All",ev.length],["APPLICANT","Applicant",act.APPLICANT||0],["SYSTEM","System",act.SYSTEM||0],["REVIEWER","Reviewer",act.REVIEWER||0],["TRAINING_ENGINE","Training",act.TRAINING_ENGINE||0]];
@@ -1253,7 +1257,7 @@ function stepDocs(){
   var n=DOCS.filter(function(d){return docClean(d.k)}).length;
   return '<div class="panel"><div class="ophead"><div class="head"><h1>Upload your documents</h1><p>Six items. Each file is read by OCR on your device as soon as you add it, and is accepted only if it is the right document for that slot. JPG, PNG or PDF.</p></div><div class="actions"><button class="btn" type="button" data-act="back-details">Back</button><button class="btn pri" type="button" data-act="submit"'+(allDocs()?"":" disabled")+'>Submit for verification</button></div></div>'+
   '<div class="bento"><div class="box s4" style="background:var(--sunken);box-shadow:none"><span class="small muted">Verified on your device</span><div><b class="num" style="font-size:3.2rem">'+n+'</b><span class="muted" style="font-size:1.4rem"> / 6</span></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(docClean(d.k)?"on":st&&st.status==="ok"?"bad":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div></div>'+
-  '<div class="box s8" style="background:var(--sunken);box-shadow:none"><div class="dtiles">'+DOCS.map(function(d,i){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected";return '<button type="button" data-dk="'+i+'" aria-current="'+(i===S.dk?"step":"false")+'" class="dtile c-'+d.k+(i===S.dk?" cur":"")+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&docClean(d.k)?'<span class="badge" style="background:var(--ok)">✓</span>':ok||bad?'<span class="badge" style="background:var(--bad)">!</span>':'')+'<span style="min-width:0;display:block"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(ok?(docClean(d.k)?"verified":docFixLabel(d.k)):bad?"not accepted":st?"reading":"to upload")+'</small></span></button>'}).join("")+'</div></div></div>'+
+  '<div class="box s8" style="background:var(--sunken);box-shadow:none"><div class="dtiles">'+DOCS.map(function(d,i){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected";return '<button type="button" data-dk="'+i+'" aria-current="'+(i===S.dk?"step":"false")+'" class="dtile c-'+d.k+(i===S.dk?" cur":"")+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&docClean(d.k)?'<span class="badge" aria-hidden="true" style="background:var(--ok)">✓</span>':ok||bad?'<span class="badge" aria-hidden="true" style="background:var(--bad)">!</span>':'')+'<span style="min-width:0;display:block"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(ok?(docClean(d.k)?"verified":docFixLabel(d.k)):bad?"not accepted":st?"reading":"to upload")+'</small></span></button>'}).join("")+'</div></div></div>'+
   '<div class="note"><span><b>'+n+' of 6 verified.</b> Document '+(S.dk+1)+' of 6 is open below; pick any tile to switch.</span></div>'+
   demoBox('<p class="small muted">No documents to hand? Specimens are synthetic document text built from your typed details and go through the same field reader as a real upload.</p><div class="demo-rows">'+DOCS.map(function(d){return '<div class="demo-row"><b>'+d.label+'</b>'+specCtl(d.k)+'</div>'}).join("")+'</div><button class="btn sm" type="button" data-act="spec-all">Use specimens for all</button>')+
   '<div class="cards">'+docCard(DOCS[S.dk]||DOCS[0])+'</div></div>';
@@ -1269,7 +1273,7 @@ function verifyCard(G){
   var head='<div class="vhead">'+thumb(G.doc,G.code)+'<div><h2>'+G.g+' verification</h2><div class="meta">'+(st?"Uploaded · "+fileKind(st):"Registry lookup")+'<br>Applicant: <span class="mono">'+S.appId+'</span></div></div>'+(gs.st==="done"?(bad?pill("bad","Review required"):pill("ok","Approved")):gs.st==="run"?pill("run","In progress"):pill("","Queued"))+'</div>';
   var rows=gs.idx.map(function(i){var c=S.checks[i],done=i<S.shown,run=i===S.shown;
     var rt=S.round>1&&done?(c.carried?'<span class="rnd"> · carried over from round '+c.from+'</span>':'<span class="rnd"> · re-checked in round '+S.round+'</span>'):'';
-    return '<div class="vrow"><span>'+c.label+'<span class="rule">'+c.rule+'</span>'+rt+'</span>'+(done?(c.res==="PASS"?pill("ok","Passed"):c.res==="INFO"?pill("info","Noted"):c.res==="PENDING"?pill("","Not checked"):c.res==="HUMAN"?pill("info","Reviewer"):pill("bad",c.res)):run?pill("run","Checking"):pill("","Queued"))+(done?'<span class="ev">'+esc(c.ev)+'</span>':'')+'</div>'}).join("");
+    return '<div class="vrow"><span>'+c.label+'<span class="rule">'+c.rule+'</span>'+rt+'</span>'+(done?(c.res==="PASS"?pill("ok","Passed"):c.res==="INFO"?pill("info","Noted"):c.res==="PENDING"?pill("","Not checked"):c.res==="HUMAN"?pill("info","Reviewer"):pill("bad",c.res)):run?pill("run","Checking"):pill("","Queued"))+(done?'<span class="ev">'+esc(applicantEv(c))+'</span>':'')+'</div>'}).join("");
   return '<article class="vcard k-'+(G.doc||"IRDAI")+(gs.st==="wait"?" wait":"")+'">'+head+'<div class="vrows">'+rows+'</div>'+(gs.st==="done"?'<div class="obs"><b>AI observation</b><span>'+esc(S.obs[G.g])+'</span></div>':'')+'<p class="foot">Simulated verification result. Not an official '+(G.doc?"document authentication":"registry response")+'.</p></article>';
 }
 function ring(){
@@ -1301,12 +1305,12 @@ function fixPanel(){
 }
 function rejectPanel(){
   var hi=S.lang==="hi";
-  return '<div class="panel"><div class="ophead"><div class="head"><h2>Why we cannot register you</h2><p>These are fixed eligibility rules, so the decision was made automatically and every reason is listed.</p></div>'+langSeg()+'</div>'+
+  return '<div class="panel"><div class="ophead"><div class="head"><h2>Why we cannot register you</h2><p>'+(S.touches>0?'A person on our team reviewed your application and made this decision. Every reason is listed.':'These are fixed eligibility rules, so the decision was made automatically and every reason is listed.')+'</p></div>'+langSeg()+'</div>'+
     '<div class="msg" lang="'+(hi?"hi":"en")+'"><span class="from">PolicyNest · to '+esc(firstName())+'</span>'+S.rej.map(function(r){return esc(hi?r.hi:r.en)}).join("\n\n")+'</div>'+
     '<div class="actions"><span class="small muted">If you think this is wrong, you can dispute it. A disputed case always goes to a person (rulebook §9).</span>'+(S.disputed?pill("info","Dispute sent"):'<button class="btn" type="button" data-act="dispute">Dispute this decision</button>')+'<button class="btn" type="button" data-act="ask-new">Start a new application</button><button class="btn" type="button" data-act="ask-delete">Delete my saved progress</button></div></div>';
 }
 function humanPanel(){
-  return '<div class="panel"><div class="head"><h2>A person on our team is checking '+(S.disputed?"your dispute":"a few details")+'</h2><p>Some decisions are always made by a person, not by the system. Nothing is needed from you right now. You will hear from us within 4 working hours, by WhatsApp and SMS.</p></div>'+
+  return '<div class="panel"><div class="head"><h2>A person on our team is checking '+(S.disputed?"your dispute":"a few details")+'</h2><p>Some decisions are always made by a person, not by the system. Nothing is needed from you right now. We aim to reply within 4 working hours (our service target)., by WhatsApp and SMS.</p></div>'+
    '<div class="note"><span><b>Demo:</b> play the reviewer in the Review console.</span><button class="btn sm" type="button" data-act="go-review">Open review console →</button></div></div>';
 }
 function stepVerify(){
@@ -1361,10 +1365,12 @@ var LASTST=null;
 function announce(msg){ var s=$("sr-status"); if(!s) return; s.textContent=""; setTimeout(function(){ s.textContent=msg },60); }
 function stepChanged(){
   if(VIEW!=="apply") return;
-  if(LASTST===null){ LASTST=S.step; return; }
-  if(S.step===LASTST) return;
-  LASTST=S.step;
-  announce("Step "+(S.step+1)+" of "+STEPS.length+": "+STEPS[S.step]);
+  if(LASTST===null){ LASTST=S.step+"|"+((S.step===2&&S.checks&&S.checks.length&&S.shown>=S.checks.length)?"done":"")+"|"+S.round; return; }
+  var shownAll=S.step===2&&!S.rechecking&&S.checks&&S.checks.length&&S.shown>=S.checks.length;
+  var key=S.step+"|"+(shownAll?"done":"")+"|"+S.round;
+  if(key===LASTST) return;
+  var stepMoved=String(LASTST).split("|")[0]!==String(S.step); LASTST=key;
+  if(stepMoved) announce("Step "+(S.step+1)+" of "+STEPS.length+": "+STEPS[S.step]);
   var ae=document.activeElement;
   if(ae&&(ae.closest&&ae.closest("#cp")||/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) return;
   var h=$("view-apply")&&$("view-apply").querySelector("h1");
@@ -1882,13 +1888,24 @@ function persist(force){
   if(!S.saveOK||S.status==="IN_REVIEW"||S.rechecking) return;
   var now=Date.now(); if(!force&&now-lastSave<400) return; lastSave=now;
   /* Internal events (fraud desk, reviewer notes) are never saved; the in-memory copy keeps them for the Audit view. */
-  try{ localStorage.setItem(SAVEKEY,JSON.stringify({v:1,savedAt:now,S:S},function(k,v){ if(k==="url"||k==="thumb"||k==="text"||k==="rnote") return undefined; if((k==="note"||k==="rec")&&this&&"ask" in this&&"opened" in this) return undefined; if(k==="events"&&Array.isArray(v)) return v.filter(function(e){return e.audience!=="internal"}); return v })) }catch(e){}
+  try{ localStorage.setItem(SAVEKEY,JSON.stringify({v:1,savedAt:now,S:savedCopy()},function(k,v){ if(k==="url"||k==="thumb"||k==="text"||k==="rnote") return undefined; if((k==="note"||k==="rec")&&this&&"ask" in this&&"opened" in this) return undefined; if(k==="events"&&Array.isArray(v)) return v.filter(function(e){return e.audience!=="internal"}); return v })) }catch(e){}
+}
+/* What goes to the device: a copy of S without another person's name, name tiers, the AI's recommendation or
+   internal codes (GR-4). Names read from a document behind a different-person or human-only finding are dropped;
+   the review console after a reload says they are not kept on this device. */
+function savedCopy(){
+  var o=JSON.parse(JSON.stringify(S,function(k,v){ return (k==="url"||k==="thumb"||k==="text")?undefined:v })),drop={};
+  (o.checks||[]).forEach(function(c){ if(c.reviewer||c.res==="HUMAN"||NEUTRAL_CODES[c.code]){ c.ev=applicantEv(c); delete c.ev0; if(c.key&&c.key!=="PAN") drop[c.key]=1; } if(c.code==="FACE_MATCH_LOW_REPEAT") c.code="FACE_MATCH_LOW"; });
+  Object.keys(drop).forEach(function(k){ if(o.ex&&o.ex[k]) delete o.ex[k].name; var d=o.docs&&o.docs[k]; if(d&&d.ocr&&d.ocr.fields) delete d.ocr.fields.name; });
+  (o.events||[]).forEach(function(e){ if(e.rules) e.rules=String(e.rules).replace(/FACE_MATCH_LOW_REPEAT/g,"FACE_MATCH_LOW"); });
+  delete o.obs; delete o.fb;
+  return o;
 }
 function restore(){
   var raw=null; try{ raw=localStorage.getItem(SAVEKEY) }catch(e){} if(!raw) return false;
   try{ var o=JSON.parse(raw),days=(Date.now()-o.savedAt)/864e5,lim=o.S.status==="NEEDS_MORE_INFO"?14:30;
     if(days>lim){ try{localStorage.removeItem(SAVEKEY)}catch(e){} DROPPED=true; return false; } /* state machine: INACTIVITY_TIMEOUT → DROPPED_OUT */
-    S=o.S; S.focus=false; S.sess=null; S.rechecking=false; S.restored=true; if(S.review&&!S.review.rec) S.review.rec=recText(S.review.dispute);
+    S=o.S; S.focus=false; S.sess=null; S.rechecking=false; S.restored=true; if(S.review&&!S.review.rec) S.review.rec=recText(S.review.dispute); if(S.checks&&S.ex) S.obs=observe(S.checks,S.ex); S.fb=S.fb||{};
     /* Saves from before the reviewer-note fix can hold internal events, reviewer notes and reviewer wording. Strip them on load. */
     S.events=(S.events||[]).filter(function(e){return e.audience!=="internal"&&!INTERNAL_EVENTS[e.event]}).map(function(e){ if(e.event==="ROUTED_TO_REVIEWER"&&e.note) e.note=e.note.replace(/ · AI recommendation: .*? · evidence/," · evidence"); return e; });
     var scrubEv=function(s){ return typeof s==="string"?s.replace(/ · confirmed by reviewer(: .*)?$/," · confirmed by a reviewer").replace(/ · rejected by reviewer(: .*)?$/," · rejected by a reviewer").replace(/ · reviewer asked the applicant: .*$/," · reviewer asked the applicant"):s; };
