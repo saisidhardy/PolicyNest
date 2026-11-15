@@ -570,7 +570,6 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
 .dnext .dest{font-weight:700;font-size:.92rem}
 .dnext .btn.pri{align-self:flex-start;min-height:48px;padding:12px 26px;font-size:1rem}
 .dnext .btn.sm{align-self:flex-start;background:rgba(255,255,255,.55);border-color:transparent;color:#141414}
-.signin-strip{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--accent-soft);border-radius:var(--r);padding:14px 20px}
 .jny{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
 .jny li{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;position:relative}
 .jny li::before{content:"";position:absolute;top:18px;right:50%;width:100%;height:2px;background:var(--line)}
@@ -582,8 +581,8 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
 .jl{font-size:.82rem;font-weight:700;overflow-wrap:anywhere} .js{font-size:.72rem;color:var(--muted)}
 .dgrid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .dsum{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
-.drow{display:flex;align-items:center;gap:8px;font-size:.84rem;min-width:0;flex-wrap:wrap}
-.drow .dn{font-weight:700;flex:1 1 auto;min-width:0} .drow .ds{font-size:.74rem;font-weight:700;color:var(--muted)}
+.drow{display:flex;align-items:center;gap:8px;font-size:.84rem;min-width:0;flex-wrap:nowrap}
+.drow .dn{font-weight:700;flex:1 1 auto;min-width:0;overflow-wrap:anywhere} .drow .ds{white-space:nowrap} .drow .ds{font-size:.74rem;font-weight:700;color:var(--muted)}
 .drow.verified svg{color:var(--ok)} .drow.action svg,.drow.action .ds{color:var(--bad-ink)}
 .nlist,.tlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
 .nrow,.tlist li{display:flex;gap:10px;align-items:flex-start}
@@ -632,9 +631,70 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   .top .iconbtn{width:44px;height:44px}
   .tb-row{gap:6px 10px}
 }
+
+/* ===== Landing page (public, signed-out) and auth dialogs (lane P3b) ===== */
+body.landing .shell,body.landing .cp-fab,body.landing #cp,body.landing #focusbar,body.landing #fs-banner,body.landing #skip-g{display:none!important}
+.landing{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.landing[hidden]{display:none}
+.lp-in{max-width:1080px;margin:0 auto;width:100%;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.lp-top{position:sticky;top:0;z-index:5;backdrop-filter:blur(10px);background:var(--glass)}
+.lp-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:10px}
+.lp-bar .brand{margin-right:0;min-width:0}
+.lp-bar .brand span{display:block;font-size:.72rem;color:var(--muted)}
+.lp-bar .iconbtn{width:44px;height:44px}
+#lp-main{display:flex;flex-direction:column;gap:20px;padding-block:clamp(16px,4vw,44px) 24px;flex:1;outline:0}
+.lp-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:center}
+.lp-hero h1{font-size:clamp(1.7rem,5.4vw,3rem);line-height:1.1;font-weight:700;overflow-wrap:anywhere}
+.lp-hero .lead{font-size:1.02rem;margin-top:12px;max-width:52ch}
+.lp-start{gap:12px}
+.lp-start h2{font-size:1.2rem}
+.lp-actions{display:flex;flex-direction:column;gap:10px}
+.lp-actions .btn{min-height:48px;width:100%;font-size:1rem}
+.lp-actions .btn:not(.pri){background:rgba(255,255,255,.7);border-color:transparent;color:#141414}
+html[data-theme="dark"] .lp-actions .btn:not(.pri){background:rgba(255,255,255,.88)}
+.lp-sec{display:flex;flex-direction:column;gap:12px}
+.lp-sec>h2{font-size:1.25rem}
+.lp-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.lp-steps li{background:var(--surface);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.lp-steps .n{width:34px;height:34px;border-radius:50%;background:var(--brand);color:#141414;display:grid;place-items:center;font-family:var(--display);font-weight:700}
+.lp-steps b{font-family:var(--display)}
+.lp-docs{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.lp-docs li{background:var(--sunken);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.88rem}
+.lp-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.lp-two .box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.lp-foot{padding-block:16px 96px;font-size:.82rem;color:var(--muted)}
+.landing .skip:focus{top:12px}
+dialog.pdlg{border:0;padding:0;margin:auto;max-width:460px;width:calc(100% - 32px);background:transparent;color:var(--ink);overflow:visible}
+dialog.pdlg::backdrop{background:rgba(10,10,10,.55)}
+dialog.pdlg:not([open]){display:none}
+.mbox{max-height:calc(100vh - 32px);overflow:auto}
+.mbox label{font-weight:700;font-size:.86rem;color:var(--ink)}
+.mbox input[type=text],.mbox input[type=email],.mbox input[type=password]{width:100%;background:var(--sunken);border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-height:46px}
+.mbox input[aria-invalid="true"]{border-color:var(--bad)}
+.mbox .errsum{background:var(--bad-soft);color:var(--bad-ink);border-radius:14px;padding:10px 14px;font-size:.88rem}
+.mbox .errsum ul{margin:6px 0 0;padding-left:18px}
+.mbox .errsum a{color:inherit;font-weight:700}
+.mbox .okmsg{background:var(--ok-soft);color:var(--ok);border-radius:14px;padding:10px 14px;font-weight:600;font-size:.9rem}
+.mbox .linkbtn{border:0;background:none;color:var(--ink);text-decoration:underline;font-weight:700;cursor:pointer;min-height:44px;padding:0 6px;text-align:left}
+.mbox .optin{display:flex;gap:10px;align-items:flex-start;background:var(--sunken);border-radius:14px;padding:12px;font-size:.84rem;font-weight:500;color:var(--ink);cursor:pointer}
+.mbox .optin input{width:22px;height:22px;flex:none;accent-color:var(--brand);margin-top:0}
+.choices{display:flex;flex-direction:column;gap:12px}
+.choice{display:flex;gap:12px;align-items:flex-start;background:var(--sunken);border-radius:16px;padding:14px;cursor:pointer;min-height:44px}
+.choice input{width:22px;height:22px;flex:none;accent-color:var(--brand);margin-top:2px}
+.choice b{display:block}
+@media (max-width:800px){.lp-hero{grid-template-columns:minmax(0,1fr)}.lp-steps,.lp-two{grid-template-columns:minmax(0,1fr)}}
 </style>
 
-<a class="skip" href="#main">Skip to content</a>
+<a class="skip" id="skip-g" href="#main">Skip to content</a>
+<div class="landing" id="view-welcome" hidden>
+ <a class="skip" id="lp-skip" href="#lp-main">Skip to content</a>
+ <header class="lp-top"><div class="lp-in lp-bar">
+  <div class="brand"><svg width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15a12 12 0 0 0 24 0" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><path d="M8 15a7 7 0 0 0 14 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="15" cy="9" r="3.4" fill="var(--brand)"/></svg><div><b>PolicyNest</b><span id="lp-tag"></span></div></div>
+  <div class="tools"><div class="langsw" id="lp-lang" role="group"><button type="button" data-ulang="en" lang="en" aria-label="English">EN</button><button type="button" data-ulang="hi" lang="hi" aria-label="हिंदी">हिंदी</button></div><button class="iconbtn" type="button" data-act="theme" id="lthemebtn" aria-label="Switch to dark mode"></button></div>
+ </div></header>
+ <main id="lp-main" tabindex="-1"></main>
+ <footer class="lp-foot lp-in" id="lp-foot"></footer>
+</div>
 <div class="shell"><aside class="nav"><div class="nav-in">
   <div class="brand">
     <svg width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15a12 12 0 0 0 24 0" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><path d="M8 15a7 7 0 0 0 14 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="15" cy="9" r="3.4" fill="var(--brand)"/></svg>
@@ -644,11 +704,7 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   <span class="env" id="envchip"><i></i>Documents are read on your device</span>
   <div class="role" id="role-box"><label for="role-sel">View as</label><select id="role-sel"><option value="applicant">Applicant</option><option value="reviewer">Reviewer</option><option value="ops">Ops and compliance</option><option value="all">All views (demo)</option></select><small>Demo role switch, not a login. Anyone can switch.</small></div>
   <nav class="menu" id="menu" aria-label="Main navigation"></nav>
-  <details class="navx" id="navx" open><summary id="navx-sum">Account, privacy and sync</summary>
-  <button class="btn" type="button" id="account-open">Sign in / create account</button>
-  <button class="btn" type="button" id="workspace-open">Account workspace</button>
-  <label class="small"><input id="account-sync" type="checkbox"> Sync document status and progress to my account (no images or ID numbers)</label>
-  <label class="small"><input id="analytics-consent" type="checkbox"> Share anonymous performance and usage measurements</label>
+  <details class="navx" id="navx" open><summary id="navx-sum">More</summary>
   <div class="help"><b>Need help?</b><span id="foot-note">A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
   </details>
 </div></aside>
@@ -752,7 +808,8 @@ function log(event,actor,note){var e={t:Date.now(),state:S.status,round:S.round,
 function pill(cls,txt){return '<span class="pill '+cls+'">'+txt+'</span>'}
 /* ---------- Theme (warm light by default; dark on request, remembered in this browser if storage allows) ---------- */
 var THEME="light"; try{ THEME=localStorage.getItem("pn-theme")==="dark"?"dark":"light" }catch(e){}
-function applyTheme(){ document.documentElement.setAttribute("data-theme",THEME); var b=$("themebtn"); if(b){ b.setAttribute("aria-label",THEME==="dark"?"Switch to light mode":"Switch to dark mode"); b.title=b.getAttribute("aria-label"); b.innerHTML=THEME==="dark"?'<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>':'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.6A5.6 5.6 0 0 1 6.4 2.5a5.6 5.6 0 1 0 7.1 7.1z"/></svg>'; } }
+function applyTheme(){ applyTheme1("themebtn"); applyTheme1("lthemebtn"); }
+function applyTheme1(bid){ document.documentElement.setAttribute("data-theme",THEME); var b=$(bid); if(b){ b.setAttribute("aria-label",THEME==="dark"?"Switch to light mode":"Switch to dark mode"); b.title=b.getAttribute("aria-label"); b.innerHTML=THEME==="dark"?'<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>':'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.6A5.6 5.6 0 0 1 6.4 2.5a5.6 5.6 0 1 0 7.1 7.1z"/></svg>'; } }
 /* ---------- Encouraging pop-ups: every success, addressed to the applicant by first name ---------- */
 function fname(){ var n=(S.ex&&S.ex.PAN&&S.ex.PAN.name)||norm(S.f.name||""); n=n.split(" ")[0]||""; return n?n.charAt(0)+n.slice(1).toLowerCase():"there"; }
 var TICON={ok:'<path d="M3.5 8.4l2.9 2.9 6.1-6.6"/>',star:'<path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/>',up:'<path d="M8 13V3M3.5 7.5L8 3l4.5 4.5"/>',heart:'<path d="M8 13.5S2 10 2 6a3 3 0 0 1 6-1 3 3 0 0 1 6 1c0 4-6 7.5-6 7.5z"/>'};
@@ -1472,7 +1529,7 @@ en:{
  "ref.label":"Application reference","ref.copy":"Copy","ref.copied":"Copied","ref.copied.sr":"Reference copied","ref.copy.aria":"Copy application reference","ref.local":"not yet registered","ref.local.long":"This reference is saved only on this device until you sign in.",
  "lang.label":"Language","lang.en":"English","lang.hi":"Hindi",
  "menu.account":"Account menu","menu.profile":"Profile","menu.notifications":"Notifications","menu.history":"Application history","menu.signin":"Sign in or create account","menu.signout":"Sign out","menu.preferred":"Preferred language: {lang}",
- "nav.label":"Main navigation","nav.home":"Home","nav.application":"Application","nav.documents":"Documents","nav.training":"Training","nav.exam":"Exam","nav.certificate":"Certificate","nav.help":"Help","nav.review":"Review console","nav.evaluation":"Evaluation","nav.audit":"Audit trail","nav.staff":"Staff tools","nav.more":"Account, privacy and sync",
+ "nav.label":"Main navigation","nav.home":"Home","nav.application":"Application","nav.documents":"Documents","nav.training":"Training","nav.exam":"Exam","nav.certificate":"Certificate","nav.help":"Help","nav.review":"Review console","nav.evaluation":"Evaluation","nav.audit":"Audit trail","nav.staff":"Staff tools","nav.more":"Help",
  "ui.guest":"Guest","ui.there":"there","ui.hello":"Hello, {name}","ui.congrats":"Congratulations, {name}","ui.today":"Today","ui.view":"View","ui.dismiss":"Dismiss","ui.new":"New",
  "save.device":"Saved on this device, {time}","save.account":"Saved to your account, {time}","save.none":"Not saved yet","save.nodevice":"Not saved. Turn on saving on this device, or sign in.",
  "dash.where":"Where you are now","dash.action.yes":"Action needed from you","dash.action.no":"Nothing needed from you right now","dash.next":"What happens next","dash.eta":"When to expect a result","dash.eta.none":"We will show an estimated decision time after your application is submitted.",
@@ -1509,7 +1566,75 @@ en:{
  "un.title":"You do not have access to {name}","un.body":"This area is for {roles}. You are signed in as: {role}.","un.body.out":"This area is for {roles}. Sign in with a staff account to open it.","un.home":"Go to your home","un.signin":"Sign in",
  "route.note":"You are on {current}. {requested} opens after that step.","route.note.done":"{requested} is already complete. You are on {current}.",
  "state.loading":"Loading…","state.error":"We could not load this right now.","state.retry":"Try again",
- "demo.chip":"Viewing as {role}. Demo only.","env.prod":"Documents are read on your device","env.demo":"Demo environment · on-device OCR","foot.prod":"Four of the checks are simulated in this version. See How document checks work.","foot.demo":"Demo environment. Checks are simulated."
+ "demo.chip":"Viewing as {role}. Demo only.","env.prod":"Documents are read on your device","env.demo":"Demo environment · on-device OCR","foot.prod":"Four of the checks are simulated in this version. See How document checks work.","foot.demo":"Demo environment. Checks are simulated.",
+ "lp.skip":"Skip to content",
+ "lp.tag":"POSP agent onboarding",
+ "lp.lang":"Language",
+ "lp.h1":"Become a certified insurance agent (POSP), one step at a time",
+ "lp.lead":"PolicyNest is an online onboarding portal for people who want to become a certified Point of Sales Person (POSP) insurance agent.",
+ "lp.start":"Get started",
+ "lp.signin":"Sign in",
+ "lp.create":"Create account",
+ "lp.recover":"Account recovery",
+ "lp.about.h":"What PolicyNest is",
+ "lp.about.b1":"You add a short set of details and six documents. Each document is read on your device and compared with the onboarding rules. Anything that needs judgement goes to a person on our team.",
+ "lp.about.b2":"After the checks pass you complete 15 hours of training, take an exam and receive your certificate.",
+ "lp.fiction":"PolicyNest is a fictional insurance broker, made for the Masters' Union Applied AI Challenge (problem PS-01). No real policies are sold here.",
+ "lp.how.h":"How it works",
+ "lp.how.sub":"Six stages, in order. You can stop and come back.",
+ "lp.s.0":"Tell us who you are on four short pages.",
+ "lp.s.1":"Add six documents, one at a time. Each is checked as soon as you add it.",
+ "lp.s.2":"We cross-check your documents against the onboarding rules. If anything is unclear, you get one message listing every fix.",
+ "lp.s.3":"15 hours of training modules, at your own pace.",
+ "lp.s.4":"A short multiple-choice exam.",
+ "lp.s.5":"Your POSP certificate.",
+ "lp.need.h":"What you need",
+ "lp.need.b":"Keep these six documents ready: {docs}.",
+ "lp.protect.h":"How we protect your information",
+ "lp.dlg.login":"Sign in",
+ "lp.dlg.register":"Create your account",
+ "lp.dlg.recover":"Account recovery",
+ "lp.dlg.login.sub":"Use the email and password you registered with.",
+ "lp.dlg.register.sub":"Your account lets you save your application and continue on any device.",
+ "lp.dlg.recover.sub":"Enter your email. If an account exists, we will send a link to reset your password. You see the same message whatever you enter.",
+ "lp.f.name":"Full name",
+ "lp.f.email":"Email",
+ "lp.f.password":"Password",
+ "lp.f.password.new":"Password (12 to 256 characters)",
+ "lp.submit.recover":"Send reset link",
+ "lp.close":"Close",
+ "lp.wait":"Please wait…",
+ "lp.sw.register":"New here? Create an account",
+ "lp.sw.login":"Already have an account? Sign in",
+ "lp.sw.recover":"Forgot your password?",
+ "lp.sync.opt":"Save my progress to my account so I can continue on any device. Only statuses are synced, never images or ID numbers. Optional.",
+ "lp.err.sum":"Please fix the following:",
+ "lp.err.name":"Enter your name.",
+ "lp.err.email":"Enter a valid email address.",
+ "lp.err.password":"The password must be 12 to 256 characters.",
+ "lp.err.password.login":"Enter your password.",
+ "lp.err.network":"The account service is unavailable. Please try again in a moment.",
+ "lp.err.credentials":"The email or password is not correct.",
+ "lp.err.taken":"An account with this email already exists. Try signing in instead.",
+ "lp.err.generic":"Something went wrong. Please try again.",
+ "lp.recover.done":"If an account exists for that address, we have sent a link to reset the password. If you do not receive it, contact your administrator.",
+ "lp.signedin":"Signed in successfully.",
+ "lp.reset.h":"Reset your password",
+ "lp.reset.pw":"New password (12 to 256 characters)",
+ "lp.reset.submit":"Set new password",
+ "lp.reset.ok":"Your password has been changed. You can sign in with it now.",
+ "lp.reset.bad":"The reset link is not valid or has expired. Request a new link from Account recovery.",
+ "lp.reset.signin":"Go to sign in",
+ "pf.choices.h":"Your choices",
+ "pf.choices.sub":"Both are off unless you turn them on. You can change them at any time.",
+ "pf.sync.t":"Sync progress to my account",
+ "pf.sync.b":"Saves document statuses and your progress to your account, so you can continue on another device. No images, no OCR text and no ID numbers are sent.",
+ "pf.an.t":"Share anonymous usage measurements",
+ "pf.an.b":"Helps us see where applicants get stuck. Contains no names, ID numbers or document content.",
+ "pf.ws.h":"Cases and appeals",
+ "pf.ws.b":"See your reviewer case status and any appeals. Reviewers and administrators see their assigned cases and reports here.",
+ "pf.ws.btn":"Open account workspace",
+ "dash.help.link":"How checks work and how your information is protected"
 },
 hi:{
  "role.applicant":"POSP आवेदक","role.reviewer":"समीक्षक","role.ops":"संचालन और अनुपालन","role.admin":"व्यवस्थापक","role.all":"डेमो: सभी दृश्य",
@@ -1517,7 +1642,7 @@ hi:{
  "ref.label":"आवेदन संदर्भ","ref.copy":"कॉपी करें","ref.copied":"कॉपी हो गया","ref.copied.sr":"संदर्भ कॉपी हो गया","ref.copy.aria":"आवेदन संदर्भ कॉपी करें","ref.local":"अभी पंजीकृत नहीं","ref.local.long":"साइन इन करने तक यह संदर्भ सिर्फ़ इसी डिवाइस पर सहेजा है।",
  "lang.label":"भाषा","lang.en":"अंग्रेज़ी","lang.hi":"हिंदी",
  "menu.account":"खाता मेनू","menu.profile":"प्रोफ़ाइल","menu.notifications":"सूचनाएँ","menu.history":"आवेदन का इतिहास","menu.signin":"साइन इन करें या खाता बनाएँ","menu.signout":"साइन आउट करें","menu.preferred":"पसंदीदा भाषा: {lang}",
- "nav.label":"मुख्य नेविगेशन","nav.home":"होम","nav.application":"आवेदन","nav.documents":"दस्तावेज़","nav.training":"प्रशिक्षण","nav.exam":"परीक्षा","nav.certificate":"प्रमाणपत्र","nav.help":"सहायता","nav.review":"समीक्षा कंसोल","nav.evaluation":"मूल्यांकन","nav.audit":"ऑडिट ट्रेल","nav.staff":"स्टाफ़ के उपकरण","nav.more":"खाता, गोपनीयता और सिंक",
+ "nav.label":"मुख्य नेविगेशन","nav.home":"होम","nav.application":"आवेदन","nav.documents":"दस्तावेज़","nav.training":"प्रशिक्षण","nav.exam":"परीक्षा","nav.certificate":"प्रमाणपत्र","nav.help":"सहायता","nav.review":"समीक्षा कंसोल","nav.evaluation":"मूल्यांकन","nav.audit":"ऑडिट ट्रेल","nav.staff":"स्टाफ़ के उपकरण","nav.more":"सहायता",
  "ui.guest":"अतिथि","ui.there":"जी","ui.hello":"नमस्ते, {name}","ui.congrats":"बधाई हो, {name}","ui.today":"आज","ui.view":"देखें","ui.dismiss":"बंद करें","ui.new":"नया",
  "save.device":"इस डिवाइस पर सहेजा गया, {time}","save.account":"आपके खाते में सहेजा गया, {time}","save.none":"अभी तक सहेजा नहीं गया","save.nodevice":"सहेजा नहीं गया। इस डिवाइस पर सहेजना चालू करें, या साइन इन करें।",
  "dash.where":"आप अभी कहाँ हैं","dash.action.yes":"आपकी ओर से कार्रवाई चाहिए","dash.action.no":"अभी आपको कुछ नहीं करना है","dash.next":"आगे क्या होगा","dash.eta":"नतीजा कब तक मिलेगा","dash.eta.none":"आवेदन जमा होने के बाद हम फ़ैसले का अनुमानित समय दिखाएँगे।",
@@ -1551,7 +1676,75 @@ hi:{
  "un.title":"आपको {name} खोलने की अनुमति नहीं है","un.body":"यह क्षेत्र {roles} के लिए है। आप इस रूप में साइन इन हैं: {role}।","un.body.out":"यह क्षेत्र {roles} के लिए है। इसे खोलने के लिए स्टाफ़ खाते से साइन इन करें।","un.home":"अपने होम पर जाएँ","un.signin":"साइन इन करें",
  "route.note":"आप {current} पर हैं। {requested} उस चरण के बाद खुलेगा।","route.note.done":"{requested} पहले ही पूरा हो चुका है। आप {current} पर हैं।",
  "state.loading":"लोड हो रहा है…","state.error":"अभी यह लोड नहीं हो सका।","state.retry":"फिर से कोशिश करें",
- "demo.chip":"{role} के रूप में देख रहे हैं। सिर्फ़ डेमो।","env.prod":"दस्तावेज़ आपके डिवाइस पर पढ़े जाते हैं","env.demo":"डेमो वातावरण · डिवाइस पर OCR","foot.prod":"इस संस्करण में चार जाँचें नक़ली हैं। “दस्तावेज़ों की जाँच कैसे होती है” देखें।","foot.demo":"डेमो वातावरण। जाँचें नक़ली हैं।"
+ "demo.chip":"{role} के रूप में देख रहे हैं। सिर्फ़ डेमो।","env.prod":"दस्तावेज़ आपके डिवाइस पर पढ़े जाते हैं","env.demo":"डेमो वातावरण · डिवाइस पर OCR","foot.prod":"इस संस्करण में चार जाँचें नक़ली हैं। “दस्तावेज़ों की जाँच कैसे होती है” देखें।","foot.demo":"डेमो वातावरण। जाँचें नक़ली हैं।",
+ "lp.skip":"सामग्री पर जाएँ",
+ "lp.tag":"POSP एजेंट ऑनबोर्डिंग",
+ "lp.lang":"भाषा",
+ "lp.h1":"प्रमाणित बीमा एजेंट (POSP) बनें, एक-एक कदम में",
+ "lp.lead":"PolicyNest एक ऑनलाइन ऑनबोर्डिंग पोर्टल है, जो प्रमाणित पॉइंट ऑफ़ सेल्स पर्सन (POSP) बीमा एजेंट बनना चाहने वालों के लिए है।",
+ "lp.start":"शुरू करें",
+ "lp.signin":"साइन इन करें",
+ "lp.create":"खाता बनाएँ",
+ "lp.recover":"खाता पुनर्प्राप्ति",
+ "lp.about.h":"PolicyNest क्या है",
+ "lp.about.b1":"आप थोड़ा-सा विवरण और छह दस्तावेज़ जोड़ते हैं। हर दस्तावेज़ आपके डिवाइस पर पढ़ा जाता है और ऑनबोर्डिंग नियमों से मिलाया जाता है। जहाँ निर्णय की ज़रूरत होती है, वहाँ हमारी टीम का कोई व्यक्ति देखता है।",
+ "lp.about.b2":"जाँच पूरी होने के बाद आप 15 घंटे का प्रशिक्षण पूरा करते हैं, परीक्षा देते हैं और अपना प्रमाणपत्र पाते हैं।",
+ "lp.fiction":"PolicyNest एक काल्पनिक बीमा ब्रोकर है, जो Masters' Union Applied AI Challenge (समस्या PS-01) के लिए बनाया गया है। यहाँ कोई असली पॉलिसी नहीं बेची जाती।",
+ "lp.how.h":"यह कैसे काम करता है",
+ "lp.how.sub":"छह चरण, क्रम से। आप रुककर बाद में लौट सकते हैं।",
+ "lp.s.0":"चार छोटे पेजों में अपने बारे में बताएँ।",
+ "lp.s.1":"छह दस्तावेज़ एक-एक करके जोड़ें। हर दस्तावेज़ जोड़ते ही जाँचा जाता है।",
+ "lp.s.2":"हम आपके दस्तावेज़ों को ऑनबोर्डिंग नियमों से मिलाते हैं। कुछ अस्पष्ट हो तो आपको एक संदेश मिलता है जिसमें सभी सुधार लिखे होते हैं।",
+ "lp.s.3":"15 घंटे के प्रशिक्षण मॉड्यूल, आपकी अपनी गति से।",
+ "lp.s.4":"एक छोटी बहुविकल्पीय परीक्षा।",
+ "lp.s.5":"आपका POSP प्रमाणपत्र।",
+ "lp.need.h":"आपको क्या चाहिए",
+ "lp.need.b":"ये छह दस्तावेज़ तैयार रखें: {docs}।",
+ "lp.protect.h":"हम आपकी जानकारी की सुरक्षा कैसे करते हैं",
+ "lp.dlg.login":"साइन इन करें",
+ "lp.dlg.register":"अपना खाता बनाएँ",
+ "lp.dlg.recover":"खाता पुनर्प्राप्ति",
+ "lp.dlg.login.sub":"पंजीकरण के समय इस्तेमाल किया ईमेल और पासवर्ड डालें।",
+ "lp.dlg.register.sub":"खाते से आप अपना आवेदन सहेज सकते हैं और किसी भी डिवाइस पर आगे बढ़ सकते हैं।",
+ "lp.dlg.recover.sub":"अपना ईमेल डालें। अगर खाता मौजूद है तो हम पासवर्ड बदलने का लिंक भेजेंगे। आप कुछ भी डालें, यही संदेश दिखेगा।",
+ "lp.f.name":"पूरा नाम",
+ "lp.f.email":"ईमेल",
+ "lp.f.password":"पासवर्ड",
+ "lp.f.password.new":"पासवर्ड (12 से 256 अक्षर)",
+ "lp.submit.recover":"रीसेट लिंक भेजें",
+ "lp.close":"बंद करें",
+ "lp.wait":"कृपया प्रतीक्षा करें…",
+ "lp.sw.register":"नए हैं? खाता बनाएँ",
+ "lp.sw.login":"पहले से खाता है? साइन इन करें",
+ "lp.sw.recover":"पासवर्ड भूल गए?",
+ "lp.sync.opt":"मेरी प्रगति मेरे खाते में सहेजें ताकि मैं किसी भी डिवाइस पर आगे बढ़ सकूँ। सिर्फ़ स्थिति सिंक होती है, कभी तस्वीरें या पहचान संख्याएँ नहीं। वैकल्पिक।",
+ "lp.err.sum":"कृपया इन्हें ठीक करें:",
+ "lp.err.name":"अपना नाम डालें।",
+ "lp.err.email":"सही ईमेल पता डालें।",
+ "lp.err.password":"पासवर्ड 12 से 256 अक्षरों का होना चाहिए।",
+ "lp.err.password.login":"अपना पासवर्ड डालें।",
+ "lp.err.network":"खाता सेवा अभी उपलब्ध नहीं है। कृपया थोड़ी देर बाद फिर कोशिश करें।",
+ "lp.err.credentials":"ईमेल या पासवर्ड सही नहीं है।",
+ "lp.err.taken":"इस ईमेल से खाता पहले से है। इसके बजाय साइन इन करें।",
+ "lp.err.generic":"कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।",
+ "lp.recover.done":"अगर उस पते पर खाता मौजूद है, तो हमने पासवर्ड बदलने का लिंक भेज दिया है। न मिले तो अपने व्यवस्थापक से संपर्क करें।",
+ "lp.signedin":"साइन इन हो गया।",
+ "lp.reset.h":"अपना पासवर्ड बदलें",
+ "lp.reset.pw":"नया पासवर्ड (12 से 256 अक्षर)",
+ "lp.reset.submit":"नया पासवर्ड सेट करें",
+ "lp.reset.ok":"आपका पासवर्ड बदल गया है। अब आप इससे साइन इन कर सकते हैं।",
+ "lp.reset.bad":"रीसेट लिंक सही नहीं है या समाप्त हो चुका है। खाता पुनर्प्राप्ति से नया लिंक मँगवाएँ।",
+ "lp.reset.signin":"साइन इन पर जाएँ",
+ "pf.choices.h":"आपके विकल्प",
+ "pf.choices.sub":"दोनों तब तक बंद रहते हैं जब तक आप चालू न करें। आप इन्हें कभी भी बदल सकते हैं।",
+ "pf.sync.t":"मेरी प्रगति मेरे खाते में सिंक करें",
+ "pf.sync.b":"दस्तावेज़ों की स्थिति और आपकी प्रगति आपके खाते में सहेजी जाती है, ताकि आप दूसरे डिवाइस पर आगे बढ़ सकें। कोई तस्वीर, OCR टेक्स्ट या पहचान संख्या नहीं भेजी जाती।",
+ "pf.an.t":"गुमनाम उपयोग माप साझा करें",
+ "pf.an.b":"इससे हमें पता चलता है कि आवेदक कहाँ अटकते हैं। इसमें नाम, पहचान संख्या या दस्तावेज़ की सामग्री नहीं होती।",
+ "pf.ws.h":"मामले और अपील",
+ "pf.ws.b":"अपने समीक्षक मामले की स्थिति और अपील देखें। समीक्षक और व्यवस्थापक यहाँ अपने सौंपे गए मामले और रिपोर्ट देखते हैं।",
+ "pf.ws.btn":"खाता कार्यक्षेत्र खोलें",
+ "dash.help.link":"जाँच कैसे होती है और आपकी जानकारी कैसे सुरक्षित रहती है"
 }};
 Object.keys(I18N_UI.en).forEach(function(k){I18N.en[k]=I18N_UI.en[k]});
 Object.keys(I18N_UI.hi).forEach(function(k){I18N.hi[k]=I18N_UI.hi[k]});
@@ -1673,10 +1866,10 @@ function TE(k,p){ return esc(T(k,p)); }
 function setHtml(el,h){ if(el&&el.__h!==h){ el.__h=h; el.innerHTML=h; } }
 function svgi(n){ return '<svg viewBox="0 0 16 16" aria-hidden="true">'+(ICON_PATHS[n]||ICON_PATHS.circle)+'</svg>'; }
 var APPREF=null,LOCALSAVE=0,ROUTE_STAGE=null,LASTHASH="";
-var VIEWS=["dash","apply","ops","audit","eval","notif","hist","acct","help"];
+var VIEWS=["welcome","dash","apply","ops","audit","eval","notif","hist","acct","help"];
 var VIEW_ACT={dash:"view.dashboard",apply:"view.application",ops:"view.review",eval:"view.evaluation",audit:"view.audit",notif:"view.notifications",hist:"view.history",acct:"view.account"};
-var VIEW_NAME={dash:"nav.home",apply:"nav.application",ops:"nav.review",audit:"nav.audit",eval:"nav.evaluation",notif:"menu.notifications",hist:"menu.history",acct:"menu.profile",help:"nav.help"};
-var HASH={dash:"dashboard",apply:"apply",ops:"review",audit:"audit",eval:"evaluation",notif:"notifications",hist:"history",acct:"account",help:"help"};
+var VIEW_NAME={dash:"nav.home",apply:"nav.application",ops:"nav.review",audit:"nav.audit",eval:"nav.evaluation",notif:"menu.notifications",hist:"menu.history",acct:"menu.profile",help:"nav.help",welcome:"lp.signin"};
+var HASH={dash:"dashboard",apply:"apply",ops:"review",audit:"audit",eval:"evaluation",notif:"notifications",hist:"history",acct:"account",help:"help",welcome:"welcome"};
 var HASH_STAGE={documents:1,training:3,exam:4,certificate:5};
 var GRID_ICON='<rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>';
 var HELP_ICON='<circle cx="8" cy="8" r="5.5"/><path d="M6.4 6.4a1.7 1.7 0 1 1 2.4 1.5c-.5.3-.8.6-.8 1.2M8 11.4v.1"/>';
@@ -1805,6 +1998,29 @@ document.addEventListener("click",function(e){
   if(tgt.closest('#acct-menu [role="menuitem"]')){ closeMenu(false); if(tgt.closest("[data-view]")) setTimeout(function(){ focusHead(VIEW); },0); }
   else if(!tgt.closest("#acct-pop")&&!tgt.closest("#acct-btn")) closeMenu(false);
 });
+/* ---- landing page (public, signed-out): three actions plus the basic facts about the site ---- */
+function lpChrome(){
+  var tg=$("lp-tag"); if(tg) tg.textContent=T("lp.tag");
+  var sk=$("lp-skip"); if(sk) sk.textContent=T("lp.skip");
+  var lg=$("lp-lang"); if(lg){ lg.setAttribute("aria-label",T("lp.lang")); Array.prototype.forEach.call(lg.querySelectorAll("[data-ulang]"),function(b){ b.setAttribute("aria-pressed",String(b.getAttribute("data-ulang")===LANG)); }); }
+  setHtml($("lp-foot"),'<p>'+TE("foot.prod")+'</p>');
+}
+function renderWelcome(){
+  lpChrome();
+  var docs=DOCS.map(function(d){return T("doc."+d.k)});
+  var h='<section class="lp-in lp-hero" aria-labelledby="lp-h1"><div><h1 id="lp-h1">'+TE("lp.h1")+'</h1><p class="lead">'+TE("lp.lead")+'</p></div>'+
+    '<section class="box hot lp-start" aria-labelledby="lp-start-h"><h2 id="lp-start-h">'+TE("lp.start")+'</h2><div class="lp-actions">'+
+    '<button class="btn pri" type="button" data-act="auth-open" data-mode="login">'+TE("lp.signin")+'</button>'+
+    '<button class="btn" type="button" data-act="auth-open" data-mode="register">'+TE("lp.create")+'</button>'+
+    '<button class="btn" type="button" data-act="auth-open" data-mode="recover">'+TE("lp.recover")+'</button></div></section></section>';
+  h+='<section class="lp-in lp-sec" aria-labelledby="lp-about-h"><h2 id="lp-about-h">'+TE("lp.about.h")+'</h2><div class="box"><p>'+TE("lp.about.b1")+'</p><p>'+TE("lp.about.b2")+'</p><p class="small muted">'+TE("lp.fiction")+'</p></div></section>';
+  h+='<section class="lp-in lp-sec" aria-labelledby="lp-how-h"><h2 id="lp-how-h">'+TE("lp.how.h")+'</h2><p class="small muted">'+TE("lp.how.sub")+'</p><ol class="lp-steps">'+STAGES.map(function(sd,i){
+    return '<li><span class="n" aria-hidden="true">'+(i+1)+'</span><b>'+TE(sd.nameKey)+'</b><span class="small">'+TE("lp.s."+i)+'</span></li>';}).join("")+'</ol></section>';
+  h+='<div class="lp-in lp-two"><section class="box" aria-labelledby="lp-need-h"><h2 id="lp-need-h">'+TE("lp.need.h")+'</h2><p class="small">'+TE("lp.need.b",{docs:docs.join(T("ui.list_sep"))})+'</p><ul class="lp-docs">'+docs.map(function(d){return '<li>'+esc(d)+'</li>'}).join("")+'</ul><p class="small muted">'+TE("trust.1.b2")+'</p></section>'+
+    '<section class="box" aria-labelledby="lp-prot-h"><h2 id="lp-prot-h">'+TE("lp.protect.h")+'</h2><ul class="small">'+["1","2","3","4"].map(function(i){return '<li>'+TE("trust.3.b"+i)+'</li>'}).join("")+'</ul>'+
+    '<details class="dd"><summary>'+TE("trust.2.h")+'</summary><div class="ddb"><p>'+TE("trust.2.b1")+'</p><p>'+TE("trust.2.b2")+'</p></div></details></section></div>';
+  setHtml($("lp-main"),h);
+}
 /* ---- routing ---- */
 function parseHash(h){
   var v=null,stage=null;
@@ -1877,15 +2093,12 @@ function trustHtml(ids){
   return ids.map(function(i){ return '<details class="dd"><summary>'+TE("trust."+i+".h")+'</summary><div class="ddb">'+secs[i].map(function(k){return '<p>'+TE(k,{docs:docs})+'</p>'}).join("")+'</div></details>'; }).join("");
 }
 function fullJourneyHtml(key,pm){
-  var frac=journeyFrac(),cert=key==="certified";
-  var bars='<div class="hbars">'+STAGES.map(function(sd,i){var f=Math.max(0,Math.min(1,frac[i])),now=i===S.step&&!cert;
-    return '<div class="b">'+(now?'<span class="tip">'+Math.round(f*100)+'%</span>':'')+'<i style="height:100%;overflow:hidden;display:flex;align-items:flex-end'+(now?';border-color:var(--brand)':'')+'"><em style="display:block;width:100%;height:'+Math.round(f*100)+'%;border-radius:999px;background:'+(now?"var(--brand)":"var(--night)")+'"></em></i><span>'+TE(sd.nameKey)+'</span></div>'}).join("")+'</div>';
   var trainingOpen=["training_pending","exam_pending","certificate_pending","certified"].indexOf(key)>=0;
   var lines='<p>'+(trainingOpen?TE("dd.training.line",{hours:pm.training.hours,of:pm.training.of,done:pm.training.done,modules:pm.training.modules}):TE("dd.training.locked"))+'</p>'+
     '<p>'+TE("dd.exam.line",{state:T("ex."+pm.exam.state)})+'</p><p>'+TE("dd.cert.line",{state:T("cs."+pm.certificate.state)})+'</p>'+
     '<p class="small muted">'+TE("dd.counters",{touches:S.touches||0,followups:S.followups||0})+'</p>';
   var agent='<div class="agentline"><b>'+TE("dd.agent")+'</b> <span class="small">'+esc(dispName()||T("ui.guest"))+(S.f.city||S.f.state?" · "+esc((S.f.city||"")+(S.f.city&&S.f.state?", ":"")+(S.f.state||"")):"")+'</span><span class="mono small">'+(S.posp?TE("dd.agent.code",{code:S.posp}):TE("dd.agent.nocode"))+'</span></div>';
-  return bars+lines+agent;
+  return lines+agent;
 }
 function renderDash(){
   var key=statusOf(S),st=APP_STATUS[key],pm=progressModel(S),na=nextAction(S),rp=resumePosition(S),cert=key==="certified";
@@ -1899,8 +2112,6 @@ function renderDash(){
     '<p class="small">'+TE(st.nextEventKey)+'</p>'+(eta?'<p class="small muted">'+esc(eta)+'</p>':'')+'</section>';
   h+='<section class="box hot dnext" aria-labelledby="nx-h"><p class="small lbl">'+TE("dash.cta.label")+'</p><h2 id="nx-h">'+TE(na.labelKey,na.params)+'</h2><p class="dest">'+esc(destLine(rp))+'</p><p class="small">'+TE(na.descKey,na.descParams)+'</p>'+
     (na.cta?'<button class="btn pri" type="button" data-act="cta-go">'+TE("dash.go")+' <span aria-hidden="true">→</span></button>':'<p class="small">'+TE("dash.wait")+'</p>'+(S.begun?'<button class="btn sm" type="button" data-act="cta-go">'+TE("dash.wait.link")+'</button>':''))+'</section></div>';
-  /* the signed-out state */
-  if(!ACCOUNT) h+='<div class="signin-strip"><div><b>'+TE("dash.signin.title")+'</b><p class="small muted">'+TE("dash.signin.body")+'</p></div><button class="btn" type="button" data-act="open-signin">'+TE("dash.signin.btn")+'</button></div>';
   /* compact journey */
   h+='<section class="box" aria-labelledby="jn-h"><h2 id="jn-h">'+TE("dash.journey")+'</h2><ol class="jny">'+STAGES.map(function(sd,i){
     var s=i<pm.journey.stagesDone?"done":i===pm.journey.step?"now":"todo";
@@ -1919,7 +2130,7 @@ function renderDash(){
     '<details class="dd"><summary>'+TE("dd.compliance")+'</summary><div class="ddb">'+(S.checks.length||S.begun?'<p class="small">'+cn+' / '+ct+'</p><ul class="cl" lang="en">'+cl.map(function(x){return '<li><span class="bx'+(x[1]?" on":"")+'" aria-hidden="true">'+(x[1]?"✓":"")+'</span>'+esc(x[0])+(x[1]?' (done)':'')+'</li>'}).join("")+'</ul>':'<p class="small muted">'+TE("dd.compliance.none")+'</p>')+'</div></details>'+
     '<details class="dd"><summary>'+TE("dd.journey")+'</summary><div class="ddb">'+fullJourneyHtml(key,pm)+'</div></details>'+
     '<a class="ddlink" href="#history">'+TE("dd.history")+' <span aria-hidden="true">→</span></a></div>';
-  h+='<section class="box" aria-labelledby="gk-h"><h2 id="gk-h">'+TE("trust.title")+'</h2><div class="dds">'+trustHtml(["1","3","4","5"])+'</div></section></div>';
+  h+='<a class="ddlink" href="#help">'+TE("dash.help.link")+' <span aria-hidden="true">→</span></a></div>';
   setHtml($("view-dash"),h);
 }
 /* ---- notifications, history, account and help views (placeholders with real states; the next lane fills them out) ---- */
@@ -1943,13 +2154,19 @@ function renderHist(){
   else body='<ol class="tlist">'+items.map(function(e){return '<li><span class="nic">'+svgi("clock")+'</span><div><b>'+esc(T(e.key,e.params))+'</b><small class="muted">'+esc(T("actor."+e.actor))+(e.t?" · "+esc(M_fmtClock(e.t,LANG)):"")+'</small></div></li>'}).join("")+'</ol>';
   setHtml($("view-hist"),'<div class="panel narrow"><div class="head"><h1>'+TE("hv.title")+'</h1><p>'+TE("hv.sub")+'</p></div>'+body+'</div>');
 }
+function choiceHtml(k){ return '<label class="choice"><input type="checkbox" data-consent="'+k+'"'+(CONS[k]?' checked':'')+'><span><b>'+TE("pf."+(k==="sync"?"sync":"an")+".t")+'</b><span class="small muted">'+TE("pf."+(k==="sync"?"sync":"an")+".b")+'</span></span></label>'; }
+function choicesHtml(){
+  if(!ACCOUNT) return "";
+  return '<section class="box" aria-labelledby="pf-ch"><h2 id="pf-ch">'+TE("pf.choices.h")+'</h2><p class="small muted">'+TE("pf.choices.sub")+'</p><div class="choices">'+(ACCOUNT.role==="applicant"?choiceHtml("sync"):"")+choiceHtml("analytics")+'</div></section>'+
+    '<section class="box" aria-labelledby="pf-ws"><h2 id="pf-ws">'+TE("pf.ws.h")+'</h2><p class="small">'+TE("pf.ws.b")+'</p><button class="btn" type="button" data-act="open-workspace">'+TE("pf.ws.btn")+'</button></section>';
+}
 function renderAcct(){
   var v=verif(),r=effRole()==="all"?"applicant":effRole(),na=T("av.na");
   function row(k,val,ok){ return '<div class="arow"><dt>'+TE(k)+'</dt><dd>'+val+(ok===undefined?'':' '+vchip(ok,k==="acct.email"?"ver.email":"ver.mobile"))+'</dd></div>'; }
   var h='<div class="panel narrow"><div class="head"><h1>'+TE("av.title")+'</h1><p>'+TE("av.sub")+'</p></div>'+(ACCOUNT?'':'<div class="note" role="status"><span>'+TE("av.notsigned")+'</span><button class="btn sm" type="button" data-act="open-signin">'+TE("un.signin")+'</button></div>')+
     '<dl class="adl">'+row("acct.name",esc(dispName()||na))+row("acct.email",esc(ACCOUNT&&ACCOUNT.email?ACCOUNT.email:na),v.e)+row("acct.mobile",esc(ACCOUNT&&ACCOUNT.mobile_masked?ACCOUNT.mobile_masked:na),v.m)+
     row("acct.language",TE("lang."+LANG))+row("ref.label",'<span class="mono">'+esc(refText())+'</span>'+(APPREF?'':' <span class="small muted">('+TE("ref.local")+')</span>'))+row("acct.status",stBadge(statusOf(S)))+row("acct.last_saved",esc(saveInfo().text))+'<div class="arow"><dt>'+TE("av.role")+'</dt><dd>'+TE("role."+r)+'</dd></div></dl>'+
-    '<p class="small muted">'+TE("av.edit.soon")+'</p></div>';
+    '<p class="small muted">'+TE("av.edit.soon")+'</p>'+choicesHtml()+'</div>';
   setHtml($("view-acct"),h);
 }
 function renderHelp(){
@@ -2457,6 +2674,7 @@ function stepCert(){
 function render(){
   flow();
   if(!canSee(VIEW)) renderBlocked(VIEW);
+  else if(VIEW==="welcome") renderWelcome();
   else if(VIEW==="dash") renderDash();
   else if(VIEW==="apply") $("view-apply").innerHTML=routeNote()+(!S.begun?stepIntro():S.step<2&&!S.focus?stepResume():stepper()+[stepDetails,stepDocs,stepVerify,stepTraining,stepExam,stepCert][S.step]());
   else if(VIEW==="ops") renderOps();
@@ -2808,8 +3026,10 @@ document.addEventListener("click",function(e){
     if(S.begun&&S.step===1&&rp0.doc){ var di=M_DOC_KEYS.indexOf(rp0.doc); if(di>=0) S.dk=di; }
     var h0=(na0.route||"#apply").slice(1); show("apply",M_has(HASH_STAGE,h0)?h0:undefined); focusHead("apply"); }
   else if(a==="copy-ref"){ copyRef(t); }
-  else if(a==="open-signin"){ accountDialog.showModal(); $("account-email").focus(); }
-  else if(a==="menu-auth"){ closeMenu(false); $("account-open").click(); }
+  else if(a==="open-signin"){ show("welcome"); }
+  else if(a==="auth-open"){ openAuth(t.getAttribute("data-mode")); }
+  else if(a==="open-workspace"){ if(ACCOUNT){ workspaceDialog.showModal(); workspaceLoad(); } }
+  else if(a==="menu-auth"){ closeMenu(false); if(ACCOUNT) signOut(); else show("welcome"); }
   else if(a==="notif-retry"){ NOTIFS.state="idle"; notifLoad(true); render(); }
   else if(a==="hist-retry"){ HIST.state="idle"; histLoad(); render(); }
   else if(a==="notif-readall"){ accountRequest("/api/notifications/read",{all:true}).then(function(){ NOTIFS.items.forEach(function(n){n.read=true}); NOTIFS.unread=0; render(); }).catch(function(){ announce(T("ui.error")); }); }
@@ -3208,7 +3428,7 @@ function cpAsk(q){
     var why=CP.capped?"AI answers paused for today (daily limit)":"AI answers not connected"; cpPush("a",t,(hits.length?"Sources: "+hits.slice(0,3).map(function(h){return h.cite}).join(", ")+" · ":"")+why); }
   if(typeof fetch!=="function") return offline();
   CP.busy=true; cpPush("a","Thinking…"); var ctl=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort()},30000);
-  Promise.resolve(ACCOUNT&&$('account-sync').checked?syncProgress():null).then(function(){return fetch(COPILOT_URL+"/api/assistant",{method:"POST",credentials:'include',headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,history:hist}),signal:ctl?ctl.signal:undefined})})
+  Promise.resolve(ACCOUNT&&CONS.sync?syncProgress():null).then(function(){return fetch(COPILOT_URL+"/api/assistant",{method:"POST",credentials:'include',headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,history:hist}),signal:ctl?ctl.signal:undefined})})
    .then(function(r){return r.ok?r.json():Promise.reject(r.status)}).then(function(o){ CP.log.pop(); var ans=String(o.answer||"");
       if(/\b(fraud|fake|forged|tamper)/i.test(ans)||/\byou (are|have been) (approved|rejected)\b/i.test(ans)) ans="I can't say how your application will be decided; the verification checks and our team do that. "+nextStepText(); /* client-side guardrail */
       if(o.context_source==='general_policy_only')ans+='\n\nOn this device: '+guidanceText();
@@ -3232,7 +3452,7 @@ var ROLES=[
 ];
 var ROLE=(function(){ if(!DEMO_BUILD) return "applicant"; var v=null; try{ v=localStorage.getItem("pn-role") }catch(e){} if(v&&roleOf(v)) return v; return DEMO?"all":"applicant" })();
 function roleOf(k){ var key=(k===undefined)?ROLE:k; for(var i=0;i<ROLES.length;i++) if(ROLES[i].k===key) return ROLES[i]; return null }
-function canSee(v){ if(v==="help") return true; if(DEMO_BUILD&&ROLE==="all") return true; return can(ROLE,VIEW_ACT[v]); }
+function canSee(v){ if(v==="help"||v==="welcome") return true; if(DEMO_BUILD&&ROLE==="all") return true; return can(ROLE,VIEW_ACT[v]); }
 function rolesFor(v){ return ROLES.filter(function(r){return r.k!=="all"&&can(r.k,VIEW_ACT[v])}) }
 function rvRoleNote(){ var r=roleOf(); return (DEMO_BUILD?" · demo role: ":" · role: ")+(r?r.label:"not set") }
 /* Production: the role follows the server account (applicant when signed out). */
@@ -3259,6 +3479,10 @@ function renderBlocked(v){
 }
 var RSEL=$("role-sel"); if(RSEL) RSEL.addEventListener("change",function(){ setRole(this.value) });
 function show(v,h){
+  /* Signed-in visitors never see the landing page; in the production build signed-out visitors see nothing but the landing page. */
+  if(v==="welcome"&&ACCOUNT){ v=roleOf().first; h=undefined; }
+  else if(v!=="welcome"&&!ACCOUNT&&!DEMO_BUILD){ v="welcome"; h=undefined; }
+  document.body.classList.toggle("landing",v==="welcome");
   stopSpeech();
   VIEW=v; ROUTE_STAGE=(v==="apply"&&h&&M_has(HASH_STAGE,h))?h:null;
   VIEWS.forEach(function(k){var el=$("view-"+k); if(el) el.hidden=k!==v});
@@ -3276,16 +3500,96 @@ window.addEventListener("hashchange",function(){
   show(p.v,p.stage||undefined); focusHead(p.v);
 });
 /* Account sessions use server-set HttpOnly cookies. Demo progress remains available without an account. */
-var ACCOUNT=null,accountDialog=document.createElement('dialog');
+var ACCOUNT=null,BOOT_TARGET=null,accountDialog=document.createElement('dialog');
+/* Optional choices, both off until the person turns them on (Profile page; sync may also be offered once at account creation). Kept per account on this device. */
+var CONS={sync:false,analytics:false};
+function consKey(){ return ACCOUNT?'pn-consent-'+ACCOUNT.id:null }
+function consLoad(){ CONS={sync:false,analytics:false}; var k=consKey(); if(!k) return; try{ var v=JSON.parse(localStorage.getItem(k)||'null'); if(v){ CONS.sync=v.sync===true; CONS.analytics=v.analytics===true } }catch(e){} }
+function consSave(){ var k=consKey(); if(!k) return; try{ localStorage.setItem(k,JSON.stringify(CONS)) }catch(e){} }
+accountDialog.className='pdlg';
 accountDialog.setAttribute('aria-labelledby','account-heading');
-accountDialog.innerHTML='<form class="mbox" id="account-form"><h2 id="account-heading">Your PolicyNest account</h2><p class="small muted">Sign in to your account. Your current demo application stays on this device.</p><label for="account-name">Name (new accounts)</label><input id="account-name" autocomplete="name" maxlength="80"><label for="account-email">Email</label><input id="account-email" type="email" autocomplete="username" required><label for="account-password">Password (at least 12 characters)</label><input id="account-password" type="password" autocomplete="current-password" minlength="12" maxlength="256"><p id="account-message" role="status"></p><div class="actions"><button class="btn pri" type="submit" value="login">Sign in</button><button class="btn" type="submit" value="register">Create account</button><button class="btn" type="submit" value="recover" formnovalidate>Account recovery</button><button class="btn" type="button" id="account-close">Close</button></div></form>';
 document.body.appendChild(accountDialog);
-var resetDialog=document.createElement('dialog');resetDialog.setAttribute('aria-labelledby','reset-heading');
-resetDialog.innerHTML='<form class="mbox" id="reset-form"><h2 id="reset-heading">Reset your password</h2><label for="reset-password">New password (12–256 characters)</label><input id="reset-password" type="password" autocomplete="new-password" minlength="12" maxlength="256" required><p id="reset-result" role="status"></p><button class="btn pri" type="submit">Set new password</button><button class="btn" type="button" id="reset-close">Close</button></form>';
+var AUTH={mode:'login'};
+/* One dialog, three modes (sign in, create account, account recovery), opened only from the landing page. Fields and errors are labelled; the error summary takes focus. */
+function authDraw(keepEmail){
+  var m=AUTH.mode,em=keepEmail&&$('account-email')?$('account-email').value:'';
+  var h='<form class="mbox" id="account-form" novalidate><h2 id="account-heading">'+TE('lp.dlg.'+m)+'</h2><p class="small">'+TE('lp.dlg.'+m+'.sub')+'</p>'+
+    '<div class="errsum" id="account-errors" role="alert" tabindex="-1" hidden></div>';
+  if(m==='register') h+='<label for="account-name">'+TE('lp.f.name')+'</label><input id="account-name" type="text" autocomplete="name" maxlength="80" required>';
+  h+='<label for="account-email">'+TE('lp.f.email')+'</label><input id="account-email" type="email" autocomplete="'+(m==='register'?'email':'username')+'" maxlength="254" value="'+esc(em)+'" required>';
+  if(m!=='recover') h+='<label for="account-password">'+TE(m==='register'?'lp.f.password.new':'lp.f.password')+'</label><input id="account-password" type="password" autocomplete="'+(m==='login'?'current-password':'new-password')+'" maxlength="256" required>';
+  if(m==='register') h+='<label class="optin" for="account-sync-opt"><input id="account-sync-opt" type="checkbox"><span>'+TE('lp.sync.opt')+'</span></label>';
+  h+='<p class="okmsg" id="account-message" role="status" hidden></p>'+
+    '<div class="actions"><button class="btn pri" type="submit" id="account-submit">'+TE(m==='login'?'lp.signin':m==='register'?'lp.create':'lp.submit.recover')+'</button><button class="btn" type="button" id="account-close">'+TE('lp.close')+'</button></div>'+
+    '<div class="actions" style="justify-content:flex-start">'+(m!=='login'?'<button class="linkbtn" type="button" data-auth-mode="login">'+TE('lp.sw.login')+'</button>':'<button class="linkbtn" type="button" data-auth-mode="register">'+TE('lp.sw.register')+'</button><button class="linkbtn" type="button" data-auth-mode="recover">'+TE('lp.sw.recover')+'</button>')+'</div></form>';
+  accountDialog.innerHTML=h;
+}
+function openAuth(mode){
+  AUTH.mode=(mode==='register'||mode==='recover')?mode:'login'; authDraw(false);
+  if(!accountDialog.open) accountDialog.showModal();
+  var f=$(AUTH.mode==='register'?'account-name':'account-email'); if(f) f.focus();
+}
+function authErrors(list){
+  var box=$('account-errors'); if(!box) return;
+  ['account-name','account-email','account-password'].forEach(function(id){ var el=$(id); if(el){ el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); } });
+  if(!list.length){ box.hidden=true; box.innerHTML=''; return; }
+  box.innerHTML=TE('lp.err.sum')+'<ul>'+list.map(function(x){ return '<li>'+(x[0]?'<a href="#'+x[0]+'" data-focus="'+x[0]+'">'+TE(x[1])+'</a>':TE(x[1]))+'</li>'; }).join('')+'</ul>';
+  box.hidden=false;
+  list.forEach(function(x){ var el=x[0]&&$(x[0]); if(el){ el.setAttribute('aria-invalid','true'); el.setAttribute('aria-describedby','account-errors'); } });
+  box.focus();
+}
+accountDialog.addEventListener('click',function(e){
+  var t=e.target; if(!t||!t.closest) return;
+  var sw=t.closest('[data-auth-mode]'); if(sw){ AUTH.mode=sw.getAttribute('data-auth-mode'); authDraw(true); var f=$(AUTH.mode==='register'?'account-name':'account-email'); if(f) f.focus(); return; }
+  var fl=t.closest('[data-focus]'); if(fl){ e.preventDefault(); var el=$(fl.getAttribute('data-focus')); if(el) el.focus(); return; }
+  if(t.closest('#account-close')) accountDialog.close();
+});
+accountDialog.addEventListener('submit',function(e){
+  e.preventDefault(); var m=AUTH.mode,msg=$('account-message'),errs=[];
+  var name=$('account-name')?$('account-name').value:'',email=$('account-email').value.trim(),pw=$('account-password')?$('account-password').value:'';
+  if(m==='register'&&!name.trim()) errs.push(['account-name','lp.err.name']);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.push(['account-email','lp.err.email']);
+  if(m==='register'&&(pw.length<12||pw.length>256)) errs.push(['account-password','lp.err.password']);
+  if(m==='login'&&!pw) errs.push(['account-password','lp.err.password.login']);
+  authErrors(errs); if(errs.length) return;
+  var syncOpt=!!($('account-sync-opt')&&$('account-sync-opt').checked);
+  msg.hidden=false; msg.textContent=T('lp.wait');
+  var buttons=accountDialog.querySelectorAll('button');buttons.forEach(function(b){b.disabled=true});
+  var body=m==='recover'?{email:email}:m==='register'?{email:email,password:pw,display_name:name.trim()}:{email:email,password:pw};
+  accountRequest('/api/auth/'+m,body,false).then(function(data){
+    if(m==='recover'){ msg.textContent=T('lp.recover.done'); return; }
+    if(data.user){ enterAccount(data.user); if(m==='register'&&syncOpt){ CONS.sync=true; consSave(); } productEvent(m==='register'?'registration':'login'); accountDialog.close(); announce(T('lp.signedin')); }
+    else { msg.hidden=true; authErrors([[null,'lp.err.generic']]); }
+  }).catch(function(err){
+    var c=String(err&&err.message||'');
+    if(m==='recover'&&c!=='Failed to fetch'){ msg.hidden=false; msg.textContent=T('lp.recover.done'); return; }
+    msg.hidden=true;
+    authErrors([[null,c==='Failed to fetch'?'lp.err.network':c==='invalid_credentials'?'lp.err.credentials':c==='email_taken'?'lp.err.taken':'lp.err.generic']]);
+  }).finally(function(){buttons.forEach(function(b){b.disabled=false})});
+});
+/* Password reset (the #reset=<token> link from the recovery email). */
+var resetDialog=document.createElement('dialog');resetDialog.className='pdlg';resetDialog.setAttribute('aria-labelledby','reset-heading');
 document.body.appendChild(resetDialog);var resetToken='';
-$('reset-close').onclick=function(){resetToken='';$('reset-password').value='';resetDialog.close()};
-$('reset-form').onsubmit=function(e){e.preventDefault();var b=e.submitter;b.disabled=true;accountRequest('/api/auth/reset',{reset_token:resetToken,password:$('reset-password').value},false).then(function(){resetToken='';$('reset-password').value='';$('reset-result').textContent='Password changed. Sign in with your new password.'}).catch(function(){$('reset-result').textContent='The reset link is invalid or expired. Request a new link or contact your administrator.'}).finally(function(){b.disabled=false})};
-function accountChrome(){ $('account-open').textContent=ACCOUNT?'Sign out · '+ACCOUNT.display_name:'Sign in / create account'; syncRole(); if(ACCOUNT&&(ACCOUNT.language==='hi'||ACCOUNT.language==='en')&&ACCOUNT.language!==LANG) setLang(ACCOUNT.language,false); }
+function resetDraw(state){
+  resetDialog.innerHTML='<form class="mbox" id="reset-form" novalidate><h2 id="reset-heading">'+TE('lp.reset.h')+'</h2>'+
+    (state==='ok'?'<p class="okmsg" role="status">'+TE('lp.reset.ok')+'</p><div class="actions"><button class="btn pri" type="button" id="reset-signin">'+TE('lp.reset.signin')+'</button></div>':
+    '<label for="reset-password">'+TE('lp.reset.pw')+'</label><input id="reset-password" type="password" autocomplete="new-password" maxlength="256" required>'+
+    '<p class="errsum" id="reset-result" role="alert" tabindex="-1"'+(state==='bad'?'':' hidden')+'>'+(state==='bad'?TE('lp.reset.bad'):'')+'</p>'+
+    '<div class="actions"><button class="btn pri" type="submit">'+TE('lp.reset.submit')+'</button><button class="btn" type="button" id="reset-close">'+TE('lp.close')+'</button></div>')+'</form>';
+}
+function openReset(){ resetDraw('form'); if(!resetDialog.open) resetDialog.showModal(); var f=$('reset-password'); if(f) f.focus(); }
+resetDialog.addEventListener('click',function(e){
+  var t=e.target; if(!t||!t.closest) return;
+  if(t.closest('#reset-close')){ resetToken=''; resetDialog.close(); }
+  else if(t.closest('#reset-signin')){ resetDialog.close(); openAuth('login'); }
+});
+resetDialog.addEventListener('submit',function(e){
+  e.preventDefault(); var pw=$('reset-password').value,r=$('reset-result');
+  if(pw.length<12||pw.length>256){ r.hidden=false; r.textContent=T('lp.err.password'); r.focus(); $('reset-password').setAttribute('aria-invalid','true'); return; }
+  var b=e.submitter; if(b) b.disabled=true;
+  accountRequest('/api/auth/reset',{reset_token:resetToken,password:pw},false).then(function(){ resetToken=''; resetDraw('ok'); var si=$('reset-signin'); if(si) si.focus(); }).catch(function(){ resetDraw('bad'); var rr=$('reset-result'); if(rr) rr.focus(); });
+});
+function accountChrome(){ syncRole(); if(ACCOUNT&&(ACCOUNT.language==='hi'||ACCOUNT.language==='en')&&ACCOUNT.language!==LANG) setLang(ACCOUNT.language,false); }
 /* Server profile and application reference (GET /api/me, GET or POST /api/applications/me). Never blocks the UI; failures leave the local values in place. */
 function loadIdentity(){
   if(!ACCOUNT) return; var uid=ACCOUNT.id;
@@ -3295,9 +3599,11 @@ function loadIdentity(){
   accountRequest('/api/applications/me').then(got).catch(function(){ accountRequest('/api/applications/me',{}).then(got).catch(function(){}); });
 }
 function enterAccount(user,keep){
-  ACCOUNT=user;SAVEKEY='pn-onboarding-user-'+user.id;lastSynced='';$('account-sync').checked=false;APPREF=null;NOTIFS={state:'idle',items:[],unread:0};HIST={state:'idle',items:[]};
+  ACCOUNT=user;SAVEKEY='pn-onboarding-user-'+user.id;lastSynced='';consLoad();APPREF=null;NOTIFS={state:'idle',items:[],unread:0};HIST={state:'idle',items:[]};
   stopSpeech();if(timer)clearInterval(timer);fresh();restore();CP.log=[];cpDraw();accountChrome();loadIdentity();
-  if(keep)show(canSee(VIEW)?VIEW:roleOf().first,ROUTE_STAGE||undefined);else show(canSee('apply')?'apply':roleOf().first);
+  /* Signed-in people never rest on the landing page: a deep link they opened first wins, otherwise their role's home. */
+  var tv=(keep&&VIEW==='welcome'&&BOOT_TARGET&&canSee(BOOT_TARGET.v))?BOOT_TARGET:null;BOOT_TARGET=null;
+  if(tv)show(tv.v,tv.stage||undefined);else if(keep&&VIEW!=='welcome')show(canSee(VIEW)?VIEW:roleOf().first,ROUTE_STAGE||undefined);else show(roleOf().first);
 }
 function accountRequest(path,body,retry,method){
   return fetch(COPILOT_URL+path,{method:method||(body===undefined?'GET':'POST'),credentials:'include',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){
@@ -3309,18 +3615,9 @@ function accountRequest(path,body,retry,method){
   });
 }
 var accountRefreshing=null;
-$('account-open').addEventListener('click',function(){
-  if(ACCOUNT){accountRequest('/api/auth/logout',{},false).then(function(){ACCOUNT=null;APPREF=null;NOTIFS={state:'signedout',items:[],unread:0};HIST={state:'idle',items:[]};$('account-sync').checked=false;SAVEKEY='pn-onboarding-v1';if(timer)clearInterval(timer);fresh();CP.log=[];cpDraw();accountChrome();workspaceDialog.close();show(canSee('apply')?'apply':roleOf().first)}).catch(function(){announce('Could not sign out. Please try again.')});return;}
-  accountDialog.showModal();$('account-email').focus();
-});
-$('account-close').addEventListener('click',function(){accountDialog.close()});
-$('account-form').addEventListener('submit',function(e){
-  e.preventDefault();var action=e.submitter?e.submitter.value:'login',msg=$('account-message');
-  msg.textContent='Please wait…';var buttons=accountDialog.querySelectorAll('button');buttons.forEach(function(b){b.disabled=true});
-  accountRequest('/api/auth/'+action,{email:$('account-email').value,password:$('account-password').value,display_name:$('account-name').value},false).then(function(data){
-    if(data.user){enterAccount(data.user);productEvent(action==='register'?'registration':'login');$('account-password').value='';accountDialog.close();announce('Signed in successfully.')}else msg.textContent=data.message||'Request received.';
-  }).catch(function(err){msg.textContent=err.message==='Failed to fetch'?'Account service is unavailable. Your demo work is still available.':err.message.replace(/_/g,' ')}).finally(function(){buttons.forEach(function(b){b.disabled=false})});
-});
+function signOut(){
+  accountRequest('/api/auth/logout',{},false).then(function(){ACCOUNT=null;APPREF=null;NOTIFS={state:'signedout',items:[],unread:0};HIST={state:'idle',items:[]};CONS={sync:false,analytics:false};SAVEKEY='pn-onboarding-v1';if(timer)clearInterval(timer);fresh();CP.log=[];cpDraw();accountChrome();workspaceDialog.close();show('welcome')}).catch(function(){announce(T('ui.error'))});
+}
 accountRequest('/api/auth/me',undefined,true).then(function(data){enterAccount(data.user,true)}).catch(function(){ACCOUNT=null;NOTIFS={state:'signedout',items:[],unread:0};accountChrome();render()});
 var lastSynced='',syncBusy=null;
 function progressSnapshot(){
@@ -3328,20 +3625,18 @@ function progressSnapshot(){
   return {stage:context.stage,documents:DOCS.map(function(d){var st=S.docs[d.k],fb=S.fb[d.k];return {key:d.k,status:st?st.status:'not uploaded',open_issues:fb?fb.codes:[],version:st&&st.versions?st.versions.length||1:1}}),training_hours:context.training_hours,exam_score:context.exam_score,decision:context.decision};
 }
 function syncProgress(){
-  if(!ACCOUNT||ACCOUNT.role!=='applicant'||!$('account-sync').checked)return Promise.resolve();
+  if(!ACCOUNT||ACCOUNT.role!=='applicant'||!CONS.sync)return Promise.resolve();
   if(syncBusy)return syncBusy;
   var snapshot=progressSnapshot(),signature=JSON.stringify(snapshot);
   if(signature===lastSynced)return Promise.resolve();
   syncBusy=accountRequest('/api/applications/me',{snapshot:snapshot}).then(function(){lastSynced=signature}).finally(function(){syncBusy=null});return syncBusy;
 }
-$('account-sync').addEventListener('change',function(){lastSynced='';syncProgress().catch(function(){announce('Could not sync progress. Please sign in and try again.')})});
 setInterval(function(){syncProgress().catch(function(){})},5000);
 var workspaceDialog=document.createElement('dialog');workspaceDialog.setAttribute('aria-labelledby','workspace-heading');
 workspaceDialog.innerHTML='<div class="mbox"><h2 id="workspace-heading">Account workspace</h2><p class="small muted">Account records are separate from the synthetic demo console. Only document statuses and issue codes are synced.</p><div id="workspace-body"></div><div class="actions"><button class="btn" id="workspace-refresh" type="button">Refresh</button><button class="btn" id="workspace-close" type="button">Close</button></div></div>';
 document.body.appendChild(workspaceDialog);
 $('workspace-close').addEventListener('click',function(){workspaceDialog.close()});
 $('workspace-refresh').addEventListener('click',workspaceLoad);
-$('workspace-open').addEventListener('click',function(){if(!ACCOUNT){accountDialog.showModal();return}workspaceDialog.showModal();workspaceLoad()});
 function workspaceLoad(){
   var box=$('workspace-body');box.textContent='Loading account records…';
   if(!ACCOUNT)return;
@@ -3369,17 +3664,23 @@ function loadAccountCase(id){accountRequest('/api/reviewer/case?id='+encodeURICo
   $('account-review-save').onclick=function(){accountRequest('/api/reviewer/decide',{case_id:id,status:$('account-review-status').value,rule:$('account-review-rule').value,note:$('account-review-note').value}).then(function(){$('account-review-result').textContent='Reviewer decision recorded.'}).catch(function(){$('account-review-result').textContent='Decision not recorded. Check the rule, rationale and assignment.'})};
 }).catch(function(){$('workspace-body').textContent='Case unavailable or not assigned to you.'})}
 var performanceQueue=[];
-function performanceMetric(name,value){if($('analytics-consent').checked&&Number.isFinite(value))performanceQueue.push({name:name,value:value})}
-function productEvent(name,result,duration){if(ACCOUNT&&$('analytics-consent').checked)accountRequest('/api/events',{event_name:name,stage:S.begun?STEPS[S.step]:'Before you start',source:'demo',duration_ms:duration,result:result||'success'},false).catch(function(){})}
+function performanceMetric(name,value){if(CONS.analytics&&Number.isFinite(value))performanceQueue.push({name:name,value:value})}
+function productEvent(name,result,duration){if(ACCOUNT&&CONS.analytics)accountRequest('/api/events',{event_name:name,stage:S.begun?STEPS[S.step]:'Before you start',source:'demo',duration_ms:duration,result:result||'success'},false).catch(function(){})}
 function trackProductAction(event){
   var key=event.split(':')[0],map={ONBOARDING_OPENED:'onboarding_started',REGISTRATION_STARTED:'stage_completed',DOC_UPLOADED:'document_uploaded',DOC_ACCEPTED:'document_uploaded',DOC_REUPLOADED:'document_corrected',DOC_REUPLOAD_ACCEPTED:'document_corrected',DOC_REJECTED:'ocr_failed',STP_PASS:'verification_completed',LMS_LOGIN:'training_started',TRAINING_COMPLETE:'training_completed',EXAM_SUBMIT:'exam_passed',EXAM_FAIL:'exam_failed',ISSUE_CREDENTIAL:'certificate_issued',PROGRESS_RESTORED:'application_resumed',ROUTED_TO_REVIEWER:'human_escalation'};
   if(map[key])productEvent(map[key]);
 }
-setInterval(function(){if(performanceQueue.length&&$('analytics-consent').checked){var batch=performanceQueue.splice(0,20);fetch(COPILOT_URL+'/api/telemetry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({metrics:batch})}).catch(function(){})}},10000);
+setInterval(function(){if(performanceQueue.length&&CONS.analytics){var batch=performanceQueue.splice(0,20);fetch(COPILOT_URL+'/api/telemetry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({metrics:batch})}).catch(function(){})}},10000);
 window.addEventListener('error',function(){performanceMetric('js_error',1)});
 window.addEventListener('unhandledrejection',function(){performanceMetric('js_error',1)});
 if(window.webVitals){window.webVitals.onLCP(function(m){performanceMetric('lcp',m.value)});window.webVitals.onINP(function(m){performanceMetric('inp',m.value)});window.webVitals.onCLS(function(m){performanceMetric('cls',m.value)})}
-$('analytics-consent').addEventListener('change',function(){if(this.checked){var navigation=performance.getEntriesByType('navigation')[0];if(navigation)performanceMetric('load',navigation.loadEventEnd||navigation.domContentLoadedEventEnd)}else performanceQueue=[]});
+document.addEventListener('change',function(e){
+  var t=e.target,c=t&&t.getAttribute?t.getAttribute('data-consent'):null; if(!c||!(c in CONS)) return;
+  CONS[c]=!!t.checked; consSave();
+  if(c==='sync'){ lastSynced=''; if(CONS.sync) syncProgress().catch(function(){announce(T('ui.error'))}); }
+  else if(CONS.analytics){ var navigation=performance.getEntriesByType('navigation')[0]; if(navigation) performanceMetric('load',navigation.loadEventEnd||navigation.domContentLoadedEventEnd); }
+  else performanceQueue=[];
+});
 $('guide-helped').addEventListener('click',function(){productEvent('assistant_resolved');$('guide-status').textContent='Thanks. You can continue with the next action.'});
 /* Optional guidance follows the same live state used by the application; audio is never retained. */
 function guidanceText(){
@@ -3423,16 +3724,19 @@ var appealDialog=document.createElement('dialog');appealDialog.setAttribute('ari
 appealDialog.innerHTML='<form class="mbox" id="appeal-form"><h2 id="appeal-heading">Ask a human reviewer</h2><p>Explain the blocker you would like reviewed. Do not include identity or bank numbers. Submitting a request does not change your application decision.</p><label for="appeal-concern">Your concern</label><textarea id="appeal-concern" minlength="10" maxlength="1500" required></textarea><p id="appeal-result" role="status"></p><div class="actions"><button class="btn pri" type="submit">Confirm and submit appeal</button><button class="btn" type="button" id="appeal-close">Close</button></div></form>';
 document.body.appendChild(appealDialog);
 $('guide-appeal').addEventListener('click',function(){
-  if(!ACCOUNT){$('guide-status').textContent='Sign in before submitting a persistent appeal.';accountDialog.showModal();return}
+  if(!ACCOUNT){$('guide-status').textContent='Sign in before submitting a persistent appeal.';show('welcome');return}
   $('appeal-concern').value='';$('appeal-result').textContent='';appealDialog.showModal();$('appeal-concern').focus();
 });
 $('appeal-close').addEventListener('click',function(){appealDialog.close()});
 $('appeal-form').addEventListener('submit',function(e){e.preventDefault();var button=e.submitter;button.disabled=true;
   accountRequest('/api/appeals',{explanation:$('appeal-concern').value}).then(function(result){productEvent('appeal_submitted');$('appeal-result').textContent='Appeal submitted. Reference '+result.reference+'. Status: '+result.status;cpPush('a','Your appeal was submitted to the human review process. Reference '+result.reference+'. It is awaiting reviewer assignment.');}).catch(function(){ $('appeal-result').textContent='The appeal could not be submitted. Please check your session and try again.';}).finally(function(){button.disabled=false});
 });
-var RESTORED=restore();
-applyTheme(); applyLang(); try{ if(window.matchMedia("(max-width:900px)").matches) $("navx").open=false }catch(e){} var BOOTH=parseHash(location.hash.slice(1)); VIEW=BOOTH.v||"dash"; if(!BOOTH.v&&!canSee(VIEW)) VIEW=roleOf().first; if(RESTORED&&!BOOTH.v&&VIEW==="dash"&&canSee("apply")) VIEW="apply"; show(VIEW,BOOTH.stage||undefined); kbLoad(); idleReset();
+var RESTORED=restore(),RESET_HASH=location.hash.indexOf('#reset=')===0?location.hash:'';
+applyTheme(); applyLang(); try{ if(window.matchMedia("(max-width:900px)").matches) $("navx").open=false }catch(e){}
+/* Signed-out visitors land on #welcome. The production build holds a deep link until the session check says who is there (enterAccount then opens it). */
+var BOOTH=parseHash(location.hash.slice(1)); BOOT_TARGET=(BOOTH.v&&BOOTH.v!=="welcome")?BOOTH:null; VIEW=BOOTH.v||"welcome"; if(!DEMO_BUILD) VIEW="welcome";
+show(VIEW,VIEW===BOOTH.v?(BOOTH.stage||undefined):undefined); kbLoad(); idleReset();
 if(DROPPED) cheer("your earlier saved progress expired.","Saved applications are kept for 30 days (14 days once a follow-up is open). Please start again.","heart");
-if(location.hash.indexOf('#reset=')===0){resetToken=decodeURIComponent(location.hash.slice(7));history.replaceState(null,'',location.pathname+location.search+'#apply');resetDialog.showModal();$('reset-password').focus()}
+if(RESET_HASH){try{resetToken=decodeURIComponent(RESET_HASH.slice(7))}catch(e){resetToken=''}openReset()}
 })();
 </script>
