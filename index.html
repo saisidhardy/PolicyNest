@@ -515,6 +515,14 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   .top .iconbtn,.top .avatar{width:32px;height:32px}
   .top .tools{gap:6px}
 }
+/* Demo role switch (15 Nov): a View-as choice for demos. Not a login. */
+.role{display:flex;flex-direction:column;gap:6px;background:var(--sunken);border-radius:14px;padding:12px}
+.role label{font-size:.82rem;font-weight:700;color:var(--ink);min-height:24px;display:inline-flex;align-items:center}
+.role select{font:inherit;font-size:.92rem;min-height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:6px 10px;width:100%}
+.role select:focus-visible{outline:3px solid var(--info);outline-offset:2px}
+.role small{font-size:.76rem;color:var(--muted);line-height:1.35}
+.rolechip{font-size:.78rem;font-weight:700;color:var(--ink);background:var(--sunken);border-radius:999px;padding:6px 12px;white-space:nowrap}
+@media (max-width:900px){.role{flex-direction:row;flex-wrap:wrap;align-items:center}.role label{flex:none}.role select{flex:1 1 160px;width:auto}.role small{flex-basis:100%}}
 </style>
 </head>
 <body style="margin:0">
@@ -528,6 +536,7 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   </div>
   <div class="who2"><span class="ph"><span id="sb-ph"></span></span><b id="sb-name">New applicant</b><small id="sb-id"></small></div>
   <span class="env" title="Documents are read by OCR inside this browser. Government, bank and face-match services are simulated: none is called. Only questions you ask the Copilot, with your first name and progress (never your ID numbers or images), are sent to the AI service."><i></i>Demo environment · on-device OCR</span>
+  <div class="role" id="role-box"><label for="role-sel">View as</label><select id="role-sel"><option value="applicant">Applicant</option><option value="reviewer">Reviewer</option><option value="ops">Ops and compliance</option><option value="all">All views (demo)</option></select><small>Demo role switch, not a login. Anyone can switch.</small></div>
   <nav class="menu" id="menu" aria-label="Sections"></nav>
   <div class="help"><b>Need help?</b><span>A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
 </div></aside>
@@ -536,7 +545,7 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   <b id="progt"></b>
   <div class="pbar"><div class="prog"><i id="pfill"></i></div><span class="mono" id="ppct"></span></div>
   <span id="flowmeta" class="small"></span>
-  <div class="tools"><button class="iconbtn" type="button" data-act="theme" id="themebtn" aria-label="Switch to dark mode"></button><span class="avatar" title="Applicant"><span id="avatar"></span></span></div>
+  <div class="tools"><span class="rolechip" id="rolechip"></span><button class="iconbtn" type="button" data-act="theme" id="themebtn" aria-label="Switch to dark mode"></button><span class="avatar" title="Applicant"><span id="avatar"></span></span></div>
 </div></header>
 <div class="fbar" id="focusbar" hidden><b>PolicyNest onboarding</b><span class="fstep" id="fb-step"></span><span class="ftime" id="fb-time" role="timer" aria-live="off" aria-label="Time left in this sitting"></span><button type="button" id="fb-extend" data-act="m-extend" hidden>Extend 10 minutes</button><button type="button" id="fb-hide" data-act="timer-hide">Hide timer</button><button type="button" id="fb-off" data-act="timer-off">Turn off time limit</button><button type="button" id="fb-on" data-act="timer-on" hidden>Turn time limit on</button><button type="button" data-act="cp-open">Ask Copilot</button><button type="button" data-act="fb-exit">Save and exit</button></div>
 <div class="fsbanner" id="fs-banner" role="status" hidden><span>Full screen closed. Your sitting carries on.</span><button type="button" class="btn pri" data-act="fs-return">Return to full screen</button><button type="button" class="btn" data-act="fs-dismiss">Dismiss</button></div>
@@ -1048,7 +1057,8 @@ function flow(){
   if($("sb-ph")) $("sb-ph").innerHTML=sf&&sf.url?'<img src="'+sf.url+'" alt="">':esc(ini);
   if($("sb-name")) $("sb-name").textContent=S.f.name||"New applicant"; if($("sb-id")) $("sb-id").textContent=S.appId;
   var av=$("avatar"); if(av) av.textContent=norm(S.f.name||"").split(" ").filter(Boolean).map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN";
-  $("menu").innerHTML=NAV.map(function(n){return '<a href="#'+HASH[n[0]]+'"'+(VIEW===n[0]?' aria-current="page"':'')+'>'+ico(n[2])+n[1]+'</a>'}).join("");
+  $("menu").innerHTML=NAV.filter(function(n){return canSee(n[0])}).map(function(n){return '<a href="#'+HASH[n[0]]+'"'+(VIEW===n[0]?' aria-current="page"':'')+'>'+ico(n[2])+n[1]+'</a>'}).join("");
+  roleChrome();
 }
 function stepper(){
   return '<div class="stepper" aria-label="Application steps">'+STEPS.map(function(s,i){var st=stepState(i);return '<div class="sp '+st+'"'+(st==="now"?' aria-current="step"':'')+'><span class="sc">'+(st==="done"?"✓":i+1)+'</span><span class="sl">'+s+'</span></div>'}).join("")+'</div>';
@@ -1121,7 +1131,7 @@ function renderDash(){
     var dots=done&&gc.length?gc.map(function(c){var k=resCls(c.res);return '<span class="d '+k+'" title="'+esc(c.label+": "+c.res)+'">'+(k==="PASS"?"✓":k==="FIX"?"!":k==="HUMAN"?"?":k==="REJECT"?"×":k==="INFO"?"i":"")+'</span>'}).join(""):Array(4).join('<span class="d"></span>');
     return '<span class="lb">'+G.g.replace(" marksheet","")+'</span><div class="dots">'+dots+'</div>'}).join("");
   var pop='<div class="popc"><span class="small" style="opacity:.7">'+(done?"Round "+S.round:"Before you submit")+'</span><b style="font-family:var(--display);font-size:1.15rem;font-weight:500">'+(done?(S.decision==="APPROVE"?"Every check cleared":S.decision==="NEEDS_MORE_INFO"?"A few fixes to make":S.decision==="REJECT"?"Eligibility rules not met":"With a reviewer"):"Checks run on submit")+'</b><span class="chip" style="align-self:flex-start">'+(done?ttdText()+" · this demo, on this device":"after you submit")+'</span><span class="small" style="opacity:.75">Each check cites the rulebook rule it used.</span></div>';
-  var dmap='<div class="box s6"><div class="bh"><div><h2>Checks map</h2><p class="small muted">Every check the engine runs, by document</p></div><button class="cbtn" type="button" data-act="go-review" aria-label="Open review console">'+ARROW+'</button></div><div style="display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px;align-items:center" class="dmw"><div class="dmap">'+rows+'</div>'+pop+'</div><div class="legend2"><span><i style="background:var(--ok)"></i>Passed</span><span><i style="background:var(--info)"></i>Noted</span><span><i style="background:var(--bad)"></i>To fix</span><span><i style="background:var(--lav)"></i>With a person</span><span><i style="border:1.5px dashed var(--dot)"></i>Not run yet</span></div></div>';
+  var dmap='<div class="box s6"><div class="bh"><div><h2>Checks map</h2><p class="small muted">Every check the engine runs, by document</p></div>'+(canSee("ops")?'<button class="cbtn" type="button" data-act="go-review" aria-label="Open review console">'+ARROW+'</button>':'')+'</div><div style="display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px;align-items:center" class="dmw"><div class="dmap">'+rows+'</div>'+pop+'</div><div class="legend2"><span><i style="background:var(--ok)"></i>Passed</span><span><i style="background:var(--info)"></i>Noted</span><span><i style="background:var(--bad)"></i>To fix</span><span><i style="background:var(--lav)"></i>With a person</span><span><i style="border:1.5px dashed var(--dot)"></i>Not run yet</span></div></div>';
   /* compliance, training, agent */
   var cl=checklist(),cn=cl.filter(function(x){return x[1]}).length,ctot=cl.filter(function(x){return x[1]!==null}).length;
   var comp='<div class="box lime s4"><div class="bh"><div><h2>Compliance</h2><p class="small muted">'+cn+' of '+ctot+' complete</p></div><b class="num" style="font-size:2rem">'+Math.round(cn/ctot*100)+'%</b></div><ul class="clist">'+cl.map(function(x){return '<li><span class="ck'+(x[1]?" on":"")+'">'+(x[1]?"✓":"")+'</span>'+x[0]+'</li>'}).join("")+'</ul></div>';
@@ -1144,8 +1154,8 @@ function computeEngineHash(){
     var block=src.slice(a,b).replace(/\r\n/g,"\n");
     window.crypto.subtle.digest("SHA-256",new TextEncoder().encode(block)).then(function(buf){
       ENG_HASH=Array.prototype.map.call(new Uint8Array(buf),function(x){return ("0"+x.toString(16)).slice(-2)}).join("");
-      ENG_STATE="ok";PEND.forEach(function(e){e.hash=ENG_HASH.slice(0,12)});PEND=[];if(VIEW==="eval")renderEval();
-    },function(){ENG_STATE="unavailable";if(VIEW==="eval")renderEval()});
+      ENG_STATE="ok";PEND.forEach(function(e){e.hash=ENG_HASH.slice(0,12)});PEND=[];if(VIEW==="eval"&&canSee("eval"))renderEval();
+    },function(){ENG_STATE="unavailable";if(VIEW==="eval"&&canSee("eval"))renderEval()});
   }catch(e){ENG_STATE="unavailable"}
 }
 function engineBox(){
@@ -1519,17 +1529,17 @@ function rejectPanel(){
 }
 function humanPanel(){
   return '<div class="panel"><div class="head"><h2>A person on our team is checking '+(S.disputed?"your dispute":"a few details")+'</h2><p>Some decisions are always made by a person, not by the system. Nothing is needed from you right now. We aim to reply within 4 working hours (our service target)., by WhatsApp and SMS.</p></div>'+
-   '<div class="note"><span><b>Demo:</b> play the reviewer in the Review console.</span><button class="btn sm" type="button" data-act="go-review">Open review console →</button></div></div>';
+   ''+(canSee("ops")?'<div class="note"><span><b>Demo:</b> play the reviewer in the Review console.</span><button class="btn sm" type="button" data-act="go-review">Open review console →</button></div>':'')+'</div>';
 }
 function stepVerify(){
   var total=S.checks.length,done=!S.rechecking&&S.shown>=total,D=S.decision,ok=D==="APPROVE";
   var side='<aside class="side stick">'+ring()+'<div class="who"><h2>'+esc(S.f.name||"New applicant")+'</h2><span class="mono muted">'+S.appId+(S.round>1?' · round '+S.round:'')+'</span></div>'+
    '<div class="slist">'+GROUPS.map(function(G){var gs=groupState(G.g),s=gs.st,bad=gs.idx.some(function(i){return S.checks[i].res!=="PASS"&&S.checks[i].res!=="INFO"});return '<div><span>'+G.side+'</span>'+(s==="done"?(bad?pill("bad","Review required"):pill("ok","Approved")):s==="run"?pill("run","In progress"):pill("","Queued"))+'</div>'}).join("")+'</div>'+
    (S.rechecking?'<p class="small muted">Re-checking the documents you replaced…</p>':!done?'<p class="small muted">Checking '+Math.min(S.shown+1,total)+' of '+total+'.</p>':
-    ok?'<div class="verdict"><h2>KYC approved</h2><span class="small">All checks passed'+(S.round>1?' after '+(S.round-1)+' follow-up round'+(S.round>2?"s":""):'')+'. Nothing needs a second look.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div><button class="btn pri wide" type="button" data-act="start-training">Start training</button><button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':
+    ok?'<div class="verdict"><h2>KYC approved</h2><span class="small">All checks passed'+(S.round>1?' after '+(S.round-1)+' follow-up round'+(S.round>2?"s":""):'')+'. Nothing needs a second look.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div><button class="btn pri wide" type="button" data-act="start-training">Start training</button>'+(canSee("audit")?'<button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':'')+'':
     D==="NEEDS_MORE_INFO"?'<div class="verdict hold"><h2>'+(S.fu.items.length===1?"One thing":S.fu.items.length+" things")+' to fix</h2><span class="small">All of them are in one message. Fix them together and only those documents are checked again.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>':
-    D==="REJECT"?'<div class="verdict no"><h2>Not eligible</h2><span class="small">'+S.rej.length+' eligibility rule'+(S.rej.length>1?"s":"")+' not met. The reasons are listed in plain words.</span></div><button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':
-    '<div class="verdict rev"><h2>With a reviewer</h2><span class="small">A decision the rulebook keeps with a person. Target: within 4 working hours.</span></div><button class="btn wide" type="button" data-act="go-review">Open review console (reviewer view)</button>')+'</aside>';
+    D==="REJECT"?'<div class="verdict no"><h2>Not eligible</h2><span class="small">'+S.rej.length+' eligibility rule'+(S.rej.length>1?"s":"")+' not met. The reasons are listed in plain words.</span></div>'+(canSee("audit")?'<button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':'')+'':
+    '<div class="verdict rev"><h2>With a reviewer</h2><span class="small">A decision the rulebook keeps with a person. Target: within 4 working hours.</span></div>'+(canSee("ops")?'<button class="btn wide" type="button" data-act="go-review">Open review console (reviewer view)</button>':'')+'')+'</aside>';
   var top=done&&D==="NEEDS_MORE_INFO"?fixPanel():done&&D==="REJECT"?rejectPanel():done&&D==="HUMAN_REVIEW"?humanPanel():"";
   var h1=S.rechecking?"Re-checking your fixes":!done?"Checking your application":ok?"Verification complete":D==="NEEDS_MORE_INFO"?"A few fixes needed":D==="REJECT"?"Application not accepted":"With a reviewer";
   return '<div class="split verify"><div style="display:flex;flex-direction:column;gap:16px;min-width:0"><div class="head"><h1>'+h1+'</h1><p>Every document is cross-checked against your PAN and the onboarding rulebook. Each check shows the rule it applied and the evidence it used.</p></div>'+top+'<div class="cards">'+GROUPS.map(verifyCard).join("")+'</div></div>'+side+'</div>';
@@ -1597,11 +1607,12 @@ function stepCert(){
   '<div class="stampline">Demonstration certificate. The seal shows these fields were not changed on this device; it does not prove that IRDAI or an insurer issued it. Fictional broker; not a valid IRDAI credential.</div></div>'+
   '<details class="certcheck no-print" id="cert-verify"><summary>Verify this certificate</summary><p class="small muted">Seal covers: POSP code, name, PAN (masked), issue date and engine version. Training hours, exam score and location are printed but not sealed.</p><div class="actions" style="justify-content:flex-start"><button class="btn" type="button" data-act="verify-cert">Recompute the seal from these fields</button></div><p class="small" id="cert-verify-out" role="status" aria-live="polite"></p></details>'+
   '<div class="stats no-print"><div class="stat"><b>'+mins+' min</b><span>Start to certificate (this demo, on this device)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>'+
-  '<div class="actions no-print"><button class="btn" type="button" data-act="print-cert">Print or save as PDF</button><button class="btn" type="button" data-act="go-ops">See the audit trail</button><button class="btn pri" type="button" data-act="ask-new">Start a new application</button></div></div>';
+  '<div class="actions no-print"><button class="btn" type="button" data-act="print-cert">Print or save as PDF</button>'+(canSee("audit")?'<button class="btn" type="button" data-act="go-ops">See the audit trail</button>':'')+'<button class="btn pri" type="button" data-act="ask-new">Start a new application</button></div></div>';
 }
 function render(){
   flow();
-  if(VIEW==="dash") renderDash();
+  if(!canSee(VIEW)) renderBlocked(VIEW);
+  else if(VIEW==="dash") renderDash();
   else if(VIEW==="apply") $("view-apply").innerHTML=(!S.begun?stepIntro():S.step<2&&!S.focus?stepResume():stepper()+[stepDetails,stepDocs,stepVerify,stepTraining,stepExam,stepCert][S.step]());
   else if(VIEW==="ops") renderOps();
   else if(VIEW==="eval") renderEval();
@@ -1613,7 +1624,7 @@ function render(){
 var LASTST=null;
 function announce(msg){ var s=$("sr-status"); if(!s) return; s.textContent=""; setTimeout(function(){ s.textContent=msg },60); }
 function stepChanged(){
-  if(VIEW!=="apply") return;
+  if(VIEW!=="apply"||!canSee("apply")) return;
   if(LASTST===null){ LASTST=S.step+"|"+((S.step===2&&S.checks&&S.checks.length&&S.shown>=S.checks.length)?"done":"")+"|"+S.round; return; }
   var shownAll=S.step===2&&!S.rechecking&&S.checks&&S.checks.length&&S.shown>=S.checks.length;
   var key=S.step+"|"+(shownAll?"done":"")+"|"+S.round;
@@ -1937,6 +1948,7 @@ document.addEventListener("click",function(e){
   else if(a==="submit-exam"){ var ok=0; QUIZ.forEach(function(q,i){ if(S.exam.ans[i]===q.a) ok++; }); S.exam.score=Math.round(ok/QUIZ.length*100);
     if(S.exam.score>=50){ setState("EXAM_PASSED"); log("EXAM_SUBMIT","SYSTEM","Score "+S.exam.score+"% · demo pass mark 50%"); S.posp="PN-POSP-"+S.appId.slice(-5); S.issued=new Date().toISOString().slice(0,10); S.seal=null; setState("CERTIFIED"); cheer("congratulations, you are certified!","You scored "+S.exam.score+"%. Your POSP code "+S.posp+" is active. Welcome to PolicyNest.","star"); log("ISSUE_CREDENTIAL","SYSTEM","POSP code "+S.posp+" issued · registry notification simulated"); go(5); }
     else { setState("TRAINING_COMPLETED"); log("EXAM_FAIL","SYSTEM","Score "+S.exam.score+"%"); cheer("not this time, and that is fine.","You can retake the exam after 24 hours (rulebook §2). Review the modules before you try again.","heart"); render(); } }
+  else if(a==="role-set"){ setRole(t.getAttribute("data-role"),VIEW) }
   else if(a==="go-ops"){ show("audit"); }
   else if(a==="go-apply"){ show("apply"); }
   else if(a==="go-review"){ show("ops"); }
@@ -1992,21 +2004,21 @@ function reviewerAct(a){
   /* The reviewer's note is reviewer-only: it goes to c.rnote and the internal log, never into c.ev (applicant screens). The draft is cleared after each action. */
   R.note="";
   S.touches++;
-  if(a==="rv-uphold"){ log("REVIEWER_DECISION","REVIEWER","Dispute reviewed · rejection upheld · note: "+note+" · reviewer time "+tm); log("DECISION","SYSTEM","Rejection confirmed by a person; applicant told in plain words"); S.decision="REJECT"; setState("REJECTED"); S.disputed=false; S.review=null; S.rounds.push({round:S.round,decision:"REJECT",t:Date.now(),items:[],rechecked:0,carried:S.checks.length,changed:[],by:"reviewer"}); return render(); }
+  if(a==="rv-uphold"){ log("REVIEWER_DECISION","REVIEWER","Dispute reviewed · rejection upheld · note: "+note+" · reviewer time "+tm+rvRoleNote()); log("DECISION","SYSTEM","Rejection confirmed by a person; applicant told in plain words"); S.decision="REJECT"; setState("REJECTED"); S.disputed=false; S.review=null; S.rounds.push({round:S.round,decision:"REJECT",t:Date.now(),items:[],rechecked:0,carried:S.checks.length,changed:[],by:"reviewer"}); return render(); }
   S.round++;
   if(a==="rv-approve"){
     if(it.some(function(c){return c.code==="FACE_MATCH_LOW_REPEAT"})){ S.faceRun=0; S.faceApproved=S.ex&&S.ex.face; }
     it.forEach(function(c){c.ev0=c.ev0||c.ev;c.res="PASS";c.reviewer=true;c.ev+=" · confirmed by a reviewer";if(note)c.rnote=note});
-    log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · "+(R.dispute?"dispute upheld for the applicant: ":"")+"approved "+it.map(function(c){return c.code}).join(", ")+(note?" · note: "+note:"")+" · reviewer time "+tm);
+    log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · "+(R.dispute?"dispute upheld for the applicant: ":"")+"approved "+it.map(function(c){return c.code}).join(", ")+(note?" · note: "+note:"")+" · reviewer time "+tm+rvRoleNote());
   } else if(a==="rv-ask"){
     var sel=it.filter(function(c,i){return R.ask[i]!==false});
     if(!sel.length) { S.round--; S.touches--; return; }
     sel.forEach(function(c){var q=ASK[c.code]?ASK[c.code](c):{key:c.key,en:"Please upload your "+DOC_LABEL[c.key][0]+" again.",hi:"कृपया "+DOC_LABEL[c.key][1]+" दोबारा अपलोड करें।"};c.res="NEEDS_INFO";c.key=q.key;c.ask=q;c.code="REVIEWER_REQUEST";c.ev+=" · reviewer asked the applicant";if(note)c.rnote=note});
-    log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · asked the applicant for more information on "+sel.map(function(c){return c.doc}).join(", ")+(note?" · note: "+note:"")+" · reviewer time "+tm);
+    log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · asked the applicant for more information on "+sel.map(function(c){return c.doc}).join(", ")+(note?" · note: "+note:"")+" · reviewer time "+tm+rvRoleNote());
   } else if(a==="rv-reject"){
     var fraud=it.some(function(c){return c.code==="NAME_MISMATCH"});
     it.forEach(function(c){c.res="REJECT";c.reviewer=true;c.ev+=" · rejected by a reviewer";if(note)c.rnote=note;c.code=c.code==="BOARD_UNLISTED"?"BOARD_NOT_RECOGNISED":"IDENTITY_NOT_CONFIRMED"});
-    log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · REJECT confirmed by a person · note: "+note+" · reviewer time "+tm);
+    log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · REJECT confirmed by a person · note: "+note+" · reviewer time "+tm+rvRoleNote());
     if(fraud) log("FRAUD_DESK_REFERRAL","SYSTEM","Different-person name confirmed · referred to the fraud desk the same day (rulebook §5, §7). Internal only: never shown to the applicant");
   }
   S.disputed=false; S.review=null; S.decision=decisionOf(S.checks); S.obs=observe(S.checks,S.ex); S.shown=S.checks.length;
@@ -2340,17 +2352,49 @@ document.addEventListener("submit",function(e){ if(e.target&&e.target.id==="cp-f
 /* Proactive help: 90 seconds with no activity on a details or documents page */
 function idleReset(){ clearTimeout(CP.idleT); CP.idleT=setTimeout(function(){ if(watching()) cpNudge("idle-"+S.step+"-"+S.dpage+"-"+accepted(),"Need a hand? "+nextStepText()); },90000); }
 ["click","keydown","input","pointerdown"].forEach(function(ev){ document.addEventListener(ev,idleReset,true) });
+/* ---------- Demo role switch (15 Nov). A View-as choice for demos. NOT authentication: anyone can switch. ROLE is not part of S and is never saved with the application. ---------- */
+var ROLES=[
+  {k:"applicant",label:"Applicant",views:["dash","apply"],first:"dash"},
+  {k:"reviewer",label:"Reviewer",views:["ops","audit"],first:"ops"},
+  {k:"ops",label:"Ops and compliance",views:["eval","audit","ops"],first:"eval"},
+  {k:"all",label:"All views (demo)",views:["dash","apply","ops","audit","eval"],first:"dash"}
+];
+var ROLE=(function(){ var v=null; try{ v=localStorage.getItem("pn-role") }catch(e){} if(v&&roleOf(v)) return v; return DEMO?"all":"applicant" })();
+function roleOf(k){ var key=(k===undefined)?ROLE:k; for(var i=0;i<ROLES.length;i++) if(ROLES[i].k===key) return ROLES[i]; return null }
+function canSee(v){ var r=roleOf(); return !!r&&r.views.indexOf(v)>=0 }
+function rolesFor(v){ return ROLES.filter(function(r){return r.k!=="all"&&r.views.indexOf(v)>=0}) }
+function rvRoleNote(){ var r=roleOf(); return " · demo role: "+(r?r.label:"not set") }
+function roleChrome(){ var c=$("rolechip"); if(c) c.textContent="Viewing as "+roleOf().label+" · demo"; var s=$("role-sel"); if(s&&s.value!==ROLE) s.value=ROLE }
+function setRole(k,goto){
+  var r=roleOf(k); if(!r) return;
+  ROLE=k; try{ localStorage.setItem("pn-role",k) }catch(e){}
+  announce("Viewing as "+r.label);
+  if(goto&&canSee(goto)){ show(goto); focusHead(goto); return }
+  if(!canSee(VIEW)) return show(r.first);
+  render();
+}
+/* Moves focus to a view's first heading (tabindex -1, so it can take focus without entering the tab order). */
+function focusHead(v){ var el=$("view-"+v); var h=el&&el.querySelector("h1"); if(h){ h.setAttribute("tabindex","-1"); try{ h.focus({preventScroll:true}) }catch(e){} } }
+/* A hidden view opened by URL: a notice in its place, with a way out (no dead ends). */
+function renderBlocked(v){
+  var need=rolesFor(v), tgt=need[0]||ROLES[3];
+  var list=need.map(function(r){return r.label}).join(" or ");
+  var names={dash:"Dashboard",apply:"Application",ops:"Review console",audit:"Audit trail",eval:"Evaluation"};
+  $("view-"+v).innerHTML='<div class="panel narrow"><div class="head"><h1>'+esc(names[v]||"This view")+' is not open to this role</h1><p>This view is for '+esc(list)+'. You are viewing as '+esc(roleOf().label)+'.</p></div><div class="actions"><button class="btn pri" type="button" data-act="role-set" data-role="'+tgt.k+'">Switch to '+esc(tgt.label)+'</button><button class="btn" type="button" data-act="role-set" data-role="all">All views (demo)</button></div></div>';
+}
+var RSEL=$("role-sel"); if(RSEL) RSEL.addEventListener("change",function(){ setRole(this.value) });
 var HASH={dash:"dashboard",apply:"apply",ops:"review",audit:"audit",eval:"evaluation"};
 function show(v){
   stopSpeech();
   VIEW=v; ["dash","apply","ops","audit","eval"].forEach(function(k){$("view-"+k).hidden=k!==v});
   render();
   try{ if(location.hash!=="#"+HASH[v]) location.hash=HASH[v]; window.scrollTo(0,0) }catch(e){}
+  if(!canSee(v)){ focusHead(v); var bl=rolesFor(v).map(function(r){return r.label}).join(" or "); announce("This view is for "+bl+". You are viewing as "+roleOf().label+".") }
 }
 function fromHash(){var h=location.hash.slice(1),v=null;Object.keys(HASH).forEach(function(k){if(HASH[k]===h)v=k});return v}
 window.addEventListener("hashchange",function(){var v=fromHash(); if(v&&v!==VIEW) show(v)});
 var RESTORED=restore();
-applyTheme(); VIEW=fromHash()||"dash"; if(RESTORED&&VIEW==="dash") VIEW="apply"; show(VIEW); kbLoad(); idleReset();
+applyTheme(); VIEW=fromHash()||"dash"; if(!fromHash()&&!canSee(VIEW)) VIEW=roleOf().first; if(RESTORED&&VIEW==="dash"&&canSee("apply")) VIEW="apply"; show(VIEW); kbLoad(); idleReset();
 if(DROPPED) cheer("your earlier saved progress expired.","Saved applications are kept for 30 days (14 days once a follow-up is open). Please start again.","heart");
 })();
 </script>
