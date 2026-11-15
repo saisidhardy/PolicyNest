@@ -1,6 +1,11 @@
 """Drive the PolicyNest applicant flow for scenarios T1 to T10 in headless Chromium.
 
-Usage:  python tools/t1_t10.py [base_url]     (default http://localhost:8000)
+Usage:  python tools/t1_t10.py [base_url]     (default http://127.0.0.1:8010, the DEMO build)
+
+This test needs the demo build: it uses the sample applicant, specimens and variants, which the production build
+does not contain. Build and serve it first:
+    python policynest_mvp/build_site.py --mode demo
+    python -m http.server 8010 --bind 127.0.0.1 --directory policynest_mvp/site-demo
 
 The server must already be running (the script never starts one). Each scenario gets a
 fresh browser context, loads /?demo=1&v=<random>#apply, types nothing, and uses the
@@ -18,7 +23,7 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000").rstrip("/")
+BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8010").rstrip("/")
 LEAK = re.compile(r"ANKIT|YADAV|recommend REJECT|fraud", re.I)
 PROCESSING = "Checking your application"
 
@@ -86,7 +91,7 @@ def pick_variants(page, tag):
 
 def open_to_documents(page):
     page.goto(f"{BASE}/?demo=1&v={random.randint(1, 10**9)}#apply")
-    page.click('[data-act="begin-nofs"]', timeout=15000)
+    page.click('[data-act="begin"]', timeout=15000)
     page.evaluate("() => document.querySelectorAll('details.demo').forEach(d => d.open = true)")
     page.click('[data-act="sample"]', timeout=15000)
     for _ in range(4):
@@ -197,6 +202,15 @@ def launch(p):
 
 
 def main():
+    import urllib.request
+    try:
+        html = urllib.request.urlopen(BASE + "/", timeout=10).read().decode("utf-8", "replace")
+    except Exception as exc:  # noqa: BLE001
+        print(f"ERROR cannot fetch {BASE}: {exc}")
+        return 1
+    if 'var BUILD_MODE="demo"' not in html:
+        print(f"ERROR {BASE} is not the DEMO build (no BUILD_MODE demo). Serve policynest_mvp/site-demo on 127.0.0.1.")
+        return 1
     results = []
     try:
         with sync_playwright() as p:

@@ -1,27 +1,50 @@
 """Rebuild site/index.html (the hosted copy) from PolicyNest.html (the source).
 
-Run from anywhere:  python policynest_mvp/build_site.py
+Run from anywhere:  python policynest_mvp/build_site.py [--mode prod|demo]
+
+  --mode prod  (default)  writes site/       the production portal: no demo controls, specimens, scenario
+                          launcher, "View as" switch, sample applicant or demo wording.
+  --mode demo             writes site-demo/  the demo site (app name policynest-demo) with every test control.
+
+The source marks demo-only code with /*DEMO:START*/ ... [/*DEMO:ELSE*/ ...] /*DEMO:END*/ (or the same with HTML
+comments). The demo build keeps the first part; the production build keeps only the part after DEMO:ELSE.
 PolicyNest.html has no <html>/<head>/<body> tags (the claude.ai artifact viewer adds them),
 so this wraps it into a standalone page and copies the two worker shim files.
 """
+import argparse, json, re
 from pathlib import Path
 
+ap = argparse.ArgumentParser()
+ap.add_argument("--mode", choices=("prod", "demo"), default="prod")
+MODE = ap.parse_args().mode
 here = Path(__file__).resolve().parent
 src = (here / "PolicyNest.html").read_text(encoding="utf-8")
-cut = src.index("</style>") + len("</style>")
+_MARK = re.compile(r"(?:/\*|<!--)DEMO:START(?:\*/|-->)(.*?)(?:(?:/\*|<!--)DEMO:ELSE(?:\*/|-->)(.*?))?(?:/\*|<!--)DEMO:END(?:\*/|-->)", re.S)
+assert src.count('var BUILD_MODE="demo";') == 1, "BUILD_MODE line not found"
+out_src = _MARK.sub(lambda m: m.group(1) if MODE == "demo" else (m.group(2) or ""), src)
+out_src = out_src.replace('var BUILD_MODE="demo";', 'var BUILD_MODE="' + MODE + '";')
+assert "DEMO:START" not in out_src and "DEMO:END" not in out_src.replace("DEMO:END_", "")
+cut = out_src.index("</style>") + len("</style>")
 page = (
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
     '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-    + src[:cut]
+    + out_src[:cut]
     + '\n</head>\n<body style="margin:0">\n'
-    + src[cut:]
+    + out_src[cut:]
     + "\n</body>\n</html>\n"
 )
-site = here / "site"
+site = here / ("site" if MODE == "prod" else "site-demo")
 site.mkdir(exist_ok=True)
+# site-demo/embarko.json is not generated: deploys name the app with the X-App-Name header (policynest-demo).
 vitals = here.parent / 'node_modules' / 'web-vitals' / 'dist' / 'web-vitals.iife.js'
 if vitals.is_file():
     (site / 'web-vitals.iife.js').write_bytes(vitals.read_bytes())
+elif not (site / 'web-vitals.iife.js').is_file():
+    _fallback = here / 'site' / 'web-vitals.iife.js'  # tracked copy from an earlier build
+    if _fallback.is_file():
+        (site / 'web-vitals.iife.js').write_bytes(_fallback.read_bytes())
+    else:
+        raise SystemExit('web-vitals.iife.js not found: run npm install web-vitals or restore policynest_mvp/site/web-vitals.iife.js')
 (site / "index.html").write_text(page, encoding="utf-8")
 for name in ("ocr-worker.js", "pdf-worker.js"):
     (site / name).write_text((here / name).read_text(encoding="utf-8"), encoding="utf-8")
@@ -128,4 +151,4 @@ elif engine_now != measured:
     print("WARNING: engine hash " + engine_now[:12] + " differs from the evaluation's " + measured[:12] + ": the Evaluation page figures were measured on different code. Re-run eval/run_eval.js.")
 else:
     print("Engine hash " + engine_now[:12] + " matches eval/out/eval_results.json")
-print("Built", site / "index.html")
+print("Built", site / "index.html", "(" + MODE + ")")

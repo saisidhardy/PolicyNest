@@ -5,7 +5,7 @@ Usage:  python tools/test_portal_e2e.py
 
 Starts, on its own, the backend (port 9480, temporary database, random JWT secret, COPILOT_ORIGINS set to the
 local site origin) and a static server for the built site (port 9481). Both are stopped before exit. Needs
-policynest_mvp/site/index.html (run `python policynest_mvp/build_site.py` first) and Python Playwright.
+policynest_mvp/site-demo/index.html (run `python policynest_mvp/build_site.py --mode demo` first; the test uses the sample applicant and specimens) and Python Playwright.
 All data is synthetic. Exit code 0 only when every check passes.
 """
 import http.server
@@ -65,14 +65,14 @@ def start_backend(tmp):
 
 
 def start_static(tmp):
-    src = open(os.path.join(ROOT, "policynest_mvp", "site", "index.html"), encoding="utf-8").read()
+    src = open(os.path.join(ROOT, "policynest_mvp", "site-demo", "index.html"), encoding="utf-8").read()
     assert "'http://localhost:8787'" in src, "COPILOT_URL pattern changed"
     src = src.replace("'http://localhost:8787'", "'" + API + "'")
     web = os.path.join(tmp, "web")
     os.makedirs(web)
     open(os.path.join(web, "index.html"), "w", encoding="utf-8").write(src)
     for f in ("kb.json", "ocr-worker.js", "pdf-worker.js"):
-        fp = os.path.join(ROOT, "policynest_mvp", "site", f)
+        fp = os.path.join(ROOT, "policynest_mvp", "site-demo", f)
         if os.path.exists(fp):
             shutil.copy(fp, web)
 
@@ -213,7 +213,7 @@ def run(browser):
     check("no duplicate application created by the page", A.api("GET", "/api/applications/me")["json"]["application"]["reference"] == ref_ui)
 
     A.page.evaluate("location.hash='#apply'")
-    A.page.click('[data-act="begin-nofs"]')
+    A.page.click('[data-act="begin"]')
     A.page.evaluate("document.querySelectorAll('details.demo').forEach(d=>d.open=true)")
     A.page.click('[data-act="sample"]')
     for _ in range(4):

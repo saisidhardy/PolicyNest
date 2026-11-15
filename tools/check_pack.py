@@ -28,8 +28,13 @@ def main():
     print(("PASS" if same else "FAIL") + " engine hash " + h[:16] + ("" if same else " (pinned " + PINNED[:16] + "; the engine block changed: re-run the evaluation)"))
     ok &= same
 
-    # 2. JS syntax: every inline <script> block must parse.
-    scripts = re.findall(r"<script>(.*?)</script>", html, flags=re.S)
+    # 2. JS syntax: every inline <script> block must parse, in the demo build and in the production build
+    # (the source holds both variants of demo-only code between DEMO:START / DEMO:ELSE / DEMO:END markers).
+    mark = re.compile(r"(?:/\*|<!--)DEMO:START(?:\*/|-->)(.*?)(?:(?:/\*|<!--)DEMO:ELSE(?:\*/|-->)(.*?))?(?:/\*|<!--)DEMO:END(?:\*/|-->)", re.S)
+    scripts = []
+    for mode in ("demo", "prod"):
+        built = mark.sub(lambda m: m.group(1) if mode == "demo" else (m.group(2) or ""), html)
+        scripts += re.findall(r"<script>(.*?)</script>", built, flags=re.S)
     bad = 0
     for i, s in enumerate(scripts):
         with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as t:
@@ -42,7 +47,7 @@ def main():
             print("FAIL js syntax in script " + str(i) + ": " + (r.stderr.strip().splitlines() or [""])[-1][:200])
             print("     " + "\n     ".join(r.stderr.strip().splitlines()[:4]))
     if not bad:
-        print("PASS js syntax (" + str(len(scripts)) + " script blocks)")
+        print("PASS js syntax (" + str(len(scripts)) + " script blocks, demo and prod builds)")
     ok &= bad == 0
 
     # 3. Banned phrases (FR-36).

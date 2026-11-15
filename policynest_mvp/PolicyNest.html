@@ -92,10 +92,6 @@ p{margin:0} button,input,select{font:inherit;color:inherit}
 .bx.on{background:var(--ok);border-color:var(--ok)}
 .decide{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center}
 @media (max-width:900px){
-  .shell{grid-template-columns:minmax(0,1fr)}
-  .nav{border-right:0;border-bottom:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
-  .nav-in{position:static;gap:10px} .help,.nav .env{display:none}
-  .menu{flex-direction:row;flex-wrap:wrap;overflow:visible}
   .sl{display:none} .sp.now .sl{display:block}
 }
 .split{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start}
@@ -319,7 +315,7 @@ html[data-theme="dark"] .nav-in{border:1px solid var(--line)}
 .who2 b{font-family:var(--display);font-size:1rem} .who2 small{color:var(--muted);font-family:var(--mono);font-size:.72rem}
 .help{background:var(--accent);color:#141414;border-radius:20px;margin-top:auto}
 .env{background:var(--sunken);color:var(--muted)} .env i{background:var(--ok)}
-@media (max-width:900px){.shell{grid-template-columns:minmax(0,1fr)} .nav{padding:10px max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px))} .nav-in{min-height:0;padding:10px} .who2{display:none}}
+
 /* Top bar */
 .top{position:sticky;top:0;z-index:5;backdrop-filter:blur(10px);background:var(--glass);border-bottom:0}
 .tools{display:flex;gap:8px;align-items:center;margin-left:auto}
@@ -453,7 +449,7 @@ html[data-theme="dark"] .hbar .tr i{background:var(--accent)}
 @keyframes tin{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes tout{to{opacity:0;transform:translateY(8px)}}
 @media (prefers-reduced-motion:reduce){.toast,.toast.out{animation:none}}
-/* Focused onboarding: sidebar and top bar give way to a slim bar with the sitting timer */
+/* Focused onboarding (optional layout, no timer): sidebar and top bar give way to a slim bar with Save and exit */
 .fbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px max(16px,env(safe-area-inset-left,0px));background:var(--night);color:var(--night-ink)}
 .fbar b{font-family:var(--display)} .fbar .fstep{font-size:.84rem;opacity:.8;flex:1;min-width:120px}
 .fbar .ftime{font-family:var(--mono);font-size:1.05rem;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.1);min-width:72px;text-align:center}
@@ -510,7 +506,7 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   .top .iconbtn,.top .avatar{width:32px;height:32px}
   .top .tools{gap:6px}
 }
-/* Demo role switch (15 Nov): a View-as choice for demos. Not a login. */
+/* Role switch for the demo build only. Not a login. */
 .role{display:flex;flex-direction:column;gap:6px;background:var(--sunken);border-radius:14px;padding:12px}
 .role label{font-size:.82rem;font-weight:700;color:var(--ink);min-height:24px;display:inline-flex;align-items:center}
 .role select{font:inherit;font-size:.92rem;min-height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:6px 10px;width:100%}
@@ -612,15 +608,12 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
 .arow dt{color:var(--muted);font-weight:700;font-size:.86rem}
 .arow dd{margin:0;font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 @media (max-width:900px){
-  .top{position:static}
   .btn,.btn.sm{min-height:44px}
   .top .iconbtn{width:44px;height:44px}
   .langsw button{min-height:44px}
   .role select{min-height:44px}
   .rolechip{display:none}
-  .menu{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:6px;scrollbar-width:thin}
-  .menu a{flex:none;min-height:44px}
-  .mgrp{display:none}
+  .menu a{min-height:44px}
   .dgrid2{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:800px){.dtop{grid-template-columns:minmax(0,1fr)} .dnext{order:-1}}
@@ -639,6 +632,74 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   .tb-row{gap:6px 10px}
 }
 
+/* Accessibility baselines (lane P6): a default visible focus ring (zero specificity, so component rules still win) and reduced motion everywhere. */
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:3px solid var(--info);outline-offset:2px}
+html{scroll-padding-top:120px}
+.panel .errsum,.errsum#det-errs{background:var(--bad-soft);color:var(--bad-ink);border-radius:14px;padding:12px 16px;font-size:.9rem;outline-offset:2px}
+.errsum#det-errs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.errsum#det-errs a{color:inherit;font-weight:700;display:inline-block;min-height:24px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+/* ===== Lane P6: tablet sidebar, phone shell (compact top bar, bottom navigation, menu drawer), badge-safe layout ===== */
+:root{--bn-h:60px;--badge-h:0px}
+.bnav,.navscrim,.navclose,.tb-brand,.mprog,.navutil{display:none}
+.cp-fab{left:auto;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + var(--badge-h))}
+.toasts{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + var(--badge-h) + 60px)}
+.nav-in{padding-bottom:calc(18px + var(--badge-h))}
+.wrap{padding-bottom:calc(96px + var(--badge-h))}
+body.typing .cp-fab{display:none}
+@media (min-width:700px) and (max-width:900px){
+  .shell{grid-template-columns:224px minmax(0,1fr)}
+  .menu a{padding:10px 12px}
+  .who2 .ph{width:56px;height:56px}
+  .jl{font-size:.72rem;overflow-wrap:normal;hyphens:none}
+}
+@media (max-width:699px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .nav{position:fixed;z-index:80;top:0;bottom:0;left:0;width:min(320px,88vw);padding:0;background:var(--surface);transform:translateX(-104%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s;overflow-y:auto;overscroll-behavior:contain}
+  body.navopen .nav{transform:none;visibility:visible;transition:transform .22s ease,visibility 0s}
+  .nav-in{position:relative;top:auto;min-height:100%;border-radius:0;box-shadow:none;padding:16px 14px calc(16px + var(--badge-h) + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+  html[data-theme="dark"] .nav-in{border:0}
+  .who2{display:flex} .nav .env,.help{display:flex}
+  .menu{flex-direction:column;overflow:visible} .menu a{min-height:48px} .mgrp{display:block}
+  .navclose{display:grid;position:absolute;top:10px;right:10px;width:44px;height:44px;z-index:2}
+  .navutil{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .navscrim{display:block;position:fixed;inset:0;z-index:70;background:rgba(10,10,10,.5)} .navscrim[hidden]{display:none}
+  .top,.top-in{display:contents}
+  .tb-1{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;padding:4px max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px));background:var(--glass);backdrop-filter:blur(10px)}
+  .tb-1 .tools{margin-left:auto;gap:2px;flex-wrap:nowrap}
+  .tb-brand{display:flex;align-items:center;gap:8px;min-height:44px;font-family:var(--display);font-weight:700;font-size:1rem}
+  .tb-who,.tb-ver,#themebtn{display:none}
+  .tb-1 .langsw{padding:2px} .tb-1 .langsw button{min-width:44px;padding:0 6px}
+  .tb-1 .amb svg{display:none}
+  .tb-brand svg{flex:none}
+  .tb-2{padding:8px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+  .mprog{display:flex;flex-direction:column;gap:4px;flex-basis:100%;order:5;padding:2px 4px 8px}
+  .mprog .segs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+  .mprog .segs i{height:5px;border-radius:3px;background:var(--line);box-shadow:inset 0 0 0 1px var(--muted)} .mprog .segs i.done{background:var(--ink)} .mprog .segs i.now{background:var(--brand)}
+  .mprog span{font-size:.78rem;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+  .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);border-top:1px solid var(--line);padding:0 max(0px,env(safe-area-inset-right,0px)) calc(var(--badge-h) + env(safe-area-inset-bottom,0px)) max(0px,env(safe-area-inset-left,0px))}
+  .bnav a,.bnav button{flex:1 1 0;min-width:0;min-height:var(--bn-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;font-size:.66rem;font-weight:700;line-height:1.15;color:var(--muted);background:none;border:0;border-radius:0;text-decoration:none;padding:6px 1px;cursor:pointer;text-align:center;position:relative}
+  .bnav .bi{display:grid;place-items:center;width:48px;height:28px;border-radius:999px;position:relative}
+  .bnav svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .bnav [aria-current="page"]{color:var(--ink)} .bnav [aria-current="page"] .bi{background:var(--brand);color:#141414}
+  .bnav .bl{display:block;max-width:100%;overflow-wrap:normal;word-break:normal;white-space:nowrap}
+  .bnav .bdg{position:absolute;top:-4px;right:2px;min-width:18px;height:18px;border-radius:9px;background:var(--brand);color:#141414;font-size:.66rem;font-weight:800;display:grid;place-items:center;padding:0 4px}
+  .bnav a:focus-visible,.bnav button:focus-visible{outline:3px solid var(--info);outline-offset:-3px}
+  body.focus .bnav{display:none}
+  .cp-fab{right:max(12px,env(safe-area-inset-right,0px));bottom:calc(var(--bn-h) + var(--badge-h) + env(safe-area-inset-bottom,0px) + 12px);padding:8px 14px;min-height:44px;font-size:.88rem}
+  body.focus .cp-fab{bottom:calc(16px + var(--badge-h) + env(safe-area-inset-bottom,0px))}
+  .toasts{bottom:calc(var(--bn-h) + var(--badge-h) + env(safe-area-inset-bottom,0px) + 72px)}
+  .wrap{padding-bottom:calc(var(--bn-h) + var(--badge-h) + env(safe-area-inset-bottom,0px) + 96px);gap:16px}
+  body.focus .wrap{padding-bottom:calc(var(--badge-h) + 96px)}
+  .cp{padding-bottom:var(--badge-h)}
+  .fbar{gap:8px}
+  .fbar button{min-height:44px}
+  .tb-2 .btn.sm,#savestate .btn{min-height:44px}
+  body{overflow-x:hidden}
+}
+@media (max-width:419px){.tb-brand span{display:none}}
+body.landing .bnav,body.landing .navscrim,body.landing .mprog{display:none!important}
+@media (prefers-reduced-motion:reduce){.nav{transition:none!important}}
 /* ===== Landing page (public, signed-out) and auth dialogs (lane P3b) ===== */
 body.landing .shell,body.landing .cp-fab,body.landing #cp,body.landing #focusbar,body.landing #fs-banner,body.landing #skip-g{display:none!important}
 .landing{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
@@ -692,7 +753,7 @@ dialog.pdlg:not([open]){display:none}
 @media (max-width:800px){.lp-hero{grid-template-columns:minmax(0,1fr)}.lp-steps,.lp-two{grid-template-columns:minmax(0,1fr)}}
 </style>
 
-<a class="skip" id="skip-g" href="#main">Skip to content</a>
+<a class="skip" id="skip-g" href="#main" data-t="skip.main">Skip to content</a>
 <div class="landing" id="view-welcome" hidden>
  <a class="skip" id="lp-skip" href="#lp-main">Skip to content</a>
  <header class="lp-top"><div class="lp-in lp-bar">
@@ -702,22 +763,25 @@ dialog.pdlg:not([open]){display:none}
  <main id="lp-main" tabindex="-1"></main>
  <footer class="lp-foot lp-in" id="lp-foot"></footer>
 </div>
-<div class="shell"><aside class="nav"><div class="nav-in">
+<div class="shell"><aside class="nav" id="nav"><div class="nav-in">
+  <button class="iconbtn navclose" type="button" data-act="nav-close" id="nav-close" data-ta="nav.menu.close"><span aria-hidden="true">&times;</span></button>
   <div class="brand">
     <svg width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15a12 12 0 0 0 24 0" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><path d="M8 15a7 7 0 0 0 14 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="15" cy="9" r="3.4" fill="var(--brand)"/></svg>
-    <div><b>PolicyNest</b><span>POSP agent onboarding</span></div>
+    <div><b>PolicyNest</b><span data-t="nav.tag">POSP agent onboarding</span></div>
   </div>
   <div class="who2"><span class="ph"><span id="sb-ph"></span></span><b id="sb-name">New applicant</b><small id="sb-id"></small></div>
   <span class="env" id="envchip"><i></i>Documents are read on your device</span>
-  <div class="role" id="role-box"><label for="role-sel">View as</label><select id="role-sel"><option value="applicant">Applicant</option><option value="reviewer">Reviewer</option><option value="ops">Ops and compliance</option><option value="all">All views (demo)</option></select><small>Demo role switch, not a login. Anyone can switch.</small></div>
+  <!--DEMO:START--><div class="role" id="role-box"><label for="role-sel">View as</label><select id="role-sel"><option value="applicant">Applicant</option><option value="reviewer">Reviewer</option><option value="ops">Ops and compliance</option><option value="all">All views (demo)</option></select><small>Demo role switch, not a login. Anyone can switch.</small></div><!--DEMO:END-->
   <nav class="menu" id="menu" aria-label="Main navigation"></nav>
+  <div class="navutil"><button class="iconbtn" type="button" data-act="theme" id="dthemebtn" aria-label="Switch to dark mode"></button><div class="langsw" id="nav-lang" role="group"></div></div>
   <details class="navx" id="navx" open><summary id="navx-sum">More</summary>
-  <div class="help"><b>Need help?</b><span id="foot-note">A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
+  <div class="help"><b data-t="help.h">Need help?</b><span id="foot-note">A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
   </details>
 </div></aside>
 <div class="main">
 <header class="top"><div class="top-in" id="topbar">
   <div class="tb-row tb-1">
+    <div class="tb-brand"><svg width="28" height="28" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15a12 12 0 0 0 24 0" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><path d="M8 15a7 7 0 0 0 14 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="15" cy="9" r="3.4" fill="var(--brand)"/></svg><span>PolicyNest</span></div>
     <div class="tb-who" id="tb-who"></div>
     <div class="tb-ver" id="tb-ver"></div>
     <div class="tools">
@@ -728,11 +792,11 @@ dialog.pdlg:not([open]){display:none}
       <div class="amwrap"><button class="amb" type="button" id="acct-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="acct-pop" aria-label="Account menu"></button>
         <div class="ampop" id="acct-pop" hidden><div class="amhead" id="am-head"></div><div role="menu" id="acct-menu" aria-labelledby="acct-btn"></div></div></div>
     </div>
+    <div class="mprog" id="mprog" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0" hidden></div>
   </div>
   <div class="tb-row tb-2"><div class="tb-ref" id="tb-ref"></div><span id="tb-status"></span><span id="savestate" role="status" aria-live="polite" aria-atomic="true"></span></div>
 </div></header>
-<div class="fbar" id="focusbar" hidden><b>PolicyNest onboarding</b><span class="fstep" id="fb-step"></span><span class="ftime" id="fb-time" role="timer" aria-live="off" aria-label="Time left in this sitting"></span><button type="button" id="fb-extend" data-act="m-extend" hidden>Extend 10 minutes</button><button type="button" id="fb-hide" data-act="timer-hide">Hide timer</button><button type="button" id="fb-off" data-act="timer-off">Turn off time limit</button><button type="button" id="fb-on" data-act="timer-on" hidden>Turn time limit on</button><button type="button" data-act="cp-open">Ask Copilot</button><button type="button" data-act="fb-exit">Save and exit</button></div>
-<div class="fsbanner" id="fs-banner" role="status" hidden><span>Full screen closed. Your sitting carries on.</span><button type="button" class="btn pri" data-act="fs-return">Return to full screen</button><button type="button" class="btn" data-act="fs-dismiss">Dismiss</button></div>
+<div class="fbar" id="focusbar" hidden><b>PolicyNest onboarding</b><span class="fstep" id="fb-step"></span><button type="button" data-act="cp-open" data-t="cp.fab">Ask Copilot</button><button type="button" data-act="fb-exit" data-t="fb.exit">Save and exit</button></div>
 <div class="sr-only" id="sr-status" role="status" aria-live="polite"></div>
 <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
 <div class="note syncnote" id="syncnote" role="status" hidden></div>
@@ -748,15 +812,17 @@ dialog.pdlg:not([open]){display:none}
   <section id="view-help" hidden></section>
 </main>
 </div></div>
-<button class="cp-fab" id="cp-fab" type="button" data-act="cp-open" aria-controls="cp" aria-expanded="false">Ask Copilot<i id="cp-badge" hidden aria-label="New suggestion"></i></button>
-<aside class="cp" id="cp" hidden role="dialog" aria-label="Onboarding Copilot">
-  <header><b>Onboarding Copilot</b><span class="cp-mode" id="cp-mode">Rulebook answers</span><button type="button" data-act="cp-close" aria-label="Close Copilot">×</button></header>
+<div class="navscrim" id="navscrim" data-act="nav-close" hidden></div>
+<nav class="bnav" id="bnav" aria-label="Quick navigation"></nav>
+<button class="cp-fab" id="cp-fab" type="button" data-act="cp-open" aria-controls="cp" aria-expanded="false"><span data-t="cp.fab">Ask Copilot</span><i id="cp-badge" hidden role="img" aria-label="New suggestion"></i></button>
+<aside class="cp" id="cp" hidden role="dialog" aria-modal="true" aria-labelledby="cp-title">
+  <header><b id="cp-title" data-t="cp.title">Onboarding Copilot</b><span class="cp-mode" id="cp-mode">Rulebook answers</span><button type="button" data-act="cp-close" aria-label="Close Copilot" data-ta="cp.close">×</button></header>
   <div class="cp-log" id="cp-log" aria-live="polite"></div>
   <div class="cp-chips"><button type="button" id="guide-next">Show next action</button><button type="button" id="guide-read">Read guidance</button><button type="button" id="guide-stop">Stop voice</button><button type="button" id="guide-mic">Ask by voice</button><select id="guide-lang" aria-label="Voice language"><option value="en-IN">English voice</option><option value="hi-IN">Hindi voice</option></select><button type="button" id="guide-appeal">Ask a human reviewer</button></div>
   <p class="cp-foot" id="guide-status" role="status"></p><button class="btn sm" type="button" id="guide-helped">This helped resolve my question</button>
-  <div class="cp-chips"><button type="button" data-cpq="What should I do next?">What next?</button><button type="button" data-cpq="Why was my document not accepted and how do I fix it?">Why was it refused?</button><button type="button" data-cpq="Which documents do I need and what makes a good photo?">Documents needed</button><button type="button" data-cpq="What happens after I submit?">After I submit</button></div>
-  <form id="cp-form" autocomplete="off"><label class="sr-only" for="cp-q">Ask a question</label><input id="cp-q" maxlength="600" placeholder="Ask about your documents or the steps"><button class="btn sm pri" type="submit">Send</button></form>
-  <p class="cp-foot">Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.</p>
+  <div class="cp-chips"><button type="button" data-cpq="What should I do next?" data-t="cp.q1">What next?</button><button type="button" data-cpq="Why was my document not accepted and how do I fix it?" data-t="cp.q2">Why was it refused?</button><button type="button" data-cpq="Which documents do I need and what makes a good photo?" data-t="cp.q3">Documents needed</button><button type="button" data-cpq="What happens after I submit?" data-t="cp.q4">After I submit</button></div>
+  <form id="cp-form" autocomplete="off"><label class="sr-only" for="cp-q" data-t="cp.label">Ask a question</label><input id="cp-q" maxlength="600" placeholder="Ask about your documents or the steps" data-tp="cp.ph"><button class="btn sm pri" type="submit" data-t="cp.send">Send</button></form>
+  <p class="cp-foot" data-t="cp.foot">Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.</p>
 </aside>
 <dialog id="modal" role="alertdialog" aria-labelledby="m-t" aria-describedby="m-b"><div class="mbox"><h2 id="m-t"></h2><p id="m-b"></p><div class="actions" id="m-a"></div></div></dialog>
 
@@ -769,7 +835,7 @@ var STEPS=["Your details","Documents","Verification","Training","Exam","Certific
 var ICONS=['<circle cx="8" cy="5.5" r="2.7"/><path d="M2.8 13.5c.6-2.6 2.7-4 5.2-4s4.6 1.4 5.2 4"/>','<path d="M4 1.8h5l3 3v9.4H4z"/><path d="M9 1.8v3h3"/>','<path d="M8 1.6l5 1.9v4.1c0 3.1-2 5.4-5 6.8-3-1.4-5-3.7-5-6.8V3.5z"/><path d="M5.8 8l1.6 1.6 2.9-3"/>','<path d="M2.5 3h4.2c.7 0 1.3.6 1.3 1.3V13c0-.7-.6-1.2-1.3-1.2H2.5zM13.5 3H9.3C8.6 3 8 3.6 8 4.3V13c0-.7.6-1.2 1.3-1.2h4.2z"/>','<path d="M2.5 13.5l.6-2.9 7.6-7.6 2.3 2.3-7.6 7.6z"/>','<circle cx="8" cy="6" r="3.8"/><path d="M5.8 9.2L5 14.2l3-1.6 3 1.6-.8-5"/>'];
 var STATES=["DRAFT","SUBMITTED","IN_REVIEW","NEEDS_MORE_INFO","HUMAN_REVIEW","REJECTED","KYC_APPROVED","TRAINING_IN_PROGRESS","TRAINING_COMPLETED","EXAM_IN_PROGRESS","EXAM_PASSED","CERTIFIED"];
 var STATE_LIST=["Delhi","Haryana","Uttar Pradesh","Maharashtra","Karnataka","Tamil Nadu","Gujarat","Rajasthan","West Bengal","Madhya Pradesh","Punjab","Bihar","Telangana","Kerala"];
-var SAMPLE={name:"Rahul Kumar Sharma",dob:"1994-08-14",mobile:"9876543210",email:"rahul.sharma@example.com",pan:"BNZPS4821K",aadhaar4:"4417",state:"Haryana",city:"Gurugram",acct:"50100284417",ifsc:"NEST0004521",education:"Graduate",consent:true};
+/*DEMO:START*/var SAMPLE={name:"Rahul Kumar Sharma",dob:"1994-08-14",mobile:"9876543210",email:"rahul.sharma@example.com",pan:"BNZPS4821K",aadhaar4:"4417",state:"Haryana",city:"Gurugram",acct:"50100284417",ifsc:"NEST0004521",education:"Graduate",consent:true};/*DEMO:ELSE*/var SAMPLE={};/*DEMO:END*/
 var DOCS=[
  {k:"PAN",label:"PAN card",hint:"Photo of the original card with all four corners visible.",code:"PAN"},
  {k:"AADHAAR_FRONT",label:"Aadhaar, front",hint:"Only the last four digits are stored. The rest is masked.",code:"AADH\nFRONT"},
@@ -793,9 +859,9 @@ var QUIZ=[
  {q:"A POSP may be registered with:",o:["One insurer or intermediary at a time","Any number of brokers","One life insurer and one broker"],a:0}];
 
 var S; var timer=null;
-/* ?demo=1 opens the demo-controls disclosures (specimens, variant pickers, sample applicant) by default. */
+/* ?demo=1 opens the extra test controls by default (demo build only). */
 var DEMO=/[?&]demo=1\b/.test(location.search);
-/* Build mode: build_site.py sets "prod" for the production portal (no demo controls, no View-as switch, no demo wording) or "demo" for the demo site. */
+/* Build mode, set by build_site.py: "prod" for the production portal, "demo" for the demo site. */
 var BUILD_MODE="demo"; var DEMO_BUILD=BUILD_MODE==="demo";
 /* A new application starts empty: no person's name, no consent (FR-01). */
 var BLANK={name:"",dob:"",mobile:"",email:"",pan:"",aadhaar4:"",state:"",city:"",acct:"",ifsc:"",education:"",consent:false};
@@ -817,7 +883,7 @@ function log(event,actor,note){var e={t:Date.now(),state:S.status,round:S.round,
 function pill(cls,txt){return '<span class="pill '+cls+'">'+txt+'</span>'}
 /* ---------- Theme (warm light by default; dark on request, remembered in this browser if storage allows) ---------- */
 var THEME="light"; try{ THEME=localStorage.getItem("pn-theme")==="dark"?"dark":"light" }catch(e){}
-function applyTheme(){ applyTheme1("themebtn"); applyTheme1("lthemebtn"); }
+function applyTheme(){ applyTheme1("themebtn"); applyTheme1("lthemebtn"); applyTheme1("dthemebtn"); }
 function applyTheme1(bid){ document.documentElement.setAttribute("data-theme",THEME); var b=$(bid); if(b){ b.setAttribute("aria-label",THEME==="dark"?"Switch to light mode":"Switch to dark mode"); b.title=b.getAttribute("aria-label"); b.innerHTML=THEME==="dark"?'<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>':'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.6A5.6 5.6 0 0 1 6.4 2.5a5.6 5.6 0 1 0 7.1 7.1z"/></svg>'; } }
 /* ---------- Encouraging pop-ups: every success, addressed to the applicant by first name ---------- */
 function fname(){ var n=(S.ex&&S.ex.PAN&&S.ex.PAN.name)||norm(S.f.name||""); n=n.split(" ")[0]||""; return n?n.charAt(0)+n.slice(1).toLowerCase():"there"; }
@@ -1533,7 +1599,7 @@ function t(key,params,lang){
    Hindi strings were written by Claude, not a native speaker: a native Hindi speaker should review them before production. ===== */
 var I18N_UI={
 en:{
- "role.applicant":"POSP Applicant","role.reviewer":"Reviewer","role.ops":"Operations and compliance","role.admin":"Administrator","role.all":"Demo: all views",
+ "role.applicant":"POSP Applicant","role.reviewer":"Reviewer","role.ops":"Operations and compliance","role.admin":"Administrator",/*DEMO:START*/"role.all":"Demo: all views",/*DEMO:END*/
  "ver.email.yes":"Email verified","ver.email.no":"Email not verified","ver.mobile.yes":"Mobile verified","ver.mobile.no":"Mobile not verified",
  "ref.label":"Application reference","ref.copy":"Copy","ref.copied":"Copied","ref.copied.sr":"Reference copied","ref.copy.aria":"Copy application reference","ref.local":"not yet registered","ref.local.long":"This reference is saved only on this device until you sign in.",
  "lang.label":"Language","lang.en":"English","lang.hi":"Hindi",
@@ -1575,7 +1641,7 @@ en:{
  "un.title":"You do not have access to {name}","un.body":"This area is for {roles}. You are signed in as: {role}.","un.body.out":"This area is for {roles}. Sign in with a staff account to open it.","un.home":"Go to your home","un.signin":"Sign in",
  "route.note":"You are on {current}. {requested} opens after that step.","route.note.done":"{requested} is already complete. You are on {current}.",
  "state.loading":"Loading…","state.error":"We could not load this right now.","state.retry":"Try again",
- "demo.chip":"Viewing as {role}. Demo only.","env.prod":"Documents are read on your device","env.demo":"Demo environment · on-device OCR","foot.prod":"Four of the checks are simulated in this version. See How document checks work.","foot.demo":"Demo environment. Checks are simulated.",
+ /*DEMO:START*/"demo.chip":"Viewing as {role}. Demo only.",/*DEMO:END*/"env.prod":"Documents are read on your device",/*DEMO:START*/"env.demo":"Demo environment · on-device OCR",/*DEMO:END*/"foot.prod":"Four checks are simulated in this version: PAN holder, bank penny-drop, face match and IRDAI registry.",/*DEMO:START*/"foot.demo":"Demo environment. Checks are simulated.",/*DEMO:END*/
  "lp.skip":"Skip to content",
  "lp.tag":"POSP agent onboarding",
  "lp.lang":"Language",
@@ -1588,7 +1654,7 @@ en:{
  "lp.about.h":"What PolicyNest is",
  "lp.about.b1":"You add a short set of details and six documents. Each document is read on your device and compared with the onboarding rules. Anything that needs judgement goes to a person on our team.",
  "lp.about.b2":"After the checks pass you complete 15 hours of training, take an exam and receive your certificate.",
- "lp.fiction":"PolicyNest is a fictional insurance broker, made for the Masters' Union Applied AI Challenge (problem PS-01). No real policies are sold here.",
+ "lp.fiction":"PolicyNest is a fictional insurance broker. No real policies are sold here.",
  "lp.how.h":"How it works",
  "lp.how.sub":"Six stages, in order. You can stop and come back.",
  "lp.s.0":"Tell us who you are on four short pages.",
@@ -1598,7 +1664,7 @@ en:{
  "lp.s.4":"A short multiple-choice exam.",
  "lp.s.5":"Your POSP certificate.",
  "lp.need.h":"What you need",
- "lp.need.b":"Keep these six documents ready: {docs}.",
+ "lp.need.b":"Keep these six documents ready.",
  "lp.protect.h":"How we protect your information",
  "lp.dlg.login":"Sign in",
  "lp.dlg.register":"Create your account",
@@ -1646,7 +1712,7 @@ en:{
  "dash.help.link":"How checks work and how your information is protected"
 },
 hi:{
- "role.applicant":"POSP आवेदक","role.reviewer":"समीक्षक","role.ops":"संचालन और अनुपालन","role.admin":"व्यवस्थापक","role.all":"डेमो: सभी दृश्य",
+ "role.applicant":"POSP आवेदक","role.reviewer":"समीक्षक","role.ops":"संचालन और अनुपालन","role.admin":"व्यवस्थापक",/*DEMO:START*/"role.all":"डेमो: सभी दृश्य",/*DEMO:END*/
  "ver.email.yes":"ईमेल सत्यापित","ver.email.no":"ईमेल सत्यापित नहीं","ver.mobile.yes":"मोबाइल सत्यापित","ver.mobile.no":"मोबाइल सत्यापित नहीं",
  "ref.label":"आवेदन संदर्भ","ref.copy":"कॉपी करें","ref.copied":"कॉपी हो गया","ref.copied.sr":"संदर्भ कॉपी हो गया","ref.copy.aria":"आवेदन संदर्भ कॉपी करें","ref.local":"अभी पंजीकृत नहीं","ref.local.long":"साइन इन करने तक यह संदर्भ सिर्फ़ इसी डिवाइस पर सहेजा है।",
  "lang.label":"भाषा","lang.en":"अंग्रेज़ी","lang.hi":"हिंदी",
@@ -1685,7 +1751,7 @@ hi:{
  "un.title":"आपको {name} खोलने की अनुमति नहीं है","un.body":"यह क्षेत्र {roles} के लिए है। आप इस रूप में साइन इन हैं: {role}।","un.body.out":"यह क्षेत्र {roles} के लिए है। इसे खोलने के लिए स्टाफ़ खाते से साइन इन करें।","un.home":"अपने होम पर जाएँ","un.signin":"साइन इन करें",
  "route.note":"आप {current} पर हैं। {requested} उस चरण के बाद खुलेगा।","route.note.done":"{requested} पहले ही पूरा हो चुका है। आप {current} पर हैं।",
  "state.loading":"लोड हो रहा है…","state.error":"अभी यह लोड नहीं हो सका।","state.retry":"फिर से कोशिश करें",
- "demo.chip":"{role} के रूप में देख रहे हैं। सिर्फ़ डेमो।","env.prod":"दस्तावेज़ आपके डिवाइस पर पढ़े जाते हैं","env.demo":"डेमो वातावरण · डिवाइस पर OCR","foot.prod":"इस संस्करण में चार जाँचें नक़ली हैं। “दस्तावेज़ों की जाँच कैसे होती है” देखें।","foot.demo":"डेमो वातावरण। जाँचें नक़ली हैं।",
+ /*DEMO:START*/"demo.chip":"{role} के रूप में देख रहे हैं। सिर्फ़ डेमो।",/*DEMO:END*/"env.prod":"दस्तावेज़ आपके डिवाइस पर पढ़े जाते हैं",/*DEMO:START*/"env.demo":"डेमो वातावरण · डिवाइस पर OCR",/*DEMO:END*/"foot.prod":"इस संस्करण में चार जाँचें नक़ली हैं: PAN धारक, बैंक पेनी-ड्रॉप, चेहरा मिलान और IRDAI रजिस्ट्री।",/*DEMO:START*/"foot.demo":"डेमो वातावरण। जाँचें नक़ली हैं।",/*DEMO:END*/
  "lp.skip":"सामग्री पर जाएँ",
  "lp.tag":"POSP एजेंट ऑनबोर्डिंग",
  "lp.lang":"भाषा",
@@ -1698,7 +1764,7 @@ hi:{
  "lp.about.h":"PolicyNest क्या है",
  "lp.about.b1":"आप थोड़ा-सा विवरण और छह दस्तावेज़ जोड़ते हैं। हर दस्तावेज़ आपके डिवाइस पर पढ़ा जाता है और ऑनबोर्डिंग नियमों से मिलाया जाता है। जहाँ निर्णय की ज़रूरत होती है, वहाँ हमारी टीम का कोई व्यक्ति देखता है।",
  "lp.about.b2":"जाँच पूरी होने के बाद आप 15 घंटे का प्रशिक्षण पूरा करते हैं, परीक्षा देते हैं और अपना प्रमाणपत्र पाते हैं।",
- "lp.fiction":"PolicyNest एक काल्पनिक बीमा ब्रोकर है, जो Masters' Union Applied AI Challenge (समस्या PS-01) के लिए बनाया गया है। यहाँ कोई असली पॉलिसी नहीं बेची जाती।",
+ "lp.fiction":"PolicyNest एक काल्पनिक बीमा ब्रोकर है। यहाँ कोई असली पॉलिसी नहीं बेची जाती।",
  "lp.how.h":"यह कैसे काम करता है",
  "lp.how.sub":"छह चरण, क्रम से। आप रुककर बाद में लौट सकते हैं।",
  "lp.s.0":"चार छोटे पेजों में अपने बारे में बताएँ।",
@@ -1708,7 +1774,7 @@ hi:{
  "lp.s.4":"एक छोटी बहुविकल्पीय परीक्षा।",
  "lp.s.5":"आपका POSP प्रमाणपत्र।",
  "lp.need.h":"आपको क्या चाहिए",
- "lp.need.b":"ये छह दस्तावेज़ तैयार रखें: {docs}।",
+ "lp.need.b":"ये छह दस्तावेज़ तैयार रखें।",
  "lp.protect.h":"हम आपकी जानकारी की सुरक्षा कैसे करते हैं",
  "lp.dlg.login":"साइन इन करें",
  "lp.dlg.register":"अपना खाता बनाएँ",
@@ -1772,22 +1838,22 @@ function safeRejectReasons(checks,x,typedDob){
 
 function validate(f){
   var e={};
-  if(norm(f.name).length<3) e.name="Enter your full name as printed on your PAN card.";
-  if(!f.dob) e.dob="Enter your date of birth.";
-  else if(ageOn(f.dob,new Date())<18) e.dob="You must be 18 or older to register as a POSP.";
-  if(!/^[6-9]\d{9}$/.test(f.mobile)) e.mobile="Enter a 10-digit Indian mobile number.";
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) e.email="Enter a valid email address.";
-  if(!/^[A-Z]{5}\d{4}[A-Z]$/.test(f.pan)) e.pan="PAN is five letters, four digits, one letter (AAAAA9999A).";
-  if(!/^\d{4}$/.test(f.aadhaar4)) e.aadhaar4="Enter only the last four digits.";
-  if(!f.state) e.state="Choose your state.";
-  if(!f.education) e.education="Choose your highest education.";
-  if(!f.city.trim()) e.city="Enter your city.";
-  if(!/^\d{9,18}$/.test(f.acct)) e.acct="Account number is 9 to 18 digits.";
-  if(!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(f.ifsc)) e.ifsc="IFSC is four letters, a zero, then six characters.";
-  if(!f.consent) e.consent="Consent is needed to process your documents.";
+  if(norm(f.name).length<3) e.name=T("val.name");
+  if(!f.dob) e.dob=T("val.dob");
+  else if(ageOn(f.dob,new Date())<18) e.dob=T("val.age");
+  if(!/^[6-9]\d{9}$/.test(f.mobile)) e.mobile=T("val.mobile");
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) e.email=T("val.email");
+  if(!/^[A-Z]{5}\d{4}[A-Z]$/.test(f.pan)) e.pan=T("val.pan");
+  if(!/^\d{4}$/.test(f.aadhaar4)) e.aadhaar4=T("val.aadhaar4");
+  if(!f.state) e.state=T("val.state");
+  if(!f.education) e.education=T("val.education");
+  if(!f.city.trim()) e.city=T("val.city");
+  if(!/^\d{9,18}$/.test(f.acct)) e.acct=T("val.acct");
+  if(!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(f.ifsc)) e.ifsc=T("val.ifsc");
+  if(!f.consent) e.consent=T("val.consent");
   return e;
 }
-/* Specimen text: what a clean set of documents for the typed details would read as, in the same layout as the
+/*DEMO:START*//* Specimen text: what a clean set of documents for the typed details would read as, in the same layout as the
    PS-01 test set. It goes through the same parser as a real upload, so the specimen path tests the reader too. */
 var VARIANTS={
  PAN:[["clean","Clean"],["blurry","Blurry photo"],["company","Company PAN (4th letter C) · T6"]],
@@ -1824,7 +1890,7 @@ function specimenText(k,f,v){
     return "STATE BANK OF INDIA\nIFSC: "+(v==="blurry"?f.ifsc.slice(0,6)+"#"+f.ifsc.slice(7):f.ifsc)+"\nA/c No. XXXXXXX"+String(f.acct).slice(-4)+"\n"+(v==="blurry"?hn.replace(/^(..)./,"$1*"):hn)+"\nCANCELLED"; }
   return "";
 }
-/* Simulated external services. Penny-drop returns the holder name printed on the cheque; face match and
+/*DEMO:END*//* Simulated external services. Penny-drop returns the holder name printed on the cheque; face match and
    the IRDAI registry return fixed clean results. No real service is called. */
 var SIM={face:0.91,registry:false};
 function buildX(){
@@ -1952,9 +2018,9 @@ function shellChrome(){
   if($("sb-name")) $("sb-name").textContent=name; if($("sb-id")) $("sb-id").textContent=refText();
   var en=$("envchip"); if(en){ setHtml(en,'<i></i>'+TE(DEMO_BUILD?"env.demo":"env.prod")); }
   var ns=$("navx-sum"); if(ns) setHtml(ns,TE("nav.more"));
-  var rb=$("role-box"); if(rb) rb.hidden=!DEMO_BUILD;
+  /*DEMO:START*/var rb=$("role-box"); if(rb) rb.hidden=!DEMO_BUILD;/*DEMO:END*/
   var rc=$("rolechip"); if(rc){ rc.hidden=!DEMO_BUILD; rc.textContent=DEMO_BUILD?T("demo.chip",{role:roleLabelFor(r==="all"?"all":r)}):""; }
-  var s=$("role-sel"); if(s&&s.value!==ROLE) s.value=ROLE;
+  /*DEMO:START*/var s=$("role-sel"); if(s&&s.value!==ROLE) s.value=ROLE;/*DEMO:END*/
 }
 function navHtml(){
   var out="",lastStaff=false;
@@ -1968,17 +2034,17 @@ function navHtml(){
 }
 function flow(){
   setHtml($("menu"),navHtml()); $("menu").setAttribute("aria-label",T("nav.label"));
-  shellChrome();
+  shellChrome(); bnavChrome();
   if($("foot-note")) setHtml($("foot-note"),TE(DEMO_BUILD?"foot.demo":"foot.prod"));
 }
 function applyLang(){
   document.documentElement.lang=LANG;
-  ["view-apply","view-ops","view-audit","view-eval","cp","cp-fab","focusbar","fs-banner","modal"].forEach(function(id){ var el=$(id); if(!el) return; if(LANG==="hi") el.setAttribute("lang","en"); else el.removeAttribute("lang"); });
+  ["view-apply","view-ops","view-audit","view-eval","cp-log","modal"].forEach(function(id){ var el=$(id); if(!el) return; if(LANG==="hi") el.setAttribute("lang","en"); else el.removeAttribute("lang"); });
 }
 function setLang(l,remote){
   if(l!=="hi") l="en"; if(l===LANG&&remote!==true) return;
   LANG=l; try{ localStorage.setItem("pn-lang",l) }catch(e){}
-  applyLang();
+  applyLang(); if(S&&S.errs&&Object.keys(S.errs).length){ var re_=validate(S.f); Object.keys(S.errs).forEach(function(k){ if(re_[k]) S.errs[k]=re_[k]; }); }
   if(ACCOUNT&&remote!==false) accountRequest("/api/me",{language:l},undefined,"PATCH").then(function(d){ if(d&&d.user&&ACCOUNT) ACCOUNT.language=d.user.language; }).catch(function(){ announce(T("ui.error")); });
   render(); announce(l==="hi"?"भाषा हिंदी में बदली गई":"Language changed to English");
 }
@@ -2155,22 +2221,22 @@ function renderHelp(){
 function stepper(){
   return '<div class="stepper" aria-label="Application steps">'+STEPS.map(function(s,i){var st=stepState(i);return '<div class="sp '+st+'"'+(st==="now"?' aria-current="step"':'')+'><span class="sc">'+(st==="done"?"✓":i+1)+'</span><span class="sl">'+s+'</span></div>'}).join("")+'</div>';
 }
-/* Each item is [label, tick]. tick true = shown ticked; false = not yet; null = this demo cannot check it (never ticked, never counted). */
+/* Each item is [label, tick]. tick true = shown ticked; false = not yet; null = this version cannot check it (never ticked, never counted). */
 function checklist(){
   var ab=function(k){return !!(S.docs[k]&&S.docs[k].status==="ok")},given=!!S.f.consent;
   return [
-    [given?"Consent under the DPDP Act, 2023: given"+(S.isSample?" (sample applicant)":S.consentAt?" at "+clock(S.consentAt):""):"Consent under the DPDP Act, 2023: not given",given],
+    [given?"Consent under the DPDP Act, 2023: given"+(S.isSample?" (sample)":S.consentAt?" at "+clock(S.consentAt):""):"Consent under the DPDP Act, 2023: not given",given],
     ["All six documents accepted",accepted()===6],
     ["Aadhaar kept as last four digits only",ab("AADHAAR_FRONT")||ab("AADHAAR_BACK")],
     ["Cross-document checks passed",!!S.reached.KYC_APPROVED],
     ["No other POSP registration found (simulated registry)",!!S.reached.KYC_APPROVED],
-    ["15 hours of training: not checked in this demo",null],
+    ["15 hours of training: not checked in this version",null],
     ["POSP examination passed",!!S.reached.EXAM_PASSED],
     ["Certificate issued",S.status==="CERTIFIED"]];
 }
 function checkCard(){
-  var c=checklist(),n=c.filter(function(x){return x[1]}).length,tot=c.filter(function(x){return x[1]!==null}).length; /* null = not checked in this demo: not counted */
-  return '<div class="card"><div><h2>Compliance checklist</h2><p class="small muted">'+n+' of '+tot+' checks passed ('+Math.round(n/tot*100)+'%)</p></div><div class="prog"><i style="width:'+(n/tot*100)+'%"></i></div><ul class="cl">'+c.map(function(x){return '<li><span class="bx'+(x[1]?" on":"")+'">'+(x[1]?"✓":"")+'</span>'+x[0]+'</li>'}).join("")+'</ul></div>';
+  var c=checklist(),n=c.filter(function(x){return x[1]}).length,tot=c.filter(function(x){return x[1]!==null}).length; /* null = not checked in this version: not counted */
+  return '<div class="card"><div><h2>Compliance checklist</h2><p class="small muted">'+n+' of '+tot+' checks passed ('+Math.round(n/tot*100)+'%)</p></div><div class="prog" role="progressbar" aria-label="'+TE("pb.compliance")+'" aria-valuemin="0" aria-valuemax="'+tot+'" aria-valuenow="'+n+'"><i style="width:'+(n/tot*100)+'%"></i></div><ul class="cl">'+c.map(function(x){return '<li><span class="bx'+(x[1]?" on":"")+'">'+(x[1]?"✓":"")+'</span>'+x[0]+'</li>'}).join("")+'</ul></div>';
 }
 var ARROW='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5"/></svg>';
 var DSHORT={PAN:["PAN card","PAN"],AADHAAR_FRONT:["Aadhaar","AF"],AADHAAR_BACK:["Aadhaar","AB"],CLASS10:["Class 10","10"],BANK:["Cheque","₹"],SELFIE:["Selfie","☺"]};
@@ -2256,7 +2322,7 @@ function rulesPanel(){
 }
 function renderAudit(){
   var ev=S.events,act={};ev.forEach(function(e){act[e.actor]=(act[e.actor]||0)+1});
-  var head='<div class="hello"><div><p class="muted small"><span class="mono">'+S.appId+'</span> · '+esc(ENGINE)+'</p><h1>Audit trail</h1><p class="small muted">Ops and compliance view (this demo shows both roles)</p></div><div class="kpis">'+
+  var head='<div class="hello"><div><p class="muted small"><span class="mono">'+S.appId+'</span> · '+esc(ENGINE)+'</p><h1>Audit trail</h1><p class="small muted">Ops and compliance view</p></div><div class="kpis">'+
     '<div class="kpi"><span>Events</span><div class="row"><b class="num">'+ev.length+'</b></div></div><div class="kpi"><span>Decision rounds</span><div class="row"><b class="num">'+S.rounds.length+'</b></div></div><div class="kpi"><span>Human touches</span><div class="row"><b class="num">'+S.touches+'</b></div></div></div></div>';
   if(!ev.length){ $("view-audit").innerHTML=head+'<div class="box"><div class="empty">No events yet. Every applicant action and engine decision is recorded here with its rule and engine version.</div></div>'; return; }
   var rounds=S.rounds.length?'<div class="rounds">'+S.rounds.map(function(r,i){var c=r.decision==="APPROVE"?"lime":r.decision==="REJECT"?"ink":r.decision==="NEEDS_MORE_INFO"?"hot":"lav";return '<div class="box '+c+'" style="padding:16px"><div class="bh"><span class="small muted">Round '+r.round+(r.by?" · "+r.by:"")+'</span><span class="mono small">'+clock(r.t)+'</span></div><b style="font-family:var(--display);font-size:1.2rem;font-weight:500">'+r.decision.replace(/_/g," ").toLowerCase().replace(/^./,function(x){return x.toUpperCase()})+'</b><span class="small muted">'+(r.round===1?"All six documents read":r.changed&&r.changed.length?"Re-read: "+r.changed.map(function(k){return DOC_LABEL[k][0]}).join(", "):"No documents re-read")+' · '+r.rechecked+' checks run, '+r.carried+' carried over</span>'+(r.items.length?'<span class="small">'+r.items.length+' item'+(r.items.length>1?"s":"")+' asked in one message</span>':'')+'</div>'}).join("")+'</div>':'';
@@ -2287,7 +2353,7 @@ function ifscHint(v){
   else if(v.length<11) parts.push("Keep typing.");
   else if(!fmt) parts.push("Format does not match: four letters, a zero, then six letters or digits.");
   else parts.push("Format looks right.");
-  if(/^[A-Z]{4}/.test(v)){ var code=v.slice(0,4); bank=Object.prototype.hasOwnProperty.call(IFSC_BANKS,code)?"Bank: "+IFSC_BANKS[code]+".":"Bank not in this demo's offline list (that is fine)."; parts.push(bank); }
+  if(/^[A-Z]{4}/.test(v)){ var code=v.slice(0,4); bank=Object.prototype.hasOwnProperty.call(IFSC_BANKS,code)?"Bank: "+IFSC_BANKS[code]+".":"Bank not in the offline list (that is fine)."; parts.push(bank); }
   return parts.join(" ");
 }
 function ifscField(){
@@ -2295,21 +2361,21 @@ function ifscField(){
   return '<div class="fld'+(e?" bad":"")+'"><label for="f-ifsc">IFSC</label><input id="f-ifsc" data-f="ifsc" type="text" value="'+esc(S.f.ifsc)+'" maxlength="11" style="text-transform:uppercase" autocomplete="off" aria-describedby="'+(e?'err-ifsc ':'')+'ifsc-hint ifsc-note"'+(e?' aria-invalid="true"':'')+'>'+(e?'<span class="err" id="err-ifsc">'+e+'</span>':'')+'<span class="hint" id="ifsc-hint" aria-live="polite">'+esc(ifscHint(S.f.ifsc))+'</span><span class="hint" id="ifsc-note">Checked on this device; no lookup is sent anywhere.</span></div>';
 }
 function fieldHtml(id){
-  if(id==="name") return fld("name","Full name as on PAN","text","",true,'autocomplete="name"');
-  if(id==="dob") return fld("dob","Date of birth","date","You must be 18 or older");
-  if(id==="pan") return fld("pan","PAN","text","As printed on your card",false,'maxlength="10" style="text-transform:uppercase" autocomplete="off"');
-  if(id==="aadhaar4") return fld("aadhaar4","Aadhaar, last four digits","text","We never ask for or store the full number",false,'maxlength="4" inputmode="numeric" autocomplete="off"');
-  if(id==="mobile") return fld("mobile","Mobile number","tel","",false,'maxlength="10" inputmode="numeric"');
-  if(id==="email") return fld("email","Email","email","",false);
-  if(id==="city") return fld("city","City","text","");
-  if(id==="acct") return fld("acct","Account number","text","Savings or current account in your own name",false,'inputmode="numeric" maxlength="18" autocomplete="off"');
+  if(id==="name") return fld("name",T("f.name"),"text","",true,'autocomplete="name"');
+  if(id==="dob") return fld("dob",T("f.dob"),"date",T("h.dob"));
+  if(id==="pan") return fld("pan",T("f.pan"),"text",T("h.pan"),false,'maxlength="10" style="text-transform:uppercase" autocomplete="off"');
+  if(id==="aadhaar4") return fld("aadhaar4",T("f.aadhaar4"),"text",T("h.aadhaar4"),false,'maxlength="4" inputmode="numeric" autocomplete="off"');
+  if(id==="mobile") return fld("mobile",T("f.mobile"),"tel","",false,'maxlength="10" inputmode="numeric"');
+  if(id==="email") return fld("email",T("f.email"),"email","",false);
+  if(id==="city") return fld("city",T("f.city"),"text","");
+  if(id==="acct") return fld("acct",T("f.acct"),"text",T("h.acct"),false,'inputmode="numeric" maxlength="18" autocomplete="off"');
   if(id==="ifsc") return ifscField();
-  if(id==="education") return '<div class="fld'+(S.errs.education?" bad":"")+'"><label for="f-education">Highest education</label><select id="f-education" data-f="education"'+(S.errs.education?' aria-invalid="true" aria-describedby="err-education"':'')+'><option value="">Choose</option>'+["Class 8 or below","Class 10","Class 12","Graduate","Post-graduate"].map(function(s){return '<option'+(s===S.f.education?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.education?'<span class="err" id="err-education">'+S.errs.education+'</span>':'<span class="hint">Class 10 pass is the minimum</span>')+'</div>';
-  if(id==="state") return '<div class="fld'+(S.errs.state?" bad":"")+'"><label for="f-state">State</label><select id="f-state" data-f="state"'+(S.errs.state?' aria-invalid="true" aria-describedby="err-state"':'')+'><option value="">Choose</option>'+STATE_LIST.map(function(s){return '<option'+(s===S.f.state?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.state?'<span class="err" id="err-state">'+S.errs.state+'</span>':'')+'</div>';
+  if(id==="education") return '<div class="fld'+(S.errs.education?" bad":"")+'"><label for="f-education">'+TE("f.education")+'</label><select id="f-education" data-f="education"'+(S.errs.education?' aria-invalid="true" aria-describedby="err-education"':'')+'><option value="">Choose</option>'+["Class 8 or below","Class 10","Class 12","Graduate","Post-graduate"].map(function(s){return '<option'+(s===S.f.education?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.education?'<span class="err" id="err-education">'+S.errs.education+'</span>':'<span class="hint">Class 10 pass is the minimum</span>')+'</div>';
+  if(id==="state") return '<div class="fld'+(S.errs.state?" bad":"")+'"><label for="f-state">'+TE("f.state")+'</label><select id="f-state" data-f="state"'+(S.errs.state?' aria-invalid="true" aria-describedby="err-state"':'')+'><option value="">Choose</option>'+STATE_LIST.map(function(s){return '<option'+(s===S.f.state?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.state?'<span class="err" id="err-state">'+S.errs.state+'</span>':'')+'</div>';
   if(id==="consent") return '<div class="fld full"><label class="consent" for="f-consent"><input id="f-consent" data-f="consent" type="checkbox"'+(S.f.consent?" checked":"")+(S.errs.consent?' aria-invalid="true" aria-describedby="err-consent"':'')+'><span>I consent to PolicyNest processing my identity, education and bank documents solely to assess and register me as a Point of Sales Person, as described under the Digital Personal Data Protection Act, 2023. I can withdraw consent at any time.</span></label>'+(S.errs.consent?'<span class="err" id="err-consent">'+S.errs.consent+'</span>':'')+'</div>';
   return "";
 }
-/* C9: scenario launcher (inside Demo controls only). Labels follow brief Table 6. T10 uses the T5 variants. */
+/*DEMO:START*//* C9: scenario launcher (inside Demo controls only). Labels follow brief Table 6. T10 uses the T5 variants. */
 var SCENARIOS=[["T1","T1 · Clean application, every document agrees"],["T2","T2 · Marksheet shows the name with initials"],["T3","T3 · Marksheet spells the name differently"],["T4","T4 · Different person on Aadhaar and marksheet"],["T5","T5 · Blurry marksheet, DOB unreadable, parent's bank account"],["T6","T6 · Company PAN (fourth character C)"],["T7","T7 · Aadhaar DOB one year off the PAN"],["T8","T8 · Face-match score 0.68"],["T9","T9 · Other address state on Aadhaar"],["T10","T10 · Corrected marksheet after a follow-up"]];
 function scenarioChip(note){
   if(!S.scenario) return "";
@@ -2327,27 +2393,35 @@ function applyScenario(){
   var n=S.scenario==="T10"?"5":S.scenario.slice(1),re=new RegExp("\\u00b7 T"+n+"$");
   Object.keys(VARIANTS).forEach(function(k){ var hit=null; VARIANTS[k].forEach(function(o){ if(!hit&&re.test(o[1])) hit=o[0]; }); S.specv[k]=hit||"clean"; });
 }
+/*DEMO:END*//* Error summary for the details form: one alert at the top, each line a link to its field (WCAG 3.3.1, 3.3.3). */
+var FIELD_KEYS={name:"f.name",dob:"f.dob",education:"f.education",pan:"f.pan",aadhaar4:"f.aadhaar4",mobile:"f.mobile",email:"f.email",state:"f.state",city:"f.city",acct:"f.acct",ifsc:"f.ifsc",consent:"f.consent"};
+function detErrSummary(){
+  var ids=Object.keys(S.errs||{}).filter(function(f){return S.errs[f]&&FIELD_KEYS[f]});
+  if(!ids.length) return "";
+  return '<div class="errsum" id="det-errs" role="alert" tabindex="-1"><b>'+TE("err.sum",{n:ids.length})+'</b><ul>'+ids.map(function(f){return '<li><a href="#f-'+f+'" data-focus="f-'+f+'">'+esc(T(FIELD_KEYS[f])+": "+S.errs[f])+'</a></li>'}).join("")+'</ul></div>';
+}
 function stepDetails(){
   var P=DPAGES[S.dpage]||DPAGES[0],last=S.dpage===DPAGES.length-1;
-  return '<div class="split"><div class="panel"><div class="head"><span class="small muted">Your details · page '+(S.dpage+1)+' of '+DPAGES.length+'</span><div class="pages" aria-hidden="true">'+DPAGES.map(function(_,i){return '<i class="'+(i<=S.dpage?"on":"")+'"></i>'}).join("")+'</div><h1>'+P.t+'</h1><p>'+P.d+'</p></div>'+
-  (S.dpage===0?(S.isSample?'<div class="note"><span><b>Sample applicant loaded.</b> These are synthetic example details. Continue with them or replace them with your own.</span><button class="btn sm" type="button" data-act="clear">Clear form</button></div>':''):'')+
-  (S.dpage===0?demoBox('<p class="small muted">To see the flow quickly, load a synthetic applicant. Its details are invented.</p><button class="btn sm" type="button" data-act="sample">Load sample applicant</button>'+scenarioUI()):'')+
+  return '<div class="split"><div class="panel"><div class="head"><span class="small muted">'+TE("dp.page",{n:S.dpage+1,total:DPAGES.length})+'</span><div class="pages" aria-hidden="true">'+DPAGES.map(function(_,i){return '<i class="'+(i<=S.dpage?"on":"")+'"></i>'}).join("")+'</div><h1>'+TE("dp."+S.dpage+".t")+'</h1><p>'+TE("dp."+S.dpage+".d")+'</p></div>'+detErrSummary()+
+  /*DEMO:START*/(S.dpage===0?(S.isSample?'<div class="note"><span><b>Sample applicant loaded.</b> These are synthetic example details. Continue with them or replace them with your own.</span><button class="btn sm" type="button" data-act="clear">Clear form</button></div>':''):'')+/*DEMO:ELSE*/''+/*DEMO:END*/
+  /*DEMO:START*/(S.dpage===0?demoBox('<p class="small muted">To see the flow quickly, load a synthetic applicant. Its details are invented.</p><button class="btn sm" type="button" data-act="sample">Load sample applicant</button>'+scenarioUI()):'')+/*DEMO:ELSE*/''+/*DEMO:END*/
   '<form id="f-form" class="grid" novalidate>'+P.f.map(fieldHtml).join("")+'</form>'+
-  '<div class="actions">'+(S.dpage>0?'<button class="btn" type="button" data-act="details-back">Back</button>':'')+'<button class="btn pri" type="button" data-act="details-next">'+(last?"Continue to documents":"Next")+'</button></div>'+
+  '<div class="actions">'+(S.dpage>0?'<button class="btn" type="button" data-act="details-back">'+TE("btn.back")+'</button>':'')+'<button class="btn pri" type="button" data-act="details-next">'+TE(last?"btn.to_docs":"btn.next")+'</button></div>'+
   (S.saveOK?'<p class="small muted">Saved on this device as you type.</p>':'')+'</div>'+
   '<aside class="side stick"><h2>Keep these ready</h2><ul class="need">'+DOCS.map(function(d){return '<li><span class="nic"><svg viewBox="0 0 16 16" aria-hidden="true">'+ICONS[d.k==="SELFIE"?0:1]+'</svg></span>'+d.label+'</li>'}).join("")+'</ul><div class="obs"><b>Stuck?</b><span>Ask the Copilot. It knows which page you are on and what each field needs.</span></div><p class="foot">'+t(DEMO_BUILD?"foot.demo":"foot.prod",null,"en")+'</p></aside></div>';
 }
-function fileKind(st){ if(!st.file) return "Specimen"; var m=/\.([a-z0-9]+)$/i.exec(st.name||""); return m?m[1].toUpperCase():"File"; }
+function fileKind(st){ /*DEMO:START*/if(!st.file) return "Specimen";/*DEMO:END*/ var m=/\.([a-z0-9]+)$/i.exec(st.name||""); return m?m[1].toUpperCase():"File"; }
 function thumb(k,code){var st=k&&S.docs[k];return '<div class="thumb">'+(st&&st.url?'<img src="'+st.url+'" alt="">':esc(code).replace("\n","<br>"))+'</div>'}
-function specCtl(k){
+/*DEMO:START*/function specCtl(k){
   var v=S.specv[k]||"clean";
   return '<select class="sel" data-specv="'+k+'" aria-label="Specimen variant for '+SLOT[k].n+'">'+VARIANTS[k].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===v?" selected":"")+'>'+o[1]+'</option>'}).join("")+'</select><button class="btn sm" type="button" data-spec="'+k+'"><span>Use specimen<span class="sr-only"> for '+SLOT[k].n+'</span></span></button>';
 }
-/* One collapsed "Demo controls" disclosure per page. Closed unless ?demo=1 or the applicant opened it (kept in S.demoOpen). */
+/*DEMO:ELSE*/function specCtl(){return ""}
+/*DEMO:END*//*DEMO:START*//* One collapsed "Demo controls" disclosure per page. Closed unless ?demo=1 or the applicant opened it (kept in S.demoOpen). */
 function demoBox(inner){
   var open=S.demoOpen===true||(DEMO&&S.demoOpen!==false);
   return '<details class="demo"'+(open?' open':'')+'><summary>Demo controls (synthetic documents)</summary><div class="demo-body">'+inner+'</div></details>';
-}
+}/*DEMO:ELSE*/function demoBox(){return ""}/*DEMO:END*/
 function docCard(d){
   var st=S.docs[d.k],rd=st&&st.status==="reading",ok=st&&st.status==="ok",rej=st&&st.status==="rejected",ph=st&&st.status==="photo",o=st&&st.ocr;
   var head='<div class="vhead">'+thumb(d.k,d.code)+'<div><h2>'+d.label+'</h2><div class="meta">'+(st?"Uploaded · "+fileKind(st)+"<br>"+esc(st.name):d.hint)+'</div></div>'+(ok?(docClean(d.k)?pill("ok","Verified"):pill("warn",docFixLabel(d.k))):rej?pill("bad","Not accepted"):ph?pill("warn","Check photo"):rd?'<span class="pill run" id="ocr-'+d.k+'">Reading text</span>':pill("","Required"))+'</div>';
@@ -2355,7 +2429,7 @@ function docCard(d){
   function row(l,p,ev){return '<div class="vrow"><span>'+l+'</span>'+p+(ev?'<span class="ev">'+esc(ev)+'</span>':'')+'</div>'}
   if(rd) body='<div class="vrows">'+row("Document classification",pill("run","In progress"))+row("Text readability",pill("run","In progress"))+row("Field detection",pill("run","In progress"))+'</div>';
   else if(ok&&o){ var miss=o.fields&&o.fields.missing||[];
-    body='<div class="vrows">'+row("Document classification",pill(o.spec?"info":"ok",o.spec?"Specimen":"Passed"),"Recognised as: "+o.detName)+row("Text readability",o.conf<0.75?pill("warn","Unclear"):pill("ok","Passed"),o.src+" · confidence "+o.conf.toFixed(2)+(o.spec?"":" · "+o.words+" words"))+
+    body='<div class="vrows">'+row("Document classification",pill(/*DEMO:START*/o.spec?"info":/*DEMO:END*/"ok",/*DEMO:START*/o.spec?"Specimen":/*DEMO:END*/"Passed"),"Recognised as: "+o.detName)+row("Text readability",o.conf<0.75?pill("warn","Unclear"):pill("ok","Passed"),o.src+" · confidence "+o.conf.toFixed(2)+(o.spec?"":" · "+o.words+" words"))+
     (d.k==="SELFIE"?row("Field detection",pill("ok","Passed"),"No identifiers expected on this item"):'<div class="vrow"><span>Fields read</span>'+(miss.length?pill("bad","Not all read"):pill("ok","Passed"))+'<span class="ev">'+docSummaryX(d.k,o.fields)+'</span></div>')+'</div>'+
     (miss.length?'<div class="obs bad"><b>Could not read</b><span>'+esc(miss.join(", "))+'. Replace it with a sharper photo in daylight, all four corners visible, for a decision without a follow-up.</span></div>':''); }
   else if(rej) body='<div class="vrows">'+row("Document classification",pill("bad","Failed"),o?(TYPE_NAME[o.det]?"Looks like: "+TYPE_NAME[o.det]:"Type not recognised")+" · confidence "+o.conf.toFixed(2)+" · "+o.words+" words":"")+'</div>'+fbHtml(rejectFeedback(st.reason));
@@ -2368,14 +2442,15 @@ function docCard(d){
 }
 /* Instant feedback after each upload: the same rule engine runs on what has been read so far, and only the
    checks that involve this document are shown, in plain words with the exact fix. Nothing here decides. */
-var PHOTO_STEPS=["Put the original on a flat, dark surface in daylight, away from lamps that cause glare.","Hold the phone straight above it so all four corners are inside the frame.","Tap Replace and upload the new photo."];
+var PHOTO_STEPS=["Put the original on a flat, dark surface in daylight, away from lamps that cause glare.","Hold the phone straight above it so all four corners are inside the frame.","Tap Replace and upload the new photo."]; /* English fallbacks; shown through photoSteps() */
+function photoSteps(){ return [T("ph.1"),T("ph.2"),T("ph.3")]; }
 /* C1/C3/C5/C13 helpers. Wording follows the defect taxonomy; the checks are heuristics (see PHOTO_LIMITS). */
 var PHOTO_MSG={SMALL:["The photo is too small to read","Small photos lose the detail needed to read the fields."],BLUR:["The photo looks blurry","Blurred text cannot be read reliably, so you may be asked to upload again."],GLARE:["Light is reflecting off the card","A bright patch can hide part of the text."],DARK:["The photo is too dark","Dark areas hide the text, so the fields may not be read."]};
 var SELFIE_PHOTO_MSG={SMALL:PHOTO_MSG.SMALL,DARK:["The photo is too dark","We need to see your face clearly in good light."]};
 function photoHold(k,codes){
   var sel=k==="SELFIE",lab=DOC_LABEL[k][0],
     msg=codes.map(function(c){var m=(sel?SELFIE_PHOTO_MSG:PHOTO_MSG)[c];return m?'<div class="obs bad"><b>'+esc(m[0])+'</b><span>'+esc(m[1])+'</span></div>':''}).join(""),
-    steps=sel?["Face the front camera in daylight.","Keep your whole face in the frame, with nothing covering it.","Tap Retake photo and take a new selfie."]:PHOTO_STEPS.slice(0,2).concat(["Tap Retake photo and upload the new photo."]);
+    steps=sel?["Face the front camera in daylight.","Keep your whole face in the frame, with nothing covering it.","Tap Retake photo and take a new selfie."]:photoSteps().slice(0,2).concat(["Tap Retake photo and upload the new photo."]);
   return msg+'<p class="small"><b>How to retake</b></p><ol class="small retake">'+steps.map(function(s){return '<li>'+esc(s)+'</li>'}).join("")+'</ol>'+
     '<div class="vbtns"><button class="btn sm" type="button" data-act="photo-retake" data-k="'+k+'" aria-label="Retake photo, '+esc(lab)+'">Retake photo</button><button class="btn sm pri" type="button" data-act="photo-anyway" data-k="'+k+'" aria-label="Use this photo anyway, '+esc(lab)+'">Use this photo anyway</button></div>';
 }
@@ -2405,7 +2480,7 @@ function feedbackFor(k){
   return {good:good,fix:fix,stop:stop,human:human,later:later,codes:fix.concat(stop,human).map(function(i){return i.code}).filter(Boolean)};
 }
 function rejectFeedback(reason){
-  var steps=/not supported|JPG/.test(reason)?["Take a photo of the document, or save it as a PDF.","Upload that file here."]:/looks like|not a selfie|not recognise/i.test(reason)?["Check the label above this slot: each slot takes one document.","Pick the right file, or take a clear photo of the original.","Upload it here."]:/face|selfie/i.test(reason)?["Face the camera in daylight, with nothing covering your face.","Take a new selfie and upload it here."]:/OCR engine/.test(reason)?["Check your internet connection and try again, or use a specimen for the demo."]:PHOTO_STEPS;
+  var steps=/not supported|JPG/.test(reason)?["Take a photo of the document, or save it as a PDF.","Upload that file here."]:/looks like|not a selfie|not recognise/i.test(reason)?["Check the label above this slot: each slot takes one document.","Pick the right file, or take a clear photo of the original.","Upload it here."]:/face|selfie/i.test(reason)?["Face the camera in daylight, with nothing covering your face.","Take a new selfie and upload it here."]:/OCR engine/.test(reason)?["Check your internet connection and try again."]:photoSteps();
   return {good:[],fix:[{what:reason,steps:steps}],stop:[],human:[],later:[],codes:["NOT_ACCEPTED"]};
 }
 function fbHtml(fb){
@@ -2421,13 +2496,13 @@ function fbHtml(fb){
 function nextDocIndex(){ for(var i=1;i<=DOCS.length;i++){ var j=(S.dk+i)%DOCS.length,st=S.docs[DOCS[j].k]; if(!st||st.status!=="ok") return j; } return -1; }
 function allDocs(){return DOCS.every(function(d){return S.docs[d.k]&&S.docs[d.k].status==="ok"})}
 function stepDocs(){
-  applyScenario();
+  /*DEMO:START*/applyScenario();/*DEMO:END*/
   var n=DOCS.filter(function(d){return docClean(d.k)}).length;
   return '<div class="panel"><div class="ophead"><div class="head"><h1>Upload your documents</h1><p>Six items. Each file is read by OCR on your device as soon as you add it, and is accepted only if it is the right document for that slot. JPG, PNG or PDF.</p></div><div class="actions"><button class="btn" type="button" data-act="back-details">Back</button><button class="btn pri" type="button" data-act="submit"'+(allDocs()?"":" disabled")+'>Submit for verification</button></div></div>'+
-  '<div class="bento"><div class="box s4" style="background:var(--sunken);box-shadow:none"><span class="small muted">Verified on your device</span><div><b class="num" style="font-size:3.2rem">'+n+'</b><span class="muted" style="font-size:1.4rem"> / 6</span></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(docClean(d.k)?"on":st&&st.status==="ok"?"bad":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div></div>'+
+  '<div class="bento"><div class="box s4" style="background:var(--sunken);box-shadow:none"><span class="small muted">Verified on your device</span><div><b class="num" style="font-size:3.2rem">'+n+'</b><span class="muted" style="font-size:1.4rem"> / 6</span></div><div class="seg6" role="progressbar" aria-label="'+TE("pb.docs")+'" aria-valuemin="0" aria-valuemax="6" aria-valuenow="'+n+'" aria-valuetext="'+esc(T("pb.docs.text",{n:n}))+'">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(docClean(d.k)?"on":st&&st.status==="ok"?"bad":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div></div>'+
   '<div class="box s8" style="background:var(--sunken);box-shadow:none"><div class="dtiles">'+DOCS.map(function(d,i){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected";return '<button type="button" data-dk="'+i+'" aria-current="'+(i===S.dk?"step":"false")+'" class="dtile c-'+d.k+(i===S.dk?" cur":"")+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&docClean(d.k)?'<span class="badge" aria-hidden="true" style="background:var(--ok)">✓</span>':ok||bad?'<span class="badge" aria-hidden="true" style="background:var(--bad)">!</span>':'')+'<span style="min-width:0;display:block"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(ok?(docClean(d.k)?"verified":docFixLabel(d.k)):bad?"not accepted":st?"reading":"to upload")+'</small></span></button>'}).join("")+'</div></div></div>'+
   '<div class="note"><span><b>'+n+' of 6 verified.</b> Document '+(S.dk+1)+' of 6 is open below; pick any tile to switch.</span></div>'+
-  demoBox('<p class="small muted">No documents to hand? Specimens are synthetic document text built from your typed details and go through the same field reader as a real upload.</p><div class="demo-rows">'+DOCS.map(function(d){return '<div class="demo-row"><b>'+d.label+'</b>'+specCtl(d.k)+'</div>'}).join("")+'</div><button class="btn sm" type="button" data-act="spec-all">Use specimens for all</button>'+scenarioChip(true))+
+  /*DEMO:START*/demoBox('<p class="small muted">No documents to hand? Specimens are synthetic document text built from your typed details and go through the same field reader as a real upload.</p><div class="demo-rows">'+DOCS.map(function(d){return '<div class="demo-row"><b>'+d.label+'</b>'+specCtl(d.k)+'</div>'}).join("")+'</div><button class="btn sm" type="button" data-act="spec-all">Use specimens for all</button>'+scenarioChip(true))/*DEMO:ELSE*/''/*DEMO:END*/+
   '<div class="cards">'+docCard(DOCS[S.dk]||DOCS[0])+'</div></div>';
 }
 function groupState(g){
@@ -2554,7 +2629,8 @@ function fixPanel(){
       (ch&&d.status==="photo"?photoHold(k,d.photo):'')+
       '<div class="vbtns">'+slotInputs(k,DOC_LABEL[k][0],"Choose new file")+'</div></div>';
   }).join("");
-  var demo=demoBox('<div class="demo-rows">'+keys.map(function(k){return '<div class="demo-row"><b>'+DOC_LABEL[k][0]+'</b>'+specCtl(k)+'</div>'}).join("")+'</div>');
+  var demo=/*DEMO:START*/demoBox('<div class="demo-rows">'+keys.map(function(k){return '<div class="demo-row"><b>'+DOC_LABEL[k][0]+'</b>'+specCtl(k)+'</div>'}).join("")+'</div>');
+/*DEMO:ELSE*/''/*DEMO:END*/;
   var ready=fixesReady();
   return '<div class="panel"><div class="ophead"><div class="head"><h2>One message, everything we need</h2><p>Sent once by WhatsApp and SMS (simulated). Round '+S.fu.round+' of follow-up. Only these documents are read again; everything else carries over.</p></div>'+langSeg()+'</div>'+
     msgBlock(it,link)+
@@ -2569,15 +2645,15 @@ function rejectPanel(){
 }
 function humanPanel(){
   return '<div class="panel"><div class="head"><h2>A person on our team is checking '+(S.disputed?"your dispute":"a few details")+'</h2><p>Some decisions are always made by a person, not by the system. Nothing is needed from you right now. We aim to reply within 4 working hours (our service target)., by WhatsApp and SMS.</p></div>'+
-   ''+(canSee("ops")?'<div class="note"><span><b>Demo:</b> play the reviewer in the Review console.</span><button class="btn sm" type="button" data-act="go-review">Open review console →</button></div>':'')+'</div>';
+   ''+/*DEMO:START*/(canSee("ops")?'<div class="note"><span><b>Demo:</b> play the reviewer in the Review console.</span><button class="btn sm" type="button" data-act="go-review">Open review console →</button></div>':'')/*DEMO:ELSE*/''/*DEMO:END*/+'</div>';
 }
 function stepVerify(){
   var total=S.checks.length,done=!S.rechecking&&S.shown>=total,D=S.decision,ok=D==="APPROVE";
   var side='<aside class="side stick">'+ring()+'<div class="who"><h2>'+esc(S.f.name||"New applicant")+'</h2><span class="mono muted">'+S.appId+(S.round>1?' · round '+S.round:'')+'</span></div>'+
    '<div class="slist">'+GROUPS.map(function(G){var gs=groupState(G.g),s=gs.st,bad=gs.idx.some(function(i){return S.checks[i].res!=="PASS"&&S.checks[i].res!=="INFO"});return '<div><span>'+G.side+'</span>'+(s==="done"?(bad?pill("bad","Review required"):pill("ok","Approved")):s==="run"?pill("run","In progress"):pill("","Queued"))+'</div>'}).join("")+'</div>'+
    (S.rechecking?'<p class="small muted">Re-checking the documents you replaced…</p>':!done?'<p class="small muted">Checking '+Math.min(S.shown+1,total)+' of '+total+'.</p>':
-    ok?'<div class="verdict"><h2>KYC approved</h2><span class="small">All checks passed'+(S.round>1?' after '+(S.round-1)+' follow-up round'+(S.round>2?"s":""):'')+'. Nothing needs a second look.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div><button class="btn pri wide" type="button" data-act="start-training">Start training</button>'+(canSee("audit")?'<button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':'')+'':
-    D==="NEEDS_MORE_INFO"?'<div class="verdict hold"><h2>'+(S.fu.items.length===1?"One thing":S.fu.items.length+" things")+' to fix</h2><span class="small">All of them are in one message. Fix them together and only those documents are checked again.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>':
+    ok?'<div class="verdict"><h2>KYC approved</h2><span class="small">All checks passed'+(S.round>1?' after '+(S.round-1)+' follow-up round'+(S.round>2?"s":""):'')+'. Nothing needs a second look.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div><button class="btn pri wide" type="button" data-act="start-training">Start training</button>'+(canSee("audit")?'<button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':'')+'':
+    D==="NEEDS_MORE_INFO"?'<div class="verdict hold"><h2>'+(S.fu.items.length===1?"One thing":S.fu.items.length+" things")+' to fix</h2><span class="small">All of them are in one message. Fix them together and only those documents are checked again.</span></div><div class="stats"><div class="stat"><b>'+ttdText()+'</b><span>Time to decision (on this device)</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>':
     D==="REJECT"?'<div class="verdict no"><h2>Not eligible</h2><span class="small">'+S.rej.length+' eligibility rule'+(S.rej.length>1?"s":"")+' not met. The reasons are listed in plain words.</span></div>'+(canSee("audit")?'<button class="btn wide" type="button" data-act="go-ops">See the audit trail</button>':'')+'':
     '<div class="verdict rev"><h2>With a reviewer</h2><span class="small">A decision the rulebook keeps with a person. Target: within 4 working hours.</span></div>'+(canSee("ops")?'<button class="btn wide" type="button" data-act="go-review">Open review console (reviewer view)</button>':'')+'')+'</aside>';
   var top=done&&D==="NEEDS_MORE_INFO"?fixPanel():done&&D==="REJECT"?rejectPanel():done&&D==="HUMAN_REVIEW"?humanPanel():"";
@@ -2587,16 +2663,16 @@ function stepVerify(){
 function stepTraining(){
   var hrs=0;S.mods.forEach(function(m,i){if(m)hrs+=MODULES[i][1]});
   return '<div class="panel narrow"><div class="head"><h1>POSP training</h1><p>IRDAI requires 15 hours of training before the examination. Complete all five modules to unlock the exam.</p></div>'+
-  '<div><div class="prog"><i style="width:'+(hrs/15*100)+'%"></i></div><p class="small muted" style="margin-top:6px"><b class="mono">'+hrs+'.0 / 15.0</b> hours logged</p></div>'+
-  '<div class="note"><span><b>Demo fast-forward.</b> Course content is out of scope, so a module is logged in full the moment you mark it complete.</span></div>'+
+  '<div><div class="prog" role="progressbar" aria-label="'+TE("pb.training")+'" aria-valuemin="0" aria-valuemax="15" aria-valuenow="'+hrs+'"><i style="width:'+(hrs/15*100)+'%"></i></div><p class="small muted" style="margin-top:6px"><b class="mono">'+hrs+'.0 / 15.0</b> hours logged</p></div>'+
+  '<div class="note"><span><b>Training in this version.</b> Course content is not included here, so a module is logged in full the moment you mark it complete.</span></div>'+
   '<div class="mods">'+MODULES.map(function(m,i){return '<div class="mod"><div><b>'+m[0]+'</b><div class="small muted">'+m[1]+' hours</div></div>'+(S.mods[i]?pill("ok","Completed"):'<button class="btn sm" type="button" data-mod="'+i+'">Mark complete</button>')+'</div>'}).join("")+'</div>'+
   '<div class="actions"><button class="btn pri" type="button" data-act="start-exam"'+(hrs>=15?"":" disabled")+'>Take the exam</button></div></div>';
 }
 function stepExam(){
   var sc=S.exam.score;
-  if(sc!==null&&sc<50) return '<div class="panel narrow"><div class="head"><h1>Not passed this time</h1><p>You scored '+sc+'%. The demo pass mark is 50%. A second attempt normally opens after 24 hours; the demo lets you retry now.</p></div><div class="actions"><button class="btn pri" type="button" data-act="retry">Try again</button></div></div>';
+  if(sc!==null&&sc<50) return '<div class="panel narrow"><div class="head"><h1>Not passed this time</h1><p>You scored '+sc+'%. The pass mark is 50%. A second attempt normally opens after 24 hours; here you can try again now.</p></div><div class="actions"><button class="btn pri" type="button" data-act="retry">Try again</button></div></div>';
   var all=QUIZ.every(function(_,i){return S.exam.ans[i]!==undefined});
-  return '<div class="panel narrow"><div class="head"><h1>POSP examination</h1><p>Five questions. The demo pass mark is 50%. This is a short demo paper, not the full exam.</p></div><div>'+
+  return '<div class="panel narrow"><div class="head"><h1>POSP examination</h1><p>Five questions. The pass mark is 50%. This is a short paper, not the full exam.</p></div><div>'+
   QUIZ.map(function(q,i){return '<fieldset class="q"><legend>'+(i+1)+'. '+q.q+'</legend>'+q.o.map(function(o,j){return '<label for="q'+i+'o'+j+'"><input type="radio" id="q'+i+'o'+j+'" name="q'+i+'" data-q="'+i+'" value="'+j+'"'+(S.exam.ans[i]===j?" checked":"")+'><span>'+o+'</span></label>'}).join("")+'</fieldset>'}).join("")+
   '</div><div class="actions"><button class="btn pri" type="button" data-act="submit-exam"'+(all?"":" disabled")+'>Submit answers</button></div></div>';
 }
@@ -2644,9 +2720,9 @@ function stepCert(){
   '<div class="cert"><span class="eyebrow">PolicyNest Insurance Brokers · Point of Sales Person</span><div><div class="small muted">This certifies that</div><div class="name" data-f="name">'+esc(v.name)+'</div><div class="small muted">has completed the prescribed training and passed the POSP examination.</div></div>'+
   '<div class="kv"><div><span>POSP code</span><b class="mono" data-f="posp">'+esc(v.posp)+'</b></div><div><span>PAN</span><b class="mono" data-f="pan">'+esc(v.pan)+'</b></div><div><span>Issued</span><b data-f="date">'+esc(v.date)+'</b></div><div><span>Engine version</span><b class="mono" data-f="eng">'+esc(v.eng)+'</b></div><div><span>Training</span><b>15.0 hours</b></div><div><span>Exam score</span><b>'+S.exam.score+'%</b></div><div><span>Location</span><b>'+esc(S.f.city)+', '+esc(S.f.state)+'</b></div></div>'+
   '<div class="seal small">Integrity seal: <span id="cert-seal" class="mono" data-seal="'+esc(seal)+'">'+esc(sealTxt)+'</span></div>'+
-  '<div class="stampline">Demonstration certificate. The seal shows these fields were not changed on this device; it does not prove that IRDAI or an insurer issued it. Fictional broker; not a valid IRDAI credential.</div></div>'+
+  '<div class="stampline">Certificate for a fictional broker. The seal shows these fields were not changed on this device; it does not prove that IRDAI or an insurer issued it. Fictional broker; not a valid IRDAI credential.</div></div>'+
   '<details class="certcheck no-print" id="cert-verify"><summary>Verify this certificate</summary><p class="small muted">Seal covers: POSP code, name, PAN (masked), issue date and engine version. Training hours, exam score and location are printed but not sealed.</p><div class="actions" style="justify-content:flex-start"><button class="btn" type="button" data-act="verify-cert">Recompute the seal from these fields</button></div><p class="small" id="cert-verify-out" role="status" aria-live="polite"></p></details>'+
-  '<div class="stats no-print"><div class="stat"><b>'+mins+' min</b><span>Start to certificate (this demo, on this device)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>'+
+  '<div class="stats no-print"><div class="stat"><b>'+mins+' min</b><span>Start to certificate (on this device)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>'+
   '<div class="actions no-print"><button class="btn" type="button" data-act="print-cert">Print or save as PDF</button>'+(canSee("audit")?'<button class="btn" type="button" data-act="go-ops">See the audit trail</button>':'')+'<button class="btn pri" type="button" data-act="ask-new">Start a new application</button></div></div>';
 }
 function render(){
@@ -2663,7 +2739,7 @@ function render(){
   else if(VIEW==="help") renderHelp();
   else renderAudit();
   if(SPK!==null){ var spkLive=false; document.querySelectorAll("button.speak").forEach(function(b){ if(b.getAttribute("data-speak")===SPK) spkLive=true; }); if(!spkLive) stopSpeech(); }
-  focusUI(); persist(); stepChanged(); syncMark();
+  focusUI(); persist(); stepChanged(); syncMark(); markHi();
 }
 /* Screen readers hear each application step once, and focus moves to the step heading (FR-43) */
 var LASTST=null;
@@ -2719,7 +2795,7 @@ async function toCanvas(file){
   return c;
 }
 /* C1: photo quality, before OCR. These are HEURISTICS on a reduced grey copy, not a verdict: OCR confidence (§4.1) still decides.
-   Named limits, tuned by eye on synthetic and generated images only. Real phone photos have not been tested. */
+   Named limits, tuned by eye on generated images only. Real phone photos have not been tested. */
 var PHOTO_LIMITS={side:512,blurVar:40,glareShare:0.5,darkMean:60,minShort:600};
 function photoQuality(c,isSelfie){
   var codes=[];
@@ -2771,7 +2847,7 @@ async function hashOf(file){
 /* C5: a version entry per accepted or refused upload into a slot. Metadata only, never the image. */
 function addVersion(d,status){
   var vs=(d.versions||[]).slice();
-  vs.push({v:vs.length+1,round:S.round,t:Date.now(),hash16:d.file?(d.hash||"unknown"):"specimen",status:status});
+  vs.push({v:vs.length+1,round:S.round,t:Date.now(),hash16:d.file?(d.hash||"unknown"):"none",status:status});
   d.versions=vs; var e=vs[vs.length-1];
   log("DOC_VERSION:"+d.k,"SYSTEM","v"+e.v+" · round "+e.round+" · "+status);
 }
@@ -2819,19 +2895,19 @@ var PHOTO_HOLD={};
 function addDoc(k,file,force){
   var uploadStarted=performance.now();
   var old=S.docs[k]; if(old&&old.url&&old.url.indexOf("blob:")===0) try{URL.revokeObjectURL(old.url)}catch(e){}
-  /* Specimens are built from the typed details, so a blank application cannot take one. */
-  if(!file&&(!S.f.name||!S.f.pan)){ S.docs[k]={status:"rejected",file:false,name:"Synthetic placeholder",url:null,ocr:null,reason:"Fill in your details first (Back to details, then Demo controls, Load sample applicant), then use a specimen."}; render(); return; }
+  /* A document needs typed details to be built from, so a blank application cannot take one. */
+  /*DEMO:START*/if(!file&&(!S.f.name||!S.f.pan)){ S.docs[k]={status:"rejected",file:false,name:"Synthetic placeholder",url:null,ocr:null,reason:"Fill in your details first (Back to details, then Demo controls, Load sample applicant), then use a specimen."}; render(); return; }/*DEMO:END*/
   if(S.decision==="NEEDS_MORE_INFO"&&!S.rechecking) S.changed[k]=true; /* a fix for the open follow-up */
-  var d={k:k,status:"reading",file:!!file,name:file?file.name:"Synthetic placeholder",url:null,ocr:null,reason:"",versions:(old&&old.versions)?old.versions.slice():[]};
+  var d={k:k,status:"reading",file:!!file,name:file?file.name:"Document",url:null,ocr:null,reason:"",versions:(old&&old.versions)?old.versions.slice():[]};
   delete PHOTO_HOLD[k];
   S.docs[k]=d; render();
-  if(!file){ setTimeout(function(){ if(S.docs[k]!==d) return;
+  /*DEMO:START*/if(!file){ setTimeout(function(){ if(S.docs[k]!==d) return;
       var vv=S.specv[k]||"clean",vl=(VARIANTS[k].filter(function(o){return o[0]===vv})[0]||["","Clean"])[1];
       var fl=k==="SELFIE"?{missing:[],face:vv==="borderline"?0.68:vv==="low"?0.52:null}:parseDoc(k,specimenText(k,S.f,vv),vv==="blurry"?0.61:0.97);
       var vlc=vl.replace(/\s*·\s*T\d+\s*$/,""); /* the test tag stays in the audit log only */
       d.name=vlc;
       d.ocr={det:SLOT[k].want,detName:"Synthetic specimen ("+SLOT[k].n+", "+vlc.toLowerCase()+")",src:k==="SELFIE"?"Specimen photo (synthetic)":"Specimen text",conf:0.97,words:0,found:[],fields:fl,spec:true};
-      d.ocr.conf=vv==="blurry"?0.61:0.97; d.status="ok"; addVersion(d,"accepted"); S.lastDocAt=Date.now(); afterDoc(k); cheerDoc(k); log((S.changed[k]?"DOC_REUPLOADED:":"DOC_UPLOADED:")+k,"APPLICANT","Specimen ("+vl+"): synthetic document text built from the typed details, read by the same parser"+(fl.missing.length?" · not read: "+fl.missing.join(", "):"")); render(); },500+Math.random()*400); return; }
+      d.ocr.conf=vv==="blurry"?0.61:0.97; d.status="ok"; addVersion(d,"accepted"); S.lastDocAt=Date.now(); afterDoc(k); cheerDoc(k); log((S.changed[k]?"DOC_REUPLOADED:":"DOC_UPLOADED:")+k,"APPLICANT","Specimen ("+vl+"): synthetic document text built from the typed details, read by the same parser"+(fl.missing.length?" · not read: "+fl.missing.join(", "):"")); render(); },500+Math.random()*400); return; }/*DEMO:END*/
   if(!/^image\//.test(file.type)&&file.type!=="application/pdf"&&!/\.pdf$/i.test(file.name)){ d.status="rejected"; d.reason="This file type is not supported. Upload a JPG, PNG or PDF."; addVersion(d,"refused"); render(); return; }
   /* C3: the selfie slot takes images only. */
   if(k==="SELFIE"&&!/^image\//.test(file.type)){ d.status="rejected"; d.reason="A selfie must be a photo (JPG or PNG), not a PDF. Take a selfie or choose a photo of your face."; addVersion(d,"refused"); render(); return; }
@@ -2960,24 +3036,18 @@ document.addEventListener("click",function(e){
   var a=t.getAttribute("data-act"); if(!a) return;
   if(p5Click(t,a)) return;
   if(a==="clear"){ S.f=Object.assign({},BLANK); S.consentAt=null; S.isSample=false; S.errs={}; render(); }
-  else if(a==="sample"){ S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; /* no consent time for a tick nobody made */ S.errs={}; render(); }
-  else if(a==="scn-setup"){ var scn=S.scnPick||"T1"; S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; S.errs={}; S.scenario=scn; S.scenarioApplied=false; S.specv={}; render(); }
+  /*DEMO:START*/else if(a==="sample"){ S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; /* no consent time for a tick nobody made */ S.errs={}; render(); }
+  else if(a==="scn-setup"){ var scn=S.scnPick||"T1"; S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; S.errs={}; S.scenario=scn; S.scenarioApplied=false; S.specv={}; render(); }/*DEMO:END*/
   else if(a==="details-next"){ var all=validate(S.f),pg=DPAGES[S.dpage],lastPg=S.dpage===DPAGES.length-1; S.errs={}; Object.keys(all).forEach(function(f){ if(lastPg||pg.f.indexOf(f)>=0) S.errs[f]=all[f]; });
     if(Object.keys(S.errs).length){ if(lastPg){ var bad=-1; DPAGES.forEach(function(p,i){ if(bad<0&&p.f.some(function(f){return S.errs[f]})) bad=i; }); S.dpage=bad; }
-      render(); var b=document.querySelector(".fld.bad input,.fld.bad select"); if(b) b.focus(); cpNudge("detail-err","A field on this page needs a fix: "+Object.keys(S.errs).map(function(f){return S.errs[f]}).join(" ")); return; }
+      render(); var b=$("det-errs")||document.querySelector(".fld.bad input,.fld.bad select"); if(b) b.focus(); cpNudge("detail-err","A field on this page needs a fix: "+Object.keys(S.errs).map(function(f){return S.errs[f]}).join(" ")); return; }
     if(!lastPg){ S.dpage++; render(); var nf=document.querySelector("#f-form input,#f-form select"); if(nf) nf.focus(); return; }
     if(!S.regLogged){ S.regLogged=true; log("REGISTRATION_STARTED","APPLICANT","Details captured · DPDP consent recorded · purpose: POSP onboarding"); cheer("your details are saved.","Next, add your six documents, one at a time.","up"); }
     S.dk=Math.max(0,nextDocIndexFrom(0)); go(1); }
   else if(a==="details-back"){ if(S.dpage>0){ S.dpage--; S.errs={}; render(); } }
   else if(a==="back-details"){ S.dpage=DPAGES.length-1; go(0); }
-  else if(a==="begin"){ beginOnboarding(true); }
-  else if(a==="begin-nofs"){ beginOnboarding(false); }
-  else if(a==="resume"){ startSitting(true,true); }
-  else if(a==="fs-return"){ fsBanner(false); requestFs(); }
-  else if(a==="fs-dismiss"){ fsBanner(false); if(S.sess) S.sess.noFs=true; }
-  else if(a==="timer-hide"){ setPref("hideT",!(S.sessPref&&S.sessPref.hideT)); focusUI(); }
-  else if(a==="timer-off"){ limitOff(); }
-  else if(a==="timer-on"){ limitOn(); }
+  else if(a==="begin"||a==="begin-nofs"){ beginOnboarding(); }
+  else if(a==="resume"){ startSitting(true); }
   else if(a==="forget"){ forgetSaved(); }
   else if(a==="fb-exit"){ askExit(); }
   else if(a==="cp-open"){ cpOpen(true); }
@@ -2993,9 +3063,9 @@ document.addEventListener("click",function(e){
   else if(a==="rv-approve"||a==="rv-ask"||a==="rv-reject"||a==="rv-uphold") reviewerAct(a);
   else if(a==="start-training"){ setState("TRAINING_IN_PROGRESS"); log("LMS_LOGIN","APPLICANT","Training modules unlocked"); go(3); }
   else if(a==="start-exam"){ setState("EXAM_IN_PROGRESS"); log("EXAM_START","APPLICANT","Attempt started"); go(4); }
-  else if(a==="retry"){ S.exam={ans:{},score:null}; setState("EXAM_IN_PROGRESS"); log("EXAM_START","APPLICANT","Re-attempt (24-hour cooldown waived in demo)"); render(); }
+  else if(a==="retry"){ S.exam={ans:{},score:null}; setState("EXAM_IN_PROGRESS"); log("EXAM_START","APPLICANT","Re-attempt (24-hour cooldown waived)"); render(); }
   else if(a==="submit-exam"){ var ok=0; QUIZ.forEach(function(q,i){ if(S.exam.ans[i]===q.a) ok++; }); S.exam.score=Math.round(ok/QUIZ.length*100);
-    if(S.exam.score>=50){ setState("EXAM_PASSED"); log("EXAM_SUBMIT","SYSTEM","Score "+S.exam.score+"% · demo pass mark 50%"); S.posp="PN-POSP-"+S.appId.slice(-5); S.issued=new Date().toISOString().slice(0,10); S.seal=null; setState("CERTIFIED"); cheer("congratulations, you are certified!","You scored "+S.exam.score+"%. Your POSP code "+S.posp+" is active. Welcome to PolicyNest.","star"); log("ISSUE_CREDENTIAL","SYSTEM","POSP code "+S.posp+" issued · registry notification simulated"); go(5); }
+    if(S.exam.score>=50){ setState("EXAM_PASSED"); log("EXAM_SUBMIT","SYSTEM","Score "+S.exam.score+"% · pass mark 50%"); S.posp="PN-POSP-"+S.appId.slice(-5); S.issued=new Date().toISOString().slice(0,10); S.seal=null; setState("CERTIFIED"); cheer("congratulations, you are certified!","You scored "+S.exam.score+"%. Your POSP code "+S.posp+" is active. Welcome to PolicyNest.","star"); log("ISSUE_CREDENTIAL","SYSTEM","POSP code "+S.posp+" issued · registry notification simulated"); go(5); }
     else { setState("TRAINING_COMPLETED"); log("EXAM_FAIL","SYSTEM","Score "+S.exam.score+"%"); cheer("not this time, and that is fine.","You can retake the exam after 24 hours (rulebook §2). Review the modules before you try again.","heart"); render(); } }
   else if(a==="role-set"){ setRole(t.getAttribute("data-role"),VIEW) }
   else if(a==="go-ops"){ show("audit"); }
@@ -3095,8 +3165,8 @@ function evidenceFor(c){
   var P=S.ex.PAN||{},rows="";
   if(c.code==="FACE_MATCH_BORDERLINE"||(c.doc==="Selfie"&&c.label.indexOf("Face")>=0)){
     var sc=S.ex.face||0;
-    return '<div class="evrow"><div class="evc"><h3>PAN photo</h3>'+thumb("PAN","PAN")+'<div class="small muted">PAN card image (the photo area is not cropped out in this demo)</div></div><div class="evc"><h3>Selfie</h3>'+thumb("SELFIE","SELFIE")+'<div class="small muted">Live photo</div></div></div>'+
-      '<div><div class="prog"><i style="width:'+Math.round(sc*100)+'%;background:'+(sc>=0.75?"var(--ok)":sc>=0.6?"var(--accent)":"var(--bad)")+'"></i></div><p class="small muted" style="margin-top:6px">Simulated face-match score <b class="mono">'+sc.toFixed(2)+'</b>. Accept at 0.75 or above; 0.60 to 0.75 is decided by a person; below 0.60 ask for a fresh selfie (§4.6).</p></div>';
+    return '<div class="evrow"><div class="evc"><h3>PAN photo</h3>'+thumb("PAN","PAN")+'<div class="small muted">PAN card image (the photo area is not cropped out in this version)</div></div><div class="evc"><h3>Selfie</h3>'+thumb("SELFIE","SELFIE")+'<div class="small muted">Live photo</div></div></div>'+
+      '<div><div class="prog" role="progressbar" aria-label="'+TE("pb.conf")+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(sc*100)+'"><i style="width:'+Math.round(sc*100)+'%;background:'+(sc>=0.75?"var(--ok)":sc>=0.6?"var(--accent)":"var(--bad)")+'"></i></div><p class="small muted" style="margin-top:6px">Simulated face-match score <b class="mono">'+sc.toFixed(2)+'</b>. Accept at 0.75 or above; 0.60 to 0.75 is decided by a person; below 0.60 ask for a fresh selfie (§4.6).</p></div>';
   }
   if(c.code==="BOARD_UNLISTED"||c.code==="BOARD_NOT_RECOGNISED") return '<div class="evrow">'+evCol("CLASS10","Class 10 marksheet")+'<div class="evc"><h3>Recognised boards (§4.4)</h3><p class="small">Any state board, CBSE, CISCE or NIOS. Marksheets from boards not on this list are decided by a person.</p></div></div>';
   return '<div class="evrow">'+evCol("PAN","PAN card (anchor)")+evCol(c.key,c.doc)+'</div><p class="small muted">'+esc(c.ev)+'</p>';
@@ -3117,13 +3187,13 @@ function renderOps(){
   var x=S.ex,sub=S.reached.SUBMITTED,done=sub&&!S.rechecking&&S.shown>=S.checks.length;
   var dec=!sub?pill("","Awaiting documents"):!done?pill("run","Engine running"):S.decision==="APPROVE"?pill("ok","APPROVE · straight-through"):pill(S.decision==="REJECT"?"bad":"info",S.decision);
   var h='<div class="card"><div class="ophead"><div><h1>'+esc(S.f.name||"New applicant")+'</h1><span class="mono muted">'+S.appId+' · Web · '+esc(S.f.city||"—")+', '+esc(S.f.state||"—")+'</span></div>'+dec+'</div>'+
-    '<div class="stats"><div class="stat"><b>'+(done?ttdText():"—")+'</b><span>Time to decision (this demo, on this device)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div><div class="stat"><b>'+(done?S.checks.filter(function(c){return c.res==="PASS"}).length+" / "+S.checks.length:"—")+'</b><span>Checks cleared (PASS only)</span></div><div class="stat"><b>'+(done?S.checks.filter(function(c){return c.res==="INFO"}).length:"—")+'</b><span>Noted (INFO), not counted as cleared</span></div></div>'+
+    '<div class="stats"><div class="stat"><b>'+(done?ttdText():"—")+'</b><span>Time to decision (on this device)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div><div class="stat"><b>'+(done?S.checks.filter(function(c){return c.res==="PASS"}).length+" / "+S.checks.length:"—")+'</b><span>Checks cleared (PASS only)</span></div><div class="stat"><b>'+(done?S.checks.filter(function(c){return c.res==="INFO"}).length:"—")+'</b><span>Noted (INFO), not counted as cleared</span></div></div>'+
     '<div class="track" aria-label="Lifecycle">'+STATES.map(function(s){return '<span class="'+(s===S.status?"cur":S.reached[s]?"hit":"")+'">'+s+'</span>'}).join("")+'</div></div>'+reviewCard();
   h+='<div class="card"><h2>Cross-document comparison</h2>';
   if(sub){
     var P=x.PAN||{},AF=x.AADHAAR_FRONT||{},AB=x.AADHAAR_BACK||{},C=x.CLASS10||{},B=x.BANK||{};
     var nr='<span class="muted">not read</span>';
-    var cf=function(k){var o=S.docs[k]&&S.docs[k].ocr;return o?o.conf.toFixed(2)+(o.spec?" (specimen)":""):"—"};
+    var cf=function(k){var o=S.docs[k]&&S.docs[k].ocr;return o?o.conf.toFixed(2)+/*DEMO:START*/(o.spec?" (specimen)":"")/*DEMO:ELSE*/""/*DEMO:END*/:"—"};
     var t=function(n){if(!n) return nr; if(!P.name) return esc(n); var r=nameTier(P.name,n);return esc(n)+'<br>'+pill(r.verdict==="MATCH"?"ok":r.verdict==="HUMAN"?"info":"bad","Tier "+r.tier+" · "+r.label)};
     var dd=function(v,ref){if(!v) return nr; return fmtDate(v)+(ref?'<br>'+(v===ref?pill("ok","Equal"):pill("bad","Differs")):"")};
     h+='<div class="scroll"><table><thead><tr><th>Field</th><th>Typed (not trusted)</th><th>PAN (anchor)</th><th>Aadhaar</th><th>Class 10</th><th>Bank</th></tr></thead><tbody>'+
@@ -3131,7 +3201,7 @@ function renderOps(){
     '<tr><td><b>Date of birth</b></td><td>'+fmtDate(S.f.dob)+'</td><td>'+dd(P.dob)+'</td><td>'+(AF.dob?dd(AF.dob,P.dob):AF.yob?"Year "+AF.yob:nr)+'</td><td>'+dd(C.dob,P.dob)+'</td><td class="muted">n/a</td></tr>'+
     '<tr><td><b>Identifier</b></td><td class="mono">'+maskPan(S.f.pan)+' · '+esc(S.f.ifsc)+'</td><td class="mono">'+(P.pan?maskPan(P.pan):nr)+'</td><td class="mono">XXXX-XXXX-'+(AF.last4||"????")+'</td><td>'+(C.board?esc(C.board):nr)+(C.year?' '+C.year:'')+' · '+(C.result||"result not read")+'</td><td class="mono">'+(B.ifsc?esc(B.ifsc):nr)+' ••••'+(B.acct4||"????")+'</td></tr>'+
     '<tr><td><b>OCR confidence</b></td><td class="muted">n/a</td><td class="mono">'+cf("PAN")+'</td><td class="mono">'+cf("AADHAAR_FRONT")+'</td><td class="mono">'+cf("CLASS10")+'</td><td class="mono">'+cf("BANK")+'</td></tr>'+
-    '</tbody></table></div><p class="small muted">Every value above was read from the document by OCR (or from specimen text) and parsed, except the typed column. Face match '+(x.face!=null?x.face.toFixed(2)+" (simulated)":"—")+' · IRDAI registry: '+(x.registry?"hit":"no record")+' (simulated) · Aadhaar address state: '+(AB.state?esc(AB.state):"not read")+'</p>';
+    '</tbody></table></div><p class="small muted">Every value above was read from the document by OCR and parsed, except the typed column. Face match '+(x.face!=null?x.face.toFixed(2)+" (simulated)":"—")+' · IRDAI registry: '+(x.registry?"hit":"no record")+' (simulated) · Aadhaar address state: '+(AB.state?esc(AB.state):"not read")+'</p>';
   } else h+='<div class="empty">Nothing submitted yet. Complete steps 1 and 2 in the Application section and the extracted fields appear here side by side.</div>';
   h+='</div><div class="card"><h2>Checks and rules applied</h2>';
   if(sub) h+='<div class="scroll"><table><thead><tr><th>Area</th><th>Check</th><th>Rule</th><th>Result</th><th>Evidence</th></tr></thead><tbody>'+S.checks.slice(0,S.shown).map(function(c){return '<tr><td>'+c.doc+'</td><td><b>'+c.label+'</b></td><td class="mono">'+c.rule+'</td><td>'+pill(c.res==="PASS"?"ok":c.res==="INFO"||c.res==="HUMAN"?"info":c.res==="PENDING"?"":"bad",c.res)+'</td><td class="muted">'+esc(c.ev)+(c.rnote?'<br><span class="small">Reviewer note (internal): '+esc(c.rnote)+'</span>':'')+'</td></tr>'}).join("")+'</tbody></table></div>';
@@ -3147,99 +3217,51 @@ var DOC_GUIDE=[
  ["Cancelled cheque or bank statement","For a savings or current account in your own name. Joint accounts only if you are the first holder.","A parent's or spouse's account is never accepted."],
  ["Selfie","A clear photo of your face in daylight, facing the camera.","Asked again if it does not match the photo on your PAN card."]];
 function stepIntro(){
-  return '<div class="panel intro"><div class="head"><span class="small muted">Before you start</span><h1>Become a PolicyNest agent</h1><p>Everything happens on this screen, one step at a time. Read this list first so you have everything to hand.</p></div>'+
-  '<h2>Keep these six ready</h2><ul class="need2">'+DOC_GUIDE.map(function(g){return '<li><b>'+g[0]+'</b><span>'+g[1]+'</span><em>'+g[2]+'</em></li>'}).join("")+'</ul>'+
+  return '<div class="panel intro"><div class="head"><span class="small muted">'+TE("intro.pre")+'</span><h1>'+TE("intro.h1")+'</h1><p>'+TE("intro.lead")+'</p></div>'+
+  '<h2>'+TE("intro.keep")+'</h2><ul class="need2">'+DOC_GUIDE.map(function(g,i){return '<li><b>'+TE("dg."+i+".0")+'</b><span>'+TE("dg."+i+".1")+'</span><em>'+TE("dg."+i+".2")+'</em></li>'}).join("")+'</ul>'+
   '<div class="obs"><b>Good photos pass first time</b><span>Use the original document, not a photocopy (a photocopy is accepted only for the bank document). Daylight, all four corners in the frame, no glare or fingers over the text. JPG, PNG or PDF. Rulebook §4.1.</span></div>'+
   '<h2>How it works</h2><ol class="steps"><li><b>Your details</b>: four short pages, typed exactly as on your PAN card.</li><li><b>Documents</b>: one at a time. Each is read on your device the moment you add it, and you see at once whether it is fine and, if not, exactly how to fix it.</li><li><b>Verification</b>: every document is checked against your PAN and the rulebook. If anything is missing you get one message that lists all of it.</li><li><b>Training</b>: 15 hours, required by IRDAI before the exam.</li><li><b>Exam</b>: pass mark 50%. A retake opens 24 hours after a failed attempt.</li><li><b>Certificate</b>: your POSP code.</li></ol>'+
-  '<div class="obs"><b>A focused 30-minute sitting</b><span>The sitting covers your details and documents only. Verification, training and the exam are not timed. Each sitting has a 30-minute timer. On a computer it can use full screen; you can start without it, hide the timer or turn the limit off. You can extend it by 10 minutes at a time. If you leave the screen we warn you but never wipe your work. Not finished? If you chose to save, you continue in a new sitting; otherwise closing this tab clears your progress.</span></div>'+
+  '<div class="obs"><b>'+TE("intro.time.h")+'</b><span>'+TE("intro.time.b")+'</span></div>'+
   '<div class="obs"><b>What is saved on this device, and for how long</b><span>Only if you tick the box below: what you type, and what is read from your documents (Aadhaar last four digits only). Never saved: document images or the full text read from them. Kept up to 30 days; 14 days once a follow-up message is open. You can delete it from the resume screen.</span></div>'+
   '<div class="fld full"><label class="consent" for="f-save"><input id="f-save" type="checkbox"'+(S.saveOK?" checked":"")+'><span>Save my progress on this device so I can resume later, as described above. I can delete it any time.</span></label></div>'+
   '<div class="obs"><b>Language</b><span>Messages to you come in English or Hindi. The screens are in English.</span></div>'+
   '<div class="obs"><b>Shared device</b><span>On a shared phone or computer, leave saving off.</span></div>'+
-  '<div class="actions"><span class="small muted">Questions at any point? Tap <b>Ask Copilot</b>.</span><button class="btn" type="button" data-act="begin-nofs">Start without full screen</button><button class="btn pri" type="button" data-act="begin">'+(S.sessPref&&S.sessPref.off?"Start onboarding":"Start onboarding (30 min)")+'</button></div></div>';
+  '<div class="actions"><span class="small muted">Questions at any point? Tap <b>Ask Copilot</b>.</span><button class="btn pri" type="button" data-act="begin">'+TE("intro.start")+'</button></div></div>';
 }
 function stepResume(){
   var n=accepted(),pg=S.step===0?"Your details, page "+(S.dpage+1)+" of "+DPAGES.length:n+" of 6 documents verified";
-  return '<div class="panel narrow"><div class="head"><span class="small muted">'+(S.restored?"Saved progress found":"Sitting paused")+'</span><h1>'+(S.restored?"Welcome back, "+esc(fname()):"Ready when you are")+'</h1><p>You stopped at: <b>'+pg+'</b>. Everything you did so far is kept. Each sitting gives you '+(S.sessPref&&S.sessPref.off?"focused time":"30 focused minutes")+'.</p></div>'+
-  '<div class="stats"><div class="stat"><b>'+S.sittings+'</b><span>Sittings so far</span></div><div class="stat"><b>'+n+' / 6</b><span>Documents verified</span></div><div class="stat"><b>'+S.exits+'</b><span>Times you left the screen</span></div></div>'+
-  '<div class="actions"><button class="btn" type="button" data-act="forget">Delete my saved progress</button><button class="btn pri" type="button" data-act="resume">'+(S.sessPref&&S.sessPref.off?"Resume onboarding":"Resume onboarding (30 min)")+'</button></div></div>';
+  return '<div class="panel narrow"><div class="head"><span class="small muted">'+(S.restored?"Saved progress found":"Sitting paused")+'</span><h1>'+(S.restored?"Welcome back, "+esc(fname()):"Ready when you are")+'</h1><p>You stopped at: <b>'+pg+'</b>. Everything you did so far is kept.</p></div>'+
+  '<div class="stats"><div class="stat"><b>'+S.sittings+'</b><span>Sittings so far</span></div><div class="stat"><b>'+n+' / 6</b><span>Documents verified</span></div></div>'+
+  '<div class="actions"><button class="btn" type="button" data-act="forget">Delete my saved progress</button><button class="btn pri" type="button" data-act="resume">'+TE("intro.resume")+'</button></div></div>';
 }
-/* ---------- Focus mode and the 30-minute sitting ---------- */
-var SITTING_MS=30*60e3,EXTEND_MS=10*60e3,tickT=null,PICKING=false,awayAt=0,MODAL=null;
-function beginOnboarding(wantFs){
+/* ---------- Onboarding sitting: no countdown, no expiry, no leave-screen warning. A sitting is only a log of when the applicant worked. ---------- */
+var tickT=null,PICKING=false,MODAL=null;
+function beginOnboarding(){
   var c=$("f-save"); S.saveOK=!!(c&&c.checked); S.begun=true;
   log("ONBOARDING_OPENED","APPLICANT","First-visit checklist read · save on this device: "+(S.saveOK?"yes (consent)":"no"));
-  startSitting(false,wantFs);
+  startSitting(false);
 }
-/* wantFs is true only when called from a click on Start or Resume; the full-screen request is made synchronously there. */
-function startSitting(resumed,wantFs){
-  var pref=S.sessPref||{}, fs=!!wantFs&&!isTouch();
-  S.sittings++; S.sess={start:Date.now(),limit:SITTING_MS,warned:{},ended:false,expShown:false,n:S.sittings,hideT:!!pref.hideT,off:!!pref.off,noFs:!fs};
-  log(resumed?"SITTING_RESUMED":"SITTING_START","APPLICANT","Sitting "+S.sittings+" · "+(S.sess.off?"no time limit":"30-minute timer")+" · "+(fs?"full screen requested":"no full screen")+" · "+(S.step===0?"details page "+(S.dpage+1):accepted()+" of 6 documents in"));
-  S.restored=false; enterFocus(fs); render(); tick();
-  if(!tickT) tickT=setInterval(tick,1000);
+function startSitting(resumed){
+  S.sittings++; S.sess={start:Date.now(),n:S.sittings};
+  log(resumed?"SITTING_RESUMED":"SITTING_START","APPLICANT","Sitting "+S.sittings+" · "+(S.step===0?"details page "+(S.dpage+1):accepted()+" of 6 documents in"));
+  S.restored=false; enterFocus(); render();
   cpNudge("start-"+S.sittings,(resumed?"Welcome back. ":"Hi, I'm your onboarding Copilot. ")+nextStepText());
 }
-function remaining(){return S.sess?S.sess.start+S.sess.limit-Date.now():0}
 function mmss(ms){ms=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(ms/60)).padStart(2,"0")+":"+String(ms%60).padStart(2,"0")}
 function modalOpen(){ var d=$("modal"); return !!(d&&d.open) }
-/* Warnings at 10 and 2 minutes are the only timer messages a screen reader hears. Each waits until any open dialog is closed. */
-function tick(){
-  var s=S.sess; if(!s) return;
-  var el=$("fb-time");
-  if(s.off){ if(el){ el.textContent="No time limit"; el.classList.remove("low"); } return; }
-  if(!S.focus) return;
-  var r=remaining();
-  if(!s.ended&&el){ el.textContent=mmss(r); el.classList.toggle("low",r<=120e3); }
-  if(!s.ended&&r<=0){ s.ended=true; log("SITTING_TIMEOUT","SYSTEM","Sitting "+s.n+" reached 30 minutes · progress saved"); persist(true); paintBar(); }
-  if(modalOpen()) return;
-  if(s.ended){ if(!s.expShown){ s.expShown=true; showModal("Your 30-minute sitting has ended","Nothing is lost while this tab stays open; "+(S.saveOK?"you can also continue in a new sitting any time within 30 days.":"saving is off, so closing this tab clears it."),[["Extend 10 minutes","m-extend",1],["Save and continue later","m-later"]]); } return; }
-  if(r<=600e3&&!s.warned.t10){ s.warned.t10=1; announce("10 minutes left in this sitting."); showModal("10 minutes left","Your progress is "+(S.saveOK?"saved on this device":"kept only until you close this tab")+". Keep working, or extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep working","m-close"]]); cpNudge("t10-"+s.n,"10 minutes left in this sitting. "+nextStepText()); return; }
-  if(r<=120e3&&r>0&&!s.warned.t2){ s.warned.t2=1; announce("2 minutes left in this sitting."); showModal("2 minutes left","Your progress is "+(S.saveOK?"saved on this device":"kept only until you close this tab")+". Need more time? Extend this sitting by 10 minutes.",[["Extend 10 minutes","m-extend",1],["Keep working","m-close"]]); }
-}
-/* Hide timer and turn off time limit: the choice is kept for this sitting (S.sess) and for later sittings (S.sessPref). */
-function setPref(k,v){ S.sessPref=Object.assign({},S.sessPref); S.sessPref[k]=v; if(S.sess) S.sess[k]=v; persist(); }
-function limitOff(){
-  if(!S.sess||S.sess.off) return;
-  S.sess.off=true; S.sess.ended=false; setPref("off",true);
-  log("SITTING_LIMIT_OFF","APPLICANT","Sitting "+S.sess.n+" · time limit turned off · no countdown, warnings or timeout");
-  focusUI();
-}
-/* Turns the limit back on: a fresh 30-minute timer from now. Logged as SITTING_LIMIT_ON. */
-function limitOn(){
-  if(!S.sess||!S.sess.off) return;
-  S.sess.off=false; S.sess.start=Date.now(); S.sess.limit=SITTING_MS; S.sess.warned={}; S.sess.ended=false; S.sess.expShown=false; setPref("off",false);
-  log("SITTING_LIMIT_ON","APPLICANT","Sitting "+S.sess.n+" · time limit turned on · 30-minute timer restarted");
-  focusUI(); tick();
-}
+function setPref(k,v){ S.sessPref=Object.assign({},S.sessPref); S.sessPref[k]=v; persist(); }
 function isTouch(){ try{ return !!(window.matchMedia&&window.matchMedia("(pointer: coarse)").matches) }catch(e){ return false } }
-/* Full screen is requested only from a click and never on touch devices. A refusal is ignored quietly. */
-function requestFs(){
-  if(isTouch()) return;
-  try{ var el=document.documentElement; if(el.requestFullscreen&&!document.fullscreenElement){ var p=el.requestFullscreen(); if(p&&p.catch) p.catch(function(){ if(S.sess) S.sess.noFs=true; }); } }catch(e){}
-}
-function fsBanner(on){ var b=$("fs-banner"); if(b) b.hidden=!on; }
 function endSitting(ev,note){ if(!S.sess) return; var used=Date.now()-S.sess.start; log(ev,"APPLICANT","Sitting "+S.sess.n+" · "+note+" · "+mmss(used)+" used"); S.sess=null; }
-function enterFocus(wantFs){ S.focus=true; document.body.classList.add("focus"); if(wantFs) requestFs(); }
-function leaveFocus(){ S.focus=false; dismissModals(); document.body.classList.remove("focus"); fsBanner(false); try{ if(document.fullscreenElement&&document.exitFullscreen){ var p=document.exitFullscreen(); if(p&&p.catch) p.catch(function(){}); } }catch(e){} }
+function enterFocus(){ S.focus=true; document.body.classList.add("focus"); }
+function leaveFocus(){ S.focus=false; dismissModals(); document.body.classList.remove("focus"); }
 function focusUI(){
   var on=S.focus&&VIEW==="apply"; if(!on&&S.focus&&VIEW!=="apply") { /* navigating away ends focus */ endSitting("SITTING_PAUSED","Left the application view"); leaveFocus(); }
   document.body.classList.toggle("focus",S.focus&&VIEW==="apply");
   var fb=$("focusbar"); if(fb) fb.hidden=!(S.focus&&VIEW==="apply");
   var st=$("fb-step"); if(st) st.textContent=S.step===0?"Your details · page "+(S.dpage+1)+" of "+DPAGES.length:S.step===1?"Documents · "+accepted()+" of 6 verified":STEPS[S.step];
-  paintBar();
   if(S.focus&&S.step>=2&&!S.sess){ leaveFocus(); var b=$("focusbar"); if(b) b.hidden=true; }
 }
-/* The focus bar's timer and controls. The countdown text itself is painted by tick(). */
-function paintBar(){
-  var s=S.sess, pref=S.sessPref||{}, tm=$("fb-time"), hb=$("fb-hide"), ob=$("fb-off"), eb=$("fb-extend");
-  if(tm){ tm.hidden=!!pref.hideT; if(!s){ tm.textContent=S.step>=2?"Done":"--:--"; tm.classList.remove("low"); } }
-  if(hb) hb.textContent=pref.hideT?"Show timer":"Hide timer";
-  if(ob){ ob.hidden=!s||!!s.off; }
-  if(eb){ eb.hidden=!(s&&s.ended&&!s.off); }
-  var onb=$("fb-on"); if(onb){ onb.hidden=!(s&&s.off); }
-}
-function askExit(){ showModal("Leave this sitting?","Your progress is saved"+(S.saveOK?" on this device":" until you close this tab (you chose not to save on this device)")+(S.sessPref&&S.sessPref.off?". You can resume in a new sitting.":". You can resume in a new 30-minute sitting."),[["Save and exit","m-later",1],["Stay","m-close"]]); }
+function askExit(){ showModal(T("exit.t"),T(S.saveOK?"exit.b.saved":"exit.b.unsaved"),[[T("fb.exit"),"m-later",1],[T("exit.stay"),"m-close"]]); }
 /* Native <dialog>: showModal() traps focus. Escape fires "cancel", which means keep working (the sitting carries on). */
 /* A dialog that is already open is never replaced: the new one waits in DQ and opens when the current one closes. */
 var DQ=[];
@@ -3249,7 +3271,7 @@ function showModal(title,body,btns){
   MODAL={prev:document.activeElement}; $("m-t").textContent=title; $("m-b").textContent=body;
   $("m-a").innerHTML=btns.map(function(b){return '<button class="btn'+(b[2]?" pri":"")+'" type="button" data-act="'+b[1]+'">'+esc(b[0])+'</button>'}).join("");
   try{ if(typeof d.showModal==="function") d.showModal(); else d.setAttribute("open",""); }catch(e){ MODAL=null; return; }
-  var f=$("m-a").querySelector("button"); if(f) f.focus();
+  markHi(); var f=$("m-a").querySelector("button"); if(f) f.focus();
 }
 function closeModal(){
   var d=$("modal"), p=MODAL&&MODAL.prev; MODAL=null; dlgClose(d); if(p&&p.focus) try{p.focus()}catch(e){}
@@ -3261,34 +3283,15 @@ function dlgClose(d){ if(!d||!d.open) return; if(typeof d.close==="function") d.
 $("modal").addEventListener("cancel",function(e){ e.preventDefault(); closeModal(); });
 function modalAct(a){
   closeModal();
-  if(a==="m-extend"&&S.sess){ var s=S.sess, r=remaining(); if(r<=0){ s.limit=(Date.now()-s.start)+EXTEND_MS; s.warned.t10=1; } else s.limit+=EXTEND_MS; s.ended=false; s.expShown=false; s.warned.t2=0; if(r>0) s.warned.t10=0; log("SITTING_EXTENDED","APPLICANT","Sitting "+s.n+" extended by 10 minutes"); enterFocus(!s.noFs); tick(); paintBar(); }
-  else if(a==="m-later"){ endSitting("SITTING_SAVED","Applicant chose to continue later"); leaveFocus(); render(); }
-  else if(a==="m-refocus"){ if(S.sess) enterFocus(!S.sess.noFs); }
+  if(a==="m-later"){ endSitting("SITTING_SAVED","Applicant chose to continue later"); leaveFocus(); render(); }
   else if(a==="m-newapp"){ newApplication(); }
   else if(a==="m-sync-yes"){ syncAccept(); }
   else if(a==="m-sync-no"){ syncDecline(); }
   else if(a==="m-delete"){ wipeSaved(); S.saveOK=false; log("SAVED_PROGRESS_DELETED","APPLICANT","Applicant deleted saved progress from this device"); render(); showModal("Saved progress deleted","Nothing from this application is kept on this device. Your reasons stay on this screen until you close or leave it; nothing further is saved.",[["OK","m-close",1]]); }
 }
 document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!$("cp").hidden){ cpOpen(false); } });
-/* Leaving the focused screen: warn and log, never wipe. Opening the file picker or camera does not count. */
-document.addEventListener("click",function(e){ if(e.target.closest&&e.target.closest('label[for^="up-"],label[for^="cam-"],input[type=file]')){ PICKING=true; setTimeout(function(){PICKING=false},60000); } },true);
-window.addEventListener("focus",function(){ setTimeout(function(){PICKING=false},1500); });
-function watching(){return S.focus&&S.sess&&!S.sess.ended&&S.step<2&&VIEW==="apply"}
-/* Desktop only: a hidden page during a sitting is a focus exit. Touch devices get no exit warnings. No duration is logged. */
-document.addEventListener("visibilitychange",function(){
-  if(isTouch()) { awayAt=0; return; }
-  if(document.hidden){ if(watching()&&!PICKING) awayAt=Date.now(); return; }
-  if(!awayAt) return; awayAt=0; if(!watching()) return;
-  S.exits++; log("FOCUS_EXIT","APPLICANT","Left the onboarding screen · warning shown · nothing reset"); persist(true);
-  showModal("You left the onboarding screen","Your work is saved and nothing was reset. Stay on this screen to finish your sitting.",[["Continue","m-refocus",1]]);
-  cpNudge("exit-"+S.exits,"Welcome back. "+nextStepText());
-});
-/* Closing full screen is not an exit: no FOCUS_EXIT and no exit count. A small banner offers to return. */
-document.addEventListener("fullscreenchange",function(){
-  if(document.fullscreenElement){ fsBanner(false); return; }
-  if(!watching()||isTouch()) return;
-  fsBanner(true);
-});
+/* Opening the file picker or camera is not a reason to do anything. Leaving the screen never warns, logs or resets. */
+function watching(){return S.focus&&S.sess&&S.step<2&&VIEW==="apply"}
 /* ---------- Autosave and resume (only with consent; never images or raw OCR text) ---------- */
 var SAVEKEY="pn-onboarding-v1",lastSave=0;
 function persist(force){
@@ -3359,16 +3362,16 @@ function nextStepText(){
     var d=DOCS[i],st=S.docs[d.k]; return (st&&st.status==="rejected"?"Replace your "+d.label+": "+st.reason:"Next, upload your "+d.label+". "+d.hint); }
   if(S.step===2){ if(S.decision==="NEEDS_MORE_INFO") return "Fix the items in the message on this page, then press 'Send fixes for re-check'."; if(S.decision==="HUMAN_REVIEW") return "A person on our team is checking your application. Nothing is needed from you now."; if(S.decision==="REJECT") return "The reasons are listed on this page. If you think it is wrong, press 'Dispute this decision'."; return "You are verified. Press 'Start training'."; }
   if(S.step===3) return "Complete the five training modules (15 hours) to unlock the exam.";
-  if(S.step===4) return "Answer all five questions. The demo pass mark is 50%.";
+  if(S.step===4) return "Answer all five questions. The pass mark is 50%.";
   return "You are certified. Your POSP code is on the certificate.";
 }
 /* ---------- Onboarding Copilot: live app state + rulebook retrieval (BM25) + Claude through a key-holding proxy ---------- */
 var COPILOT_URL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'http://localhost:8787':"https://policynest-copilot.embarko.app";
 var CP={log:[],kb:null,idf:null,llm:null,busy:false,seen:{},idleT:null};
-function cpOpen(on,focusQuestion){ var p=$("cp"),f=$("cp-fab");clearTimeout(CP.focusT);p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a","Hi "+fname()+". I can see where you are and what each document needs. "+nextStepText()); cpDraw(); if(focusQuestion!==false)CP.focusT=setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else f.focus(); }
+function cpOpen(on,focusQuestion){ var p=$("cp"),f=$("cp-fab");clearTimeout(CP.focusT);p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a","Hi "+fname()+". I can see where you are and what each document needs. "+nextStepText()); cpDraw(); if(focusQuestion!==false)CP.focusT=setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else { document.body.classList.remove("typing"); f.focus(); } }
 function cpPush(who,text,meta){ CP.log.push({who:who,text:text,meta:meta||""}); if(CP.log.length>40) CP.log.shift(); cpDraw(); }
 function cpDraw(){ var l=$("cp-log"); if(!l) return; l.innerHTML=CP.log.map(function(m){return '<div class="cp-m '+m.who+'">'+esc(m.text)+(m.meta?'<small>'+esc(m.meta)+'</small>':'')+'</div>'}).join(""); l.scrollTop=l.scrollHeight;
-  var md=$("cp-mode"); if(md) md.textContent=CP.llm?"AI + rulebook":"Rulebook answers"; }
+  var md=$("cp-mode"); if(md) md.textContent=CP.llm?T("cp.mode.ai"):T("cp.mode.rule"); }
 function cpNudge(id,text){ if(CP.seen[id]) return; CP.seen[id]=1; cpPush("n",text,"Suggestion"); if($("cp").hidden) $("cp-badge").hidden=false; }
 function tokens(s){return String(s).toLowerCase().replace(/[^a-z0-9ऀ-ॿ ]+/g," ").split(/\s+/).filter(function(w){return w.length>1&&!/^(the|and|for|are|you|your|is|of|to|in|on|a|an|it|be|or|my|me|i|we|do|does|what|how|why|can|this|that|with|not)$/.test(w)})}
 function kbLoad(){ if(CP.kb!==null||typeof fetch!=="function") return; CP.kb=[];
@@ -3381,7 +3384,7 @@ function retrieve(q,n){
 function copilotContext(){
   var hrs=0; S.mods.forEach(function(m,i){if(m)hrs+=MODULES[i][1]});
   return {first_name:fname(),stage:S.begun?STEPS[S.step]:"Before you start",details_page:S.step===0&&S.begun?DPAGES[S.dpage].t:null,application_status:S.status,
-    minutes_left_in_sitting:S.sess&&!S.sess.off?Math.max(0,Math.round(remaining()/60000)):null,sittings:S.sittings,
+    sittings:S.sittings,
     documents:DOCS.map(function(d){var st=S.docs[d.k],fb=S.fb[d.k];return {document:d.label,status:st?st.status:"not uploaded",refusal_reason:st&&st.status==="rejected"?st.reason:null,open_issues:fb?fb.codes:[]}}),
     field_errors:Object.keys(S.errs),decision:S.decision,follow_up_items:S.fu?S.fu.items.map(function(i){return {document:DOC_LABEL[i.key]?DOC_LABEL[i.key][0]:i.key,issue:i.code}}):[],
     round:S.round,training_hours:hrs,exam_score:S.exam.score,suggested_next_step:nextStepText()};
@@ -3395,7 +3398,7 @@ function intentAnswer(q){
   }
   if(/photo|blur|clear|picture|image|camera|glare|scan/i.test(q)) return "For a photo that passes first time (rulebook §4.1):\n1. Use the original, not a photocopy (a photocopy is accepted only for the bank document).\n2. "+PHOTO_STEPS[0]+"\n3. "+PHOTO_STEPS[1]+"\n4. Make sure every word is sharp; if any field cannot be read, we ask for a new photo.";
   if(/which doc|documents? (do i )?need|required|keep ready|what do i need/i.test(q)) return "You need six items:\n"+DOC_GUIDE.map(function(g,i){return (i+1)+". "+g[0]+": "+g[1]}).join("\n");
-  if(/after|submit|then what|training|exam|certif|how long/i.test(q)) return "After you submit: every document is checked against your PAN and the rulebook. If anything is missing you get one message listing all of it. Then 15 hours of training (IRDAI), the exam (demo pass mark 50%, retake after 24 hours), and your POSP certificate.";
+  if(/after|submit|then what|training|exam|certif|how long/i.test(q)) return "After you submit: every document is checked against your PAN and the rulebook. If anything is missing you get one message listing all of it. Then 15 hours of training (IRDAI), the exam (pass mark 50%, retake after 24 hours), and your POSP certificate.";
   if(/next|what now|kya karu|aage|stuck|help/i.test(q)) return nextStepText();
   return null;
 }
@@ -3423,19 +3426,19 @@ document.addEventListener("submit",function(e){ if(e.target&&e.target.id==="cp-f
 function idleReset(){ clearTimeout(CP.idleT); CP.idleT=setTimeout(function(){ if(watching()) cpNudge("idle-"+S.step+"-"+S.dpage+"-"+accepted(),"Need a hand? "+nextStepText()); },90000); }
 ["click","keydown","input","pointerdown"].forEach(function(ev){ document.addEventListener(ev,idleReset,true) });
 /* ---------- Roles. In the production build the role comes only from the signed-in server account (the server enforces data access; the client hides what a role cannot use).
-   The demo build adds a "View as" switch for demonstrations. It is NOT authentication and is never present in production. ROLE is not part of S and is never saved with the application. ---------- */
+   Only the demo build adds a role switch. It is NOT authentication and is never present in production. ROLE is not part of S and is never saved with the application. ---------- */
 var ROLES=[
   {k:"applicant",label:"Applicant",first:"dash"},
   {k:"reviewer",label:"Reviewer",first:"ops"},
   {k:"ops",label:"Ops and compliance",first:"eval"},
   {k:"admin",label:"Administrator",first:"ops"},
-  {k:"all",label:"All views (demo)",first:"dash"}
+  /*DEMO:START*/{k:"all",label:"All views (demo)",first:"dash"}/*DEMO:END*/
 ];
 var ROLE=(function(){ if(!DEMO_BUILD) return "applicant"; var v=null; try{ v=localStorage.getItem("pn-role") }catch(e){} if(v&&roleOf(v)) return v; return DEMO?"all":"applicant" })();
 function roleOf(k){ var key=(k===undefined)?ROLE:k; for(var i=0;i<ROLES.length;i++) if(ROLES[i].k===key) return ROLES[i]; return null }
 function canSee(v){ if(v==="help"||v==="welcome") return true; if(DEMO_BUILD&&ROLE==="all") return true; return can(ROLE,VIEW_ACT[v]); }
 function rolesFor(v){ return ROLES.filter(function(r){return r.k!=="all"&&can(r.k,VIEW_ACT[v])}) }
-function rvRoleNote(){ var r=roleOf(); return (DEMO_BUILD?" · demo role: ":" · role: ")+(r?r.label:"not set") }
+function rvRoleNote(){ var r=roleOf(); return (/*DEMO:START*/DEMO_BUILD?" · demo role: ":/*DEMO:END*/" · role: ")+(r?r.label:"not set") }
 /* Production: the role follows the server account (applicant when signed out). */
 function syncRole(){ if(DEMO_BUILD) return; var r=ACCOUNT&&roleOf(ACCOUNT.role)&&ACCOUNT.role!=="all"?ACCOUNT.role:"applicant"; ROLE=r; }
 function setRole(k,goto){
@@ -3455,10 +3458,10 @@ function renderBlocked(v){
   var rl=ROLE==="all"?"all":ROLE;
   var body=ACCOUNT||DEMO_BUILD?T("un.body",{roles:list,role:T("role."+rl)}):T("un.body.out",{roles:list});
   var acts='<button class="btn pri" type="button" data-act="go-home">'+TE("un.home")+'</button>'+(!ACCOUNT?'<button class="btn" type="button" data-act="open-signin">'+TE("un.signin")+'</button>':'')+
-    (DEMO_BUILD&&need[0]?'<button class="btn" type="button" data-act="role-set" data-role="'+need[0].k+'">Switch to '+esc(need[0].label)+' (demo)</button><button class="btn" type="button" data-act="role-set" data-role="all">All views (demo)</button>':'');
+    /*DEMO:START*/(DEMO_BUILD&&need[0]?'<button class="btn" type="button" data-act="role-set" data-role="'+need[0].k+'">Switch to '+esc(need[0].label)+' (demo)</button><button class="btn" type="button" data-act="role-set" data-role="all">All views (demo)</button>':'')/*DEMO:ELSE*/''/*DEMO:END*/;
   var bel=$("view-"+v); bel.__h=null; bel.innerHTML=('<div class="panel narrow" role="alert"><div class="head"><h1>'+esc(T("un.title",{name:nm}))+'</h1><p>'+esc(body)+'</p></div><div class="actions">'+acts+'</div></div>');
 }
-var RSEL=$("role-sel"); if(RSEL) RSEL.addEventListener("change",function(){ setRole(this.value) });
+/*DEMO:START*/var RSEL=$("role-sel"); if(RSEL) RSEL.addEventListener("change",function(){ setRole(this.value) });/*DEMO:END*/
 function show(v,h){
   /* Signed-in visitors never see the landing page; in the production build signed-out visitors see nothing but the landing page. */
   if(v==="welcome"&&ACCOUNT){ v=roleOf().first; h=undefined; }
@@ -3467,7 +3470,7 @@ function show(v,h){
   stopSpeech();
   VIEW=v; ROUTE_STAGE=(v==="apply"&&h&&M_has(HASH_STAGE,h))?h:null;
   VIEWS.forEach(function(k){var el=$("view-"+k); if(el) el.hidden=k!==v});
-  closeMenu(false);
+  closeMenu(false); navClose(false);
   if(ACCOUNT&&(v==="dash"||v==="notif")) notifLoad(true);
   if(ACCOUNT&&v==="hist") histLoad();
   render();
@@ -3480,7 +3483,7 @@ window.addEventListener("hashchange",function(){
   var p=parseHash(h); if(!p.v) return;
   show(p.v,p.stage||undefined); focusHead(p.v);
 });
-/* Account sessions use server-set HttpOnly cookies. Demo progress remains available without an account. */
+/* Account sessions use server-set HttpOnly cookies. */
 var ACCOUNT=null,BOOT_TARGET=null,accountDialog=document.createElement('dialog');
 /* Optional choices, both off until the person turns them on (Profile page; sync may also be offered once at account creation). Kept per account on this device. */
 var CONS={sync:false,analytics:false};
@@ -3666,6 +3669,159 @@ var I18N_P5={en:{
 }};
 Object.keys(I18N_P5.en).forEach(function(k){I18N.en[k]=I18N_P5.en[k]});
 Object.keys(I18N_P5.hi).forEach(function(k){I18N.hi[k]=I18N_P5.hi[k]});
+/* ===== Lane P6: phone shell (bottom navigation, menu drawer, compact progress), static-chrome translation, badge-safe layout ===== */
+var I18N_P6={en:{
+ "skip.main":"Skip to content","nav.tag":"POSP agent onboarding","help.h":"Need help?",
+ "nav.more.btn":"More","nav.menu":"Menu","nav.menu.close":"Close menu","nav.bottom":"Quick navigation",
+ "prog.label":"Application progress","prog.mobile":"Step {n} of 6: {stage}","prog.notstarted":"Application not started",
+ "cp.fab":"Ask Copilot","cp.title":"Onboarding Copilot","cp.close":"Close Copilot","cp.mode.ai":"AI + rulebook","cp.mode.rule":"Rulebook answers",
+ "cp.q1":"What next?","cp.q2":"Why was it refused?","cp.q3":"Documents needed","cp.q4":"After I submit",
+ "cp.label":"Ask a question","cp.ph":"Ask about your documents or the steps","cp.send":"Send",
+ "cp.foot":"Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.",
+ "cp.badge":"New suggestion","pb.compliance":"Compliance checks passed","pb.training":"Training hours completed","pb.conf":"Read confidence","pb.docs":"Documents verified","pb.docs.text":"{n} of 6 documents verified","fb.exit":"Save and exit","fb.title":"PolicyNest onboarding",
+ "val.name":"Enter your full name as printed on your PAN card.","val.dob":"Enter your date of birth.","val.age":"You must be 18 or older to register as a POSP.","val.mobile":"Enter a 10-digit Indian mobile number.","val.email":"Enter a valid email address.","val.pan":"PAN is five letters, four digits, one letter (AAAAA9999A).","val.aadhaar4":"Enter only the last four digits.","val.state":"Choose your state.","val.education":"Choose your highest education.","val.city":"Enter your city.","val.acct":"Account number is 9 to 18 digits.","val.ifsc":"IFSC is four letters, a zero, then six characters.","val.consent":"Consent is needed to process your documents.",
+ "f.name":"Full name as on PAN","f.dob":"Date of birth","f.pan":"PAN","f.aadhaar4":"Aadhaar, last four digits","f.mobile":"Mobile number","f.email":"Email","f.city":"City","f.acct":"Account number","f.ifsc":"IFSC","f.education":"Highest education","f.state":"State","f.consent":"Consent",
+ "h.dob":"You must be 18 or older","h.pan":"As printed on your card","h.aadhaar4":"We never ask for or store the full number","h.acct":"Savings or current account in your own name",
+ "dp.page":"Your details · page {n} of {total}","dp.0.t":"Who you are","dp.0.d":"Exactly as printed on your PAN card. We compare it with the documents you upload next.","dp.1.t":"Your ID numbers","dp.1.d":"Your PAN, and only the last four digits of your Aadhaar.","dp.2.t":"How we reach you","dp.2.d":"Where we send your one follow-up message, if one is needed, and where you will work.","dp.3.t":"Bank account and consent","dp.3.d":"Commission is paid only into an account in your own name.",
+ "btn.back":"Back","btn.next":"Next","btn.to_docs":"Continue to documents","err.sum":"{n} fields need your attention",
+ "intro.pre":"Before you start","intro.h1":"Become a PolicyNest agent","intro.lead":"Everything happens on this screen, one step at a time. Read this list first so you have everything to hand.","intro.keep":"Keep these six ready","intro.time.h":"Take your time","intro.time.b":"Most applicants complete details and document upload in about 30 minutes. There is no countdown. Use Save and exit whenever you like and pick up where you stopped: if you chose to save, you continue on this device; otherwise closing this tab clears your progress.","intro.start":"Start onboarding","intro.resume":"Resume onboarding",
+ "dg.0.0":"PAN card","dg.0.1":"Photo of the original card. Your name and date of birth on it are the reference for every other document.","dg.0.2":"Refused if it is a business PAN (4th letter not P), the number is not in the PAN format, or the photo is blurry or cropped.",
+ "dg.1.0":"Aadhaar, front","dg.1.1":"Photo of the front, which shows your photo and date of birth. Only the last four digits are ever stored; the rest is masked.","dg.1.2":"Asked again if the name or date of birth differs from your PAN, or the photo is unclear.",
+ "dg.2.0":"Aadhaar, back","dg.2.1":"Photo of the back, which shows your address.","dg.2.2":"Refused if it is the front of the card. Asked again if the photo is unclear.",
+ "dg.3.0":"Class 10 marksheet","dg.3.1":"Marksheet or pass certificate from a state board, CBSE, CISCE or NIOS.","dg.3.2":"Refused if it does not show a pass. A board not on the list goes to a person.",
+ "dg.4.0":"Cancelled cheque or bank statement","dg.4.1":"For a savings or current account in your own name. Joint accounts only if you are the first holder.","dg.4.2":"A parent's or spouse's account is never accepted.",
+ "dg.5.0":"Selfie","dg.5.1":"A clear photo of your face in daylight, facing the camera.","dg.5.2":"Asked again if it does not match the photo on your PAN card.",
+ "ph.1":"Put the original on a flat, dark surface in daylight, away from lamps that cause glare.","ph.2":"Hold the phone straight above it so all four corners are inside the frame.","ph.3":"Tap Replace and upload the new photo.",
+ "exit.t":"Save and exit?","exit.b.saved":"Your progress is saved on this device. You can pick up where you stopped.","exit.b.unsaved":"Your progress is kept only until you close this tab, because you chose not to save on this device. You can pick up where you stopped until then.","exit.stay":"Stay"
+},hi:{
+ "skip.main":"मुख्य सामग्री पर जाएँ","nav.tag":"POSP एजेंट ऑनबोर्डिंग","help.h":"मदद चाहिए?",
+ "nav.more.btn":"और","nav.menu":"मेनू","nav.menu.close":"मेनू बंद करें","nav.bottom":"त्वरित नेविगेशन",
+ "prog.label":"आवेदन की प्रगति","prog.mobile":"चरण {n}/6: {stage}","prog.notstarted":"आवेदन अभी शुरू नहीं हुआ",
+ "cp.fab":"Copilot से पूछें","cp.title":"ऑनबोर्डिंग Copilot","cp.close":"Copilot बंद करें","cp.mode.ai":"AI + नियमावली","cp.mode.rule":"नियमावली के उत्तर",
+ "cp.q1":"आगे क्या?","cp.q2":"अस्वीकार क्यों हुआ?","cp.q3":"ज़रूरी दस्तावेज़","cp.q4":"जमा करने के बाद",
+ "cp.label":"प्रश्न पूछें","cp.ph":"अपने दस्तावेज़ों या चरणों के बारे में पूछें","cp.send":"भेजें",
+ "cp.foot":"उत्तर PolicyNest नियमावली और इस पेज पर आपकी प्रगति पर आधारित हैं। Copilot आपको स्वीकृत या अस्वीकृत नहीं कर सकता। यहाँ अपना पूरा PAN, आधार या खाता नंबर कभी न लिखें।",
+ "cp.badge":"नया सुझाव","pb.compliance":"पूरी हुई अनुपालन जाँचें","pb.training":"पूरे हुए प्रशिक्षण घंटे","pb.conf":"पढ़ने का भरोसा","pb.docs":"सत्यापित दस्तावेज़","pb.docs.text":"6 में से {n} दस्तावेज़ सत्यापित","fb.exit":"सहेजें और बाहर निकलें","fb.title":"PolicyNest ऑनबोर्डिंग",
+ "val.name":"अपना पूरा नाम वैसे ही लिखें जैसा आपके PAN कार्ड पर छपा है।","val.dob":"अपनी जन्म तिथि भरें।","val.age":"POSP के रूप में पंजीकरण के लिए आपकी उम्र 18 वर्ष या अधिक होनी चाहिए।","val.mobile":"10 अंकों का भारतीय मोबाइल नंबर भरें।","val.email":"सही ईमेल पता भरें।","val.pan":"PAN में पाँच अक्षर, चार अंक और एक अक्षर होता है (AAAAA9999A)।","val.aadhaar4":"केवल आधार के आख़िरी चार अंक भरें।","val.state":"अपना राज्य चुनें।","val.education":"अपनी उच्चतम शिक्षा चुनें।","val.city":"अपना शहर भरें।","val.acct":"खाता संख्या 9 से 18 अंकों की होती है।","val.ifsc":"IFSC में चार अक्षर, फिर शून्य, फिर छह वर्ण होते हैं।","val.consent":"आपके दस्तावेज़ों की प्रक्रिया के लिए सहमति ज़रूरी है।",
+ "f.name":"PAN के अनुसार पूरा नाम","f.dob":"जन्म तिथि","f.pan":"PAN","f.aadhaar4":"आधार, आख़िरी चार अंक","f.mobile":"मोबाइल नंबर","f.email":"ईमेल","f.city":"शहर","f.acct":"खाता संख्या","f.ifsc":"IFSC","f.education":"उच्चतम शिक्षा","f.state":"राज्य","f.consent":"सहमति",
+ "h.dob":"आपकी उम्र 18 वर्ष या अधिक होनी चाहिए","h.pan":"जैसा आपके कार्ड पर छपा है","h.aadhaar4":"हम पूरा नंबर न माँगते हैं, न सहेजते हैं","h.acct":"आपके अपने नाम का बचत या चालू खाता",
+ "dp.page":"आपकी जानकारी · पेज {n}/{total}","dp.0.t":"आप कौन हैं","dp.0.d":"ठीक वैसा जैसा आपके PAN कार्ड पर छपा है। हम इसे आपके अगले अपलोड किए दस्तावेज़ों से मिलाते हैं।","dp.1.t":"आपके पहचान नंबर","dp.1.d":"आपका PAN और आधार के केवल आख़िरी चार अंक।","dp.2.t":"हम आप तक कैसे पहुँचें","dp.2.d":"जहाँ हम आपको एक फ़ॉलो-अप संदेश भेजेंगे (अगर ज़रूरत हो), और जहाँ आप काम करेंगे।","dp.3.t":"बैंक खाता और सहमति","dp.3.d":"कमीशन केवल आपके अपने नाम के खाते में दिया जाता है।",
+ "btn.back":"पीछे","btn.next":"आगे","btn.to_docs":"दस्तावेज़ों पर जाएँ","err.sum":"{n} फ़ील्ड पर आपका ध्यान चाहिए",
+ "intro.pre":"शुरू करने से पहले","intro.h1":"PolicyNest एजेंट बनें","intro.lead":"सब कुछ इसी स्क्रीन पर, एक-एक चरण में होता है। पहले यह सूची पढ़ लें ताकि सब कुछ हाथ में रहे।","intro.keep":"ये छह तैयार रखें","intro.time.h":"आराम से करें","intro.time.b":"ज़्यादातर आवेदक लगभग 30 मिनट में जानकारी और दस्तावेज़ अपलोड पूरे कर लेते हैं। कोई उलटी गिनती नहीं है। जब चाहें सहेजें और बाहर निकलें, और जहाँ रुके थे वहीं से आगे बढ़ें: अगर आपने सहेजना चुना है तो इसी डिवाइस पर जारी रहेगा; नहीं तो यह टैब बंद करने पर आपकी प्रगति मिट जाएगी।","intro.start":"ऑनबोर्डिंग शुरू करें","intro.resume":"ऑनबोर्डिंग जारी रखें",
+ "dg.0.0":"PAN कार्ड","dg.0.1":"मूल कार्ड की फ़ोटो। इस पर आपका नाम और जन्म तिथि बाकी हर दस्तावेज़ के लिए आधार है।","dg.0.2":"अस्वीकार हो सकता है अगर यह व्यावसायिक PAN है (चौथा अक्षर P नहीं), नंबर PAN के प्रारूप में नहीं है, या फ़ोटो धुँधली या कटी हुई है।",
+ "dg.1.0":"आधार, आगे का भाग","dg.1.1":"आगे के भाग की फ़ोटो, जिसमें आपकी तस्वीर और जन्म तिथि है। केवल आख़िरी चार अंक सहेजे जाते हैं; बाकी छिपाए जाते हैं।","dg.1.2":"अगर नाम या जन्म तिथि आपके PAN से अलग है, या फ़ोटो साफ़ नहीं है, तो दोबारा माँगा जाता है।",
+ "dg.2.0":"आधार, पीछे का भाग","dg.2.1":"पीछे के भाग की फ़ोटो, जिसमें आपका पता है।","dg.2.2":"अगर यह कार्ड का आगे का भाग है तो अस्वीकार हो जाता है। फ़ोटो साफ़ न हो तो दोबारा माँगा जाता है।",
+ "dg.3.0":"कक्षा 10 की अंकतालिका","dg.3.1":"राज्य बोर्ड, CBSE, CISCE या NIOS की अंकतालिका या उत्तीर्ण प्रमाणपत्र।","dg.3.2":"अगर उसमें उत्तीर्ण नहीं दिखता तो अस्वीकार हो जाता है। सूची में न होने वाला बोर्ड किसी व्यक्ति के पास जाता है।",
+ "dg.4.0":"रद्द चेक या बैंक स्टेटमेंट","dg.4.1":"आपके अपने नाम के बचत या चालू खाते के लिए। संयुक्त खाता तभी, जब आप पहले खाताधारक हों।","dg.4.2":"माता-पिता या जीवनसाथी का खाता कभी स्वीकार नहीं होता।",
+ "dg.5.0":"सेल्फ़ी","dg.5.1":"दिन की रोशनी में, कैमरे की ओर देखते हुए आपके चेहरे की साफ़ फ़ोटो।","dg.5.2":"अगर यह आपके PAN कार्ड की फ़ोटो से मेल न खाए तो दोबारा माँगा जाता है।",
+ "ph.1":"मूल दस्तावेज़ को दिन की रोशनी में किसी समतल, गहरी सतह पर रखें, चकाचौंध करने वाली लाइट से दूर।","ph.2":"फ़ोन को उसके ठीक ऊपर सीधा पकड़ें ताकि चारों कोने फ़्रेम में आएँ।","ph.3":"बदलें पर टैप करें और नई फ़ोटो अपलोड करें।",
+ "exit.t":"सहेजें और बाहर निकलें?","exit.b.saved":"आपकी प्रगति इस डिवाइस पर सहेजी गई है। आप जहाँ रुके थे वहीं से आगे बढ़ सकते हैं।","exit.b.unsaved":"आपने इस डिवाइस पर सहेजना नहीं चुना, इसलिए प्रगति केवल इस टैब के बंद होने तक रहेगी। तब तक आप जहाँ रुके थे वहीं से आगे बढ़ सकते हैं।","exit.stay":"यहीं रहें"
+}};
+Object.keys(I18N_P6.en).forEach(function(k){I18N.en[k]=I18N_P6.en[k]});
+Object.keys(I18N_P6.hi).forEach(function(k){I18N.hi[k]=I18N_P6.hi[k]});
+/* Static markup (skip link, Copilot launcher and panel, focus bar, drawer) is translated in place from data-t / data-tp / data-ta. */
+function markHi(){
+  if(LANG!=="hi") return;
+  var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){
+    var p=n.parentNode; if(!p||/^(SCRIPT|STYLE|TEXTAREA|OPTION|NOSCRIPT)$/.test(p.nodeName)||!/[ऀ-ॿ]/.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+    var a=p.closest?p.closest("[lang]"):null; return (a&&/^hi/.test(a.getAttribute("lang")))?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT; }});
+  var list=[],n; while((n=w.nextNode())) list.push(n);
+  list.forEach(function(t){ var sp=document.createElement("span"); sp.setAttribute("lang","hi"); t.parentNode.replaceChild(sp,t); sp.appendChild(t); });
+}
+function staticI18n(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-t]"),function(el){ var v=T(el.getAttribute("data-t")); if(el.textContent!==v) el.textContent=v; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-tp]"),function(el){ el.setAttribute("placeholder",T(el.getAttribute("data-tp"))); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ta]"),function(el){ el.setAttribute("aria-label",T(el.getAttribute("data-ta"))); });
+  var bi=$("cp-badge"); if(bi) bi.setAttribute("aria-label",T("cp.badge"));
+  var fbt=document.querySelector("#focusbar>b"); if(fbt) fbt.textContent=T("fb.title");
+  $("bnav").setAttribute("aria-label",T("nav.bottom"));
+}
+var BELL_PATH='<path d="M4 11V7a4 4 0 0 1 8 0v4l1 1.5H3zM6.5 14h3"/>',MORE_PATH='<circle cx="3.5" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="12.5" cy="8" r="1.2"/>';
+function isPhone(){ try{ return !!(window.matchMedia&&window.matchMedia("(max-width:699px)").matches) }catch(e){ return false } }
+/* Bottom navigation: at most five items. Applicants: Home, Application, Documents, Notifications, More. Staff roles: their own views, then Notifications and More. */
+function bnavItems(){
+  var staff=ROLE!=="applicant"&&ROLE!=="all",out=[];
+  if(staff){ NAV.forEach(function(n){ if(n.staff&&canSee(n.v)&&out.length<3) out.push(n); }); }
+  else ["nav.home","nav.application","nav.documents"].forEach(function(k){ NAV.forEach(function(n){ if(n.k===k&&canSee(n.v)) out.push(n); }); });
+  out.push({k:"menu.notifications",v:"notif",h:"notifications",i:BELL_PATH});
+  return out;
+}
+function bnavChrome(){
+  var out="";
+  bnavItems().forEach(function(n){
+    var cur=VIEW===n.v&&(n.v!=="apply"||(n.stage||null)===ROUTE_STAGE),un=n.v==="notif"?(NOTIFS.unread||0):0,lab=T(n.k);
+    out+='<a href="#'+n.h+'"'+(cur?' aria-current="page"':'')+(un?' aria-label="'+esc(T("nv.bell.n",{n:un}))+'"':'')+'><span class="bi">'+ico(n.i)+(un?'<span class="bdg" aria-hidden="true">'+(un>9?"9+":un)+'</span>':'')+'</span><span class="bl">'+esc(lab)+'</span></a>';
+  });
+  out+='<button type="button" id="bn-more" data-act="nav-open" aria-haspopup="dialog" aria-expanded="'+(NAVO?"true":"false")+'"><span class="bi">'+ico(MORE_PATH)+'</span><span class="bl">'+TE("nav.more.btn")+'</span></button>';
+  setHtml($("bnav"),out);
+  var nl=$("nav-lang"); if(nl){ nl.setAttribute("aria-label",T("lang.label")); setHtml(nl,'<button type="button" data-ulang="en" lang="en" aria-label="English" aria-pressed="'+(LANG==="en")+'">EN</button><button type="button" data-ulang="hi" lang="hi" aria-label="हिंदी" aria-pressed="'+(LANG==="hi")+'">हिंदी</button>'); }
+  mprogChrome(); staticI18n();
+}
+/* Compact journey progress shown under the phone top bar. Journey stages only; documents and form progress stay on their own pages. */
+function mprogChrome(){
+  var el=$("mprog"); if(!el) return;
+  var app=(ROLE==="applicant"||ROLE==="all")&&VIEW!=="welcome";
+  if(!app){ el.hidden=true; return; }
+  el.hidden=false;
+  var cert=S.status==="CERTIFIED",started=S.begun||S.step>0||accepted()>0||cert,done=0,segs="",i;
+  for(i=0;i<6;i++){ var st=stepState(i); if(st==="done") done++; segs+='<i class="'+(started?st:"next")+'"></i>'; }
+  var txt=started?T("prog.mobile",{n:Math.min(6,S.step+1),stage:T(STAGES[Math.min(5,S.step)].nameKey)}):T("prog.notstarted");
+  el.setAttribute("aria-label",T("prog.label")); el.setAttribute("aria-valuenow",String(started?done:0)); el.setAttribute("aria-valuetext",txt);
+  setHtml(el,'<div class="segs" aria-hidden="true">'+segs+'</div><span aria-hidden="true">'+esc(txt)+'</span>');
+}
+/* Menu drawer (phones): opened from More, traps focus, closes on Escape, the scrim, a link or growing the window, and returns focus to More. */
+var NAVO=null;
+function navOpen(){
+  if(NAVO||!isPhone()) return;
+  NAVO={prev:document.activeElement}; document.body.classList.add("navopen");
+  var nv=$("nav"); nv.setAttribute("role","dialog"); nv.setAttribute("aria-modal","true"); nv.setAttribute("aria-label",T("nav.menu"));
+  $("navscrim").hidden=false; var b=$("bn-more"); if(b) b.setAttribute("aria-expanded","true");
+  var c=$("nav-close"); if(c) c.focus();
+}
+function navClose(restore){
+  if(!NAVO) return; var prev=NAVO.prev; NAVO=null; document.body.classList.remove("navopen");
+  var nv=$("nav"); nv.removeAttribute("role"); nv.removeAttribute("aria-modal"); nv.removeAttribute("aria-label");
+  $("navscrim").hidden=true; var b=$("bn-more"); if(b) b.setAttribute("aria-expanded","false");
+  if(restore!==false){ var t=b||prev; if(t&&t.focus) try{ t.focus() }catch(e){} }
+}
+function trapTab(c,e){
+  var f=Array.prototype.filter.call(c.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])'),function(x){ return !x.hidden&&x.getClientRects().length>0; });
+  if(!f.length) return; var a=f[0],z=f[f.length-1];
+  if(!c.contains(document.activeElement)){ e.preventDefault(); a.focus(); }
+  else if(e.shiftKey&&document.activeElement===a){ e.preventDefault(); z.focus(); }
+  else if(!e.shiftKey&&document.activeElement===z){ e.preventDefault(); a.focus(); }
+}
+document.addEventListener("keydown",function(e){
+  if(NAVO){ if(e.key==="Escape"){ e.preventDefault(); navClose(true); } else if(e.key==="Tab") trapTab($("nav"),e); }
+  else if(e.key==="Tab"&&!$("cp").hidden) trapTab($("cp"),e);
+});
+document.addEventListener("click",function(e){
+  var t=e.target&&e.target.closest?e.target.closest("[data-act='nav-open'],[data-act='nav-close']"):null; if(!t) return;
+  if(t.getAttribute("data-act")==="nav-open") navOpen(); else navClose(true);
+});
+$("nav").addEventListener("click",function(e){ if(NAVO&&e.target.closest&&e.target.closest(".menu a")) setTimeout(function(){ navClose(false); },0); });
+window.addEventListener("resize",function(){ if(NAVO&&!isPhone()) navClose(false); badgeSync(); });
+/* The keyboard on a phone must not sit under the Copilot launcher: hide it while a text field has focus. */
+document.addEventListener("focusin",function(e){ var t=e.target; if(isPhone()&&t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)&&!/^(checkbox|radio|file|button|submit)$/.test(t.type||"")) document.body.classList.add("typing"); });
+document.addEventListener("focusout",function(){ setTimeout(function(){ var a=document.activeElement; if(!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) document.body.classList.remove("typing"); },120); });
+/* The hosting platform injects a small badge at the bottom of the page (embarko-badge or #__embarko_orphan_footer). It is never hidden:
+   its height is measured and reserved as --badge-h, so the bottom navigation, the Copilot launcher and the page padding sit clear of it. */
+function badgeSync(){
+  var h=0;
+  try{
+    var b=document.querySelector("embarko-badge,#__embarko_orphan_footer");
+    if(b){
+      var cs=getComputedStyle(b),r=b.getBoundingClientRect(),fixed=(cs.position==="fixed"||cs.position==="sticky");
+      if(!r.height&&b.shadowRoot&&b.shadowRoot.firstElementChild) r=b.shadowRoot.firstElementChild.getBoundingClientRect();
+      if(!r.height&&b.firstElementChild) r=b.firstElementChild.getBoundingClientRect();
+      if(cs.display!=="none"&&cs.visibility!=="hidden"&&(fixed||cs.display==="contents")){ h=r.height>0?Math.ceil(Math.max(0,window.innerHeight-r.top)):44; if(r.top<window.innerHeight*0.5) h=0; }
+    }
+  }catch(e){ h=0; }
+  document.documentElement.style.setProperty("--badge-h",Math.min(h,96)+"px");
+}
+try{ new MutationObserver(function(){ badgeSync(); }).observe(document.body,{childList:true}); }catch(e){}
+window.addEventListener("load",function(){ badgeSync(); setTimeout(badgeSync,1200); setTimeout(badgeSync,4000); });
+
 /* Server timeline keys (contract section 4) mapped onto applicant-safe timeline entries. */
 (function(){
  var m={application_started:["application_created","details"],resumed:["progress_resumed",null],saved_exit:["progress_saved",null],details_saved:["details_saved","details"],doc_uploaded:["doc_uploaded","documents"],
@@ -4008,7 +4164,7 @@ function profSubmit(){
   }).catch(function(e){ PROF.busy=false; PROF.errs=[e&&e.message==="invalid_mobile"?["pf-mobile","pf.err.mobile"]:e&&e.message==="invalid_display_name"?["pf-name","pf.err.name"]:[null,e&&e.status===401?"pf.err.sess":"pf.err.net"]]; PROF.force=true; renderAcct(); var eb=$("pf-errors"); if(eb) eb.focus(); });
 }
 document.addEventListener("submit",function(e){ if(e.target&&e.target.id==="prof-form"){ e.preventDefault(); profSubmit(); } });
-document.addEventListener("click",function(e){ var a=e.target&&e.target.closest?e.target.closest("[data-focus]"):null; if(a&&a.closest&&a.closest("#pf-errors")){ e.preventDefault(); var el=$(a.getAttribute("data-focus")); if(el) el.focus(); } });
+document.addEventListener("click",function(e){ var a=e.target&&e.target.closest?e.target.closest("[data-focus]"):null; if(a&&a.closest&&a.closest("#det-errs")){ e.preventDefault(); var fe=$(a.getAttribute("data-focus")); if(fe) fe.focus(); return; } if(a&&a.closest&&a.closest("#pf-errors")){ e.preventDefault(); var el=$(a.getAttribute("data-focus")); if(el) el.focus(); } });
 /* Click actions for this lane. Returns true when handled. */
 function p5Click(t,a){
   if(a==="save-retry"){ SYNC.tries=0; SYNC.online=true; syncFlush(); return true; }
@@ -4020,7 +4176,7 @@ function p5Click(t,a){
   return false;
 }
 var workspaceDialog=document.createElement('dialog');workspaceDialog.setAttribute('aria-labelledby','workspace-heading');
-workspaceDialog.innerHTML='<div class="mbox"><h2 id="workspace-heading">Account workspace</h2><p class="small muted">Account records are separate from the synthetic demo console. Only document statuses and issue codes are synced.</p><div id="workspace-body"></div><div class="actions"><button class="btn" id="workspace-refresh" type="button">Refresh</button><button class="btn" id="workspace-close" type="button">Close</button></div></div>';
+workspaceDialog.innerHTML='<div class="mbox"><h2 id="workspace-heading">Account workspace</h2><p class="small muted">Account records are separate from any on-device practice data. Only document statuses and issue codes are synced.</p><div id="workspace-body"></div><div class="actions"><button class="btn" id="workspace-refresh" type="button">Refresh</button><button class="btn" id="workspace-close" type="button">Close</button></div></div>';
 document.body.appendChild(workspaceDialog);
 $('workspace-close').addEventListener('click',function(){workspaceDialog.close()});
 $('workspace-refresh').addEventListener('click',workspaceLoad);
@@ -4034,7 +4190,7 @@ function workspaceLoad(){
   }else if(ACCOUNT.role==='reviewer'){
     accountRequest('/api/reviewer/queue').then(function(r){box.innerHTML='<h3>Assigned cases</h3>'+(r.cases.length?r.cases.map(function(c){return '<button type="button" class="btn" data-account-case="'+esc(c.id)+'">'+esc(c.id)+' · '+esc(c.status)+'</button>'}).join(''):'<p>No cases assigned to you.</p>')}).catch(function(){box.textContent='Unable to load assigned cases.'});
   }else{
-    box.innerHTML='<label>Time window <select id="report-days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select></label><label>Activity <select id="report-source"><option value="demo">Demo</option><option value="operational">Operational</option></select></label><button class="btn" type="button" id="report-load">Load measurements</button><div id="report-body"></div>';
+    box.innerHTML='<label>Time window <select id="report-days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select></label><label>Activity <select id="report-source">/*DEMO:START*/<option value="demo">Demo</option>/*DEMO:END*/<option value="operational">Operational</option></select></label><button class="btn" type="button" id="report-load">Load measurements</button><div id="report-body"></div>';
     $('report-load').onclick=loadReport;loadReport();
   }
 }
@@ -4046,13 +4202,13 @@ function loadReport(){
 function reportTable(rows){if(!rows.length)return '<p>No measured data in this window.</p>';var keys=Object.keys(rows[0]);return '<div style="overflow:auto"><table><thead><tr>'+keys.map(function(k){return '<th>'+esc(k.replace(/_/g,' '))+'</th>'}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+keys.map(function(k){return '<td>'+esc(r[k]===null?'Not measured':String(r[k]))+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
 workspaceDialog.addEventListener('click',function(e){var b=e.target.closest('[data-account-case]');if(!b)return;loadAccountCase(b.getAttribute('data-account-case'))});
 function loadAccountCase(id){accountRequest('/api/reviewer/case?id='+encodeURIComponent(id)).then(function(c){
-  var body=$('workspace-body');body.innerHTML='<h3>'+esc(c.id)+'</h3><p>Device-reported demo progress. No original images or OCR text are stored on the server.</p>'+reportTable(c.progress?c.progress.documents:[])+'<h3>Appeals</h3>'+c.appeals.map(function(a){return '<div class="box"><b>'+esc(a.id)+'</b><p>'+esc(a.explanation)+'</p><p>'+esc(a.status)+'</p><label>Applicant-facing response<textarea data-resolution-text="'+esc(a.id)+'" minlength="10" maxlength="1500"></textarea></label><select data-resolution-status="'+esc(a.id)+'" aria-label="Appeal outcome"><option>RESOLVED</option><option>MORE_INFO</option><option>ESCALATED</option></select><button class="btn" type="button" data-resolve-appeal="'+esc(a.id)+'">Record response</button></div>'}).join('')+'<h3>Reviewer decision</h3><p>Use only evidence available to you. Request more information when evidence is insufficient.</p><label>Outcome<select id="account-review-status"><option>NEEDS_MORE_INFO</option><option>HUMAN_REVIEW</option><option>KYC_APPROVED</option><option>REJECTED</option></select></label><label>Rulebook clause<input id="account-review-rule" placeholder="§9" pattern="§[0-9.]+"></label><label>Internal rationale<textarea id="account-review-note" minlength="10" maxlength="1500"></textarea></label><button class="btn pri" id="account-review-save">Record decision</button><p id="account-review-result" role="status"></p><h3>Internal notes</h3>'+reportTable(c.notes)+'<h3>Audit</h3>'+reportTable(c.audit);
+  var body=$('workspace-body');body.innerHTML='<h3>'+esc(c.id)+'</h3><p>Device-reported progress. No original images or OCR text are stored on the server.</p>'+reportTable(c.progress?c.progress.documents:[])+'<h3>Appeals</h3>'+c.appeals.map(function(a){return '<div class="box"><b>'+esc(a.id)+'</b><p>'+esc(a.explanation)+'</p><p>'+esc(a.status)+'</p><label>Applicant-facing response<textarea data-resolution-text="'+esc(a.id)+'" minlength="10" maxlength="1500"></textarea></label><select data-resolution-status="'+esc(a.id)+'" aria-label="Appeal outcome"><option>RESOLVED</option><option>MORE_INFO</option><option>ESCALATED</option></select><button class="btn" type="button" data-resolve-appeal="'+esc(a.id)+'">Record response</button></div>'}).join('')+'<h3>Reviewer decision</h3><p>Use only evidence available to you. Request more information when evidence is insufficient.</p><label>Outcome<select id="account-review-status"><option>NEEDS_MORE_INFO</option><option>HUMAN_REVIEW</option><option>KYC_APPROVED</option><option>REJECTED</option></select></label><label>Rulebook clause<input id="account-review-rule" placeholder="§9" pattern="§[0-9.]+"></label><label>Internal rationale<textarea id="account-review-note" minlength="10" maxlength="1500"></textarea></label><button class="btn pri" id="account-review-save">Record decision</button><p id="account-review-result" role="status"></p><h3>Internal notes</h3>'+reportTable(c.notes)+'<h3>Audit</h3>'+reportTable(c.audit);
   body.querySelectorAll('[data-resolve-appeal]').forEach(function(b){b.onclick=function(){var ref=b.getAttribute('data-resolve-appeal');b.disabled=true;accountRequest('/api/reviewer/appeals/resolve',{reference:ref,status:body.querySelector('[data-resolution-status="'+ref+'"]').value,response:body.querySelector('[data-resolution-text="'+ref+'"]').value}).then(function(){loadAccountCase(id)}).catch(function(){b.disabled=false;announce('Response could not be recorded. Check access and response length.')})}});
   $('account-review-save').onclick=function(){accountRequest('/api/reviewer/decide',{case_id:id,status:$('account-review-status').value,rule:$('account-review-rule').value,note:$('account-review-note').value}).then(function(){$('account-review-result').textContent='Reviewer decision recorded.'}).catch(function(){$('account-review-result').textContent='Decision not recorded. Check the rule, rationale and assignment.'})};
 }).catch(function(){$('workspace-body').textContent='Case unavailable or not assigned to you.'})}
 var performanceQueue=[];
 function performanceMetric(name,value){if(CONS.analytics&&Number.isFinite(value))performanceQueue.push({name:name,value:value})}
-function productEvent(name,result,duration){if(ACCOUNT&&CONS.analytics)accountRequest('/api/events',{event_name:name,stage:S.begun?STEPS[S.step]:'Before you start',source:'demo',duration_ms:duration,result:result||'success'},false).catch(function(){})}
+function productEvent(name,result,duration){if(ACCOUNT&&CONS.analytics)accountRequest('/api/events',{event_name:name,stage:S.begun?STEPS[S.step]:'Before you start',source:DEMO_BUILD?'demo':'operational',duration_ms:duration,result:result||'success'},false).catch(function(){})}
 function trackProductAction(event){
   var key=event.split(':')[0],map={ONBOARDING_OPENED:'onboarding_started',REGISTRATION_STARTED:'stage_completed',DOC_UPLOADED:'document_uploaded',DOC_ACCEPTED:'document_uploaded',DOC_REUPLOADED:'document_corrected',DOC_REUPLOAD_ACCEPTED:'document_corrected',DOC_REJECTED:'ocr_failed',STP_PASS:'verification_completed',LMS_LOGIN:'training_started',TRAINING_COMPLETE:'training_completed',EXAM_SUBMIT:'exam_passed',EXAM_FAIL:'exam_failed',ISSUE_CREDENTIAL:'certificate_issued',PROGRESS_RESTORED:'application_resumed',ROUTED_TO_REVIEWER:'human_escalation'};
   if(map[key])productEvent(map[key]);
@@ -4119,7 +4275,7 @@ $('appeal-form').addEventListener('submit',function(e){e.preventDefault();var bu
   accountRequest('/api/appeals',{explanation:$('appeal-concern').value}).then(function(result){productEvent('appeal_submitted');$('appeal-result').textContent='Appeal submitted. Reference '+result.reference+'. Status: '+result.status;cpPush('a','Your appeal was submitted to the human review process. Reference '+result.reference+'. It is awaiting reviewer assignment.');}).catch(function(){ $('appeal-result').textContent='The appeal could not be submitted. Please check your session and try again.';}).finally(function(){button.disabled=false});
 });
 var RESTORED=restore(),RESET_HASH=location.hash.indexOf('#reset=')===0?location.hash:'';
-applyTheme(); applyLang(); try{ if(window.matchMedia("(max-width:900px)").matches) $("navx").open=false }catch(e){}
+applyTheme(); applyLang();
 /* Signed-out visitors land on #welcome. The production build holds a deep link until the session check says who is there (enterAccount then opens it). */
 var BOOTH=parseHash(location.hash.slice(1)); BOOT_TARGET=(BOOTH.v&&BOOTH.v!=="welcome")?BOOTH:null; VIEW=BOOTH.v||"welcome"; if(!DEMO_BUILD) VIEW="welcome";
 show(VIEW,VIEW===BOOTH.v?(BOOTH.stage||undefined):undefined); kbLoad(); idleReset();
