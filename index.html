@@ -163,6 +163,12 @@ details.demo .demo-body{display:flex;flex-direction:column;gap:10px;margin-top:1
 .foot{font-size:.72rem;color:var(--muted)}
 .vcard input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
 .vbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;align-items:center}
+.goodhint{background:var(--sunken);border-radius:10px;padding:10px 12px;font-size:.84rem}
+.goodhint ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px}
+.goodhint li{display:flex;gap:6px;align-items:center}
+.goodhint svg{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.retake{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.vers{margin:0;overflow-wrap:anywhere}
 .sel{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 8px;min-height:32px;font-size:.8rem;max-width:100%}
 .msg{background:var(--sunken);border:1px solid var(--line);border-radius:12px;padding:14px 16px;white-space:pre-wrap;font-size:.9rem;line-height:1.55;overflow-wrap:anywhere}
 .msg .from{display:block;font-size:.72rem;color:var(--muted);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em}
@@ -1209,8 +1215,8 @@ function demoBox(inner){
   return '<details class="demo"'+(open?' open':'')+'><summary>Demo controls (synthetic documents)</summary><div class="demo-body">'+inner+'</div></details>';
 }
 function docCard(d){
-  var st=S.docs[d.k],rd=st&&st.status==="reading",ok=st&&st.status==="ok",rej=st&&st.status==="rejected",o=st&&st.ocr;
-  var head='<div class="vhead">'+thumb(d.k,d.code)+'<div><h2>'+d.label+'</h2><div class="meta">'+(st?"Uploaded · "+fileKind(st)+"<br>"+esc(st.name):d.hint)+'</div></div>'+(ok?(docClean(d.k)?pill("ok","Verified"):pill("warn",docFixLabel(d.k))):rej?pill("bad","Not accepted"):rd?'<span class="pill run" id="ocr-'+d.k+'">Reading text</span>':pill("","Required"))+'</div>';
+  var st=S.docs[d.k],rd=st&&st.status==="reading",ok=st&&st.status==="ok",rej=st&&st.status==="rejected",ph=st&&st.status==="photo",o=st&&st.ocr;
+  var head='<div class="vhead">'+thumb(d.k,d.code)+'<div><h2>'+d.label+'</h2><div class="meta">'+(st?"Uploaded · "+fileKind(st)+"<br>"+esc(st.name):d.hint)+'</div></div>'+(ok?(docClean(d.k)?pill("ok","Verified"):pill("warn",docFixLabel(d.k))):rej?pill("bad","Not accepted"):ph?pill("warn","Check photo"):rd?'<span class="pill run" id="ocr-'+d.k+'">Reading text</span>':pill("","Required"))+'</div>';
   var body="";
   function row(l,p,ev){return '<div class="vrow"><span>'+l+'</span>'+p+(ev?'<span class="ev">'+esc(ev)+'</span>':'')+'</div>'}
   if(rd) body='<div class="vrows">'+row("Document classification",pill("run","In progress"))+row("Text readability",pill("run","In progress"))+row("Field detection",pill("run","In progress"))+'</div>';
@@ -1219,14 +1225,40 @@ function docCard(d){
     (d.k==="SELFIE"?row("Field detection",pill("ok","Passed"),"No identifiers expected on this item"):'<div class="vrow"><span>Fields read</span>'+(miss.length?pill("bad","Not all read"):pill("ok","Passed"))+'<span class="ev">'+docSummaryX(d.k,o.fields)+'</span></div>')+'</div>'+
     (miss.length?'<div class="obs bad"><b>Could not read</b><span>'+esc(miss.join(", "))+'. Replace it with a sharper photo in daylight, all four corners visible, for a decision without a follow-up.</span></div>':''); }
   else if(rej) body='<div class="vrows">'+row("Document classification",pill("bad","Failed"),o?(TYPE_NAME[o.det]?"Looks like: "+TYPE_NAME[o.det]:"Type not recognised")+" · confidence "+o.conf.toFixed(2)+" · "+o.words+" words":"")+'</div>'+fbHtml(rejectFeedback(st.reason));
+  if(ph) body=photoHold(d.k,st.photo); else if(!st) body=goodHint(d.k);
+  if(st&&st.versions&&st.versions.length>1) body+=versionLine(st.versions);
   if(ok) body+=fbHtml(S.fb[d.k]);
   if(st&&st.restored&&ok) body+='<p class="small muted">Verified in an earlier sitting. The image itself was not saved, only what was read from it.</p>';
   var nx=ok&&S.step===1?nextDocIndex():-1;
-  return '<article class="vcard k-'+d.k+(rej?" rej":"")+'">'+head+body+'<div class="vbtns"><label class="btn sm" for="up-'+d.k+'"><span>'+(st?"Replace":"Upload file")+'<span class="sr-only">, '+d.label+'</span></span></label><input type="file" id="up-'+d.k+'" data-up="'+d.k+'" accept="image/*,application/pdf">'+(nx>=0?'<button class="btn sm pri" type="button" data-dk="'+nx+'">Next: '+DOCS[nx].label+' →</button>':'')+'</div></article>';
+  return '<article class="vcard k-'+d.k+(rej?" rej":"")+'">'+head+body+'<div class="vbtns">'+slotInputs(d.k,d.label,st?"Replace file":"Choose file")+(nx>=0?'<button class="btn sm pri" type="button" data-dk="'+nx+'">Next: '+DOCS[nx].label+' →</button>':'')+'</div></article>';
 }
 /* Instant feedback after each upload: the same rule engine runs on what has been read so far, and only the
    checks that involve this document are shown, in plain words with the exact fix. Nothing here decides. */
 var PHOTO_STEPS=["Put the original on a flat, dark surface in daylight, away from lamps that cause glare.","Hold the phone straight above it so all four corners are inside the frame.","Tap Replace and upload the new photo."];
+/* C1/C3/C5/C13 helpers. Wording follows the defect taxonomy; the checks are heuristics (see PHOTO_LIMITS). */
+var PHOTO_MSG={SMALL:["The photo is too small to read","Small photos lose the detail needed to read the fields."],BLUR:["The photo looks blurry","Blurred text cannot be read reliably, so you may be asked to upload again."],GLARE:["Light is reflecting off the card","A bright patch can hide part of the text."],DARK:["The photo is too dark","Dark areas hide the text, so the fields may not be read."]};
+var SELFIE_PHOTO_MSG={SMALL:PHOTO_MSG.SMALL,DARK:["The photo is too dark","We need to see your face clearly in good light."]};
+function photoHold(k,codes){
+  var sel=k==="SELFIE",lab=DOC_LABEL[k][0],
+    msg=codes.map(function(c){var m=(sel?SELFIE_PHOTO_MSG:PHOTO_MSG)[c];return m?'<div class="obs bad"><b>'+esc(m[0])+'</b><span>'+esc(m[1])+'</span></div>':''}).join(""),
+    steps=sel?["Face the front camera in daylight.","Keep your whole face in the frame, with nothing covering it.","Tap Retake photo and take a new selfie."]:PHOTO_STEPS.slice(0,2).concat(["Tap Retake photo and upload the new photo."]);
+  return msg+'<p class="small"><b>How to retake</b></p><ol class="small retake">'+steps.map(function(s){return '<li>'+esc(s)+'</li>'}).join("")+'</ol>'+
+    '<div class="vbtns"><button class="btn sm" type="button" data-act="photo-retake" data-k="'+k+'" aria-label="Retake photo, '+esc(lab)+'">Retake photo</button><button class="btn sm pri" type="button" data-act="photo-anyway" data-k="'+k+'" aria-label="Use this photo anyway, '+esc(lab)+'">Use this photo anyway</button></div>';
+}
+function goodHint(k){
+  var sel=k==="SELFIE",items=sel?["Face the camera","Good light, no harsh shadows","Nothing covering your face"]:["All four corners in the frame","Daylight, no flash glare","Nothing covering the text"],
+    ic='<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7"/></svg>';
+  return '<div class="goodhint"><p class="small"><b>'+(sel?"Good selfie":"Good photo")+'</b></p><ul>'+items.map(function(t){return '<li>'+ic+'<span>'+esc(t)+'</span></li>'}).join("")+'</ul></div>';
+}
+function versionLine(vs){
+  return '<p class="small muted vers"><b>Version history</b> '+vs.map(function(e,i){return 'v'+e.v+' · round '+e.round+' · '+esc(e.status)+(i>0?' · replaced v'+vs[i-1].v:'')}).join(' → ')+'</p>';
+}
+/* C3: "Choose file" (any allowed file) and "Take photo" / "Take selfie" (camera). Both feed the same handler (data-up). */
+function slotInputs(k,label,chooseTxt){
+  var sel=k==="SELFIE",acc=sel?"image/*":"image/*,application/pdf",take=sel?"Take selfie":"Take photo",cap=sel?"user":"environment";
+  return '<label class="btn sm" for="up-'+k+'"><span>'+esc(chooseTxt)+'<span class="sr-only">, '+esc(label)+'</span></span></label><input type="file" id="up-'+k+'" data-up="'+k+'" accept="'+acc+'">'+
+    '<label class="btn sm" for="cam-'+k+'"><span>'+take+'<span class="sr-only">, '+esc(label)+'</span></span></label><input type="file" id="cam-'+k+'" data-up="'+k+'" accept="image/*" capture="'+cap+'">';
+}
 function feedbackFor(k){
   var x=buildX(),r=decide(S.f,x,new Date(S.started)),G=GROUPS.filter(function(g){return g.doc===k})[0];
   var cs=r.checks.filter(function(c){return c.key===k||(G&&c.doc===G.g&&!c.key)});
@@ -1289,12 +1321,13 @@ function fixPanel(){
   var hi=S.lang==="hi",link="policynest.embarko.app/#apply";
   var rows=keys.map(function(k){
     var d=S.docs[k],mine=it.filter(function(i){return i.key===k}),ch=S.changed[k];
-    var stp=!ch?pill("bad","Needed"):d.status==="reading"?'<span class="pill run" id="ocr-'+k+'">Reading text</span>':d.status==="rejected"?pill("bad","Not accepted"):pill("ok","New copy read");
+    var stp=!ch?pill("bad","Needed"):d.status==="reading"?'<span class="pill run" id="ocr-'+k+'">Reading text</span>':d.status==="photo"?pill("warn","Check photo"):d.status==="rejected"?pill("bad","Not accepted"):d.status==="ok"?pill("ok","New copy read"):"";
     return '<div class="fix"><div class="fixh"><h3>'+esc(DOC_LABEL[k][0].charAt(0).toUpperCase()+DOC_LABEL[k][0].slice(1))+'</h3>'+stp+'</div>'+
       '<ul class="small" style="margin:0;padding-left:18px">'+mine.map(function(i){return '<li>'+esc(hi?i.hi:i.en)+'</li>'}).join("")+'</ul>'+
       (ch&&d.status==="ok"?'<p class="small muted">Read from the new copy: '+docSummaryX(k,d.ocr&&d.ocr.fields)+'</p>':'')+
       (ch&&d.status==="rejected"?'<div class="obs bad"><b>What to fix</b><span>'+esc(d.reason)+'</span></div>':'')+
-      '<div class="vbtns"><label class="btn sm" for="up-'+k+'"><span>Upload new photo<span class="sr-only">, '+DOC_LABEL[k][0]+'</span></span></label><input type="file" id="up-'+k+'" data-up="'+k+'" accept="image/*,application/pdf"></div></div>';
+      (ch&&d.status==="photo"?photoHold(k,d.photo):'')+
+      '<div class="vbtns">'+slotInputs(k,DOC_LABEL[k][0],"Choose new file")+'</div></div>';
   }).join("");
   var demo=demoBox('<div class="demo-rows">'+keys.map(function(k){return '<div class="demo-row"><b>'+DOC_LABEL[k][0]+'</b>'+specCtl(k)+'</div>'}).join("")+'</div>');
   var ready=fixesReady();
@@ -1401,10 +1434,35 @@ function getWorker(){
   ocrW.catch(function(){ocrW=null});
   return ocrW;
 }
+/* C2: decode with the EXIF orientation applied, then keep the canvas at most MAX_SIDE px on its longest side.
+   The original size is kept on the canvas (origW, origH, origShort) for the photo check (C1). */
+var MAX_SIDE=1920;
 async function toCanvas(file){
-  var bmp; try{bmp=await createImageBitmap(file)}catch(e){bmp=await new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im)};im.onerror=function(){rej(new Error("image"))};var fr=new FileReader();fr.onload=function(){im.src=fr.result};fr.onerror=function(){rej(new Error("image"))};fr.readAsDataURL(file)})}
-  var mx=Math.max(bmp.width,bmp.height),s=mx<1000?Math.min(2.5,1000/mx):Math.min(1,1800/mx);
-  var c=document.createElement("canvas");c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);return c;
+  var bmp; try{bmp=await createImageBitmap(file,{imageOrientation:"from-image"})}catch(e){bmp=await new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im)};im.onerror=function(){rej(new Error("image"))};var fr=new FileReader();fr.onload=function(){im.src=fr.result};fr.onerror=function(){rej(new Error("image"))};fr.readAsDataURL(file)})}
+  var ow=bmp.naturalWidth||bmp.width,oh=bmp.naturalHeight||bmp.height;
+  var mx=Math.max(ow,oh),s=mx<1000?Math.min(2.5,1000/mx):Math.min(1,MAX_SIDE/mx);
+  var c=document.createElement("canvas");c.width=Math.max(1,Math.round(ow*s));c.height=Math.max(1,Math.round(oh*s));c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+  c.origW=ow;c.origH=oh;c.origShort=Math.min(ow,oh);
+  if(bmp.close) try{bmp.close()}catch(e){}
+  return c;
+}
+/* C1: photo quality, before OCR. These are HEURISTICS on a reduced grey copy, not a verdict: OCR confidence (§4.1) still decides.
+   Named limits, tuned by eye on synthetic and generated images only. Real phone photos have not been tested. */
+var PHOTO_LIMITS={side:512,blurVar:40,glareShare:0.5,darkMean:60,minShort:600};
+function photoQuality(c,isSelfie){
+  var codes=[];
+  if(c.origShort&&c.origShort<PHOTO_LIMITS.minShort) codes.push("SMALL");
+  var f=Math.min(1,PHOTO_LIMITS.side/Math.max(c.width,c.height)),t=document.createElement("canvas");
+  t.width=Math.max(1,Math.round(c.width*f));t.height=Math.max(1,Math.round(c.height*f));
+  var ctx=t.getContext("2d");ctx.drawImage(c,0,0,t.width,t.height);
+  var px=ctx.getImageData(0,0,t.width,t.height).data,n=t.width*t.height,g=new Float32Array(n),sum=0,clip=0,i;
+  for(i=0;i<n;i++){var p=i*4,v=0.299*px[p]+0.587*px[p+1]+0.114*px[p+2];g[i]=v;sum+=v;if(v>=250)clip++}
+  var mean=sum/n,W=t.width,H=t.height,ls=0,lq=0,cnt=0;
+  for(var y=1;y<H-1;y++)for(var x=1;x<W-1;x++){var j=y*W+x,L=4*g[j]-g[j-1]-g[j+1]-g[j-W]-g[j+W];ls+=L;lq+=L*L;cnt++}
+  var lv=cnt?lq/cnt-(ls/cnt)*(ls/cnt):0;
+  if(!isSelfie){ if(lv<PHOTO_LIMITS.blurVar) codes.push("BLUR"); if(clip/n>=PHOTO_LIMITS.glareShare) codes.push("GLARE"); }
+  if(mean<PHOTO_LIMITS.darkMean) codes.push("DARK");
+  return codes;
 }
 async function pdfFirstPage(file){
   if(!window.pdfjsLib){await withTimeout(loadScript(PDFJS),30000);window.pdfjsLib.GlobalWorkerOptions.workerSrc=WEB?new URL("pdf-worker.js",location.href).href:PDFW}
@@ -1416,13 +1474,34 @@ async function pdfFirstPage(file){
   return {canvas:c,text:text};
 }
 function thumbOf(c){var t=document.createElement("canvas"),s=Math.min(1,260/Math.max(c.width,c.height));t.width=Math.max(1,Math.round(c.width*s));t.height=Math.max(1,Math.round(c.height*s));t.getContext("2d").drawImage(c,0,0,t.width,t.height);return t.toDataURL("image/jpeg",.7)}
-async function readDoc(k,file){
-  var isPdf=file.type==="application/pdf"||/\.pdf$/i.test(file.name),c,thumb=null,faces=null;
+async function readDoc(k,file,force){
+  var isPdf=file.type==="application/pdf"||/\.pdf$/i.test(file.name),c,thumb=null;
   if(isPdf){var r=await pdfFirstPage(file);c=r.canvas;thumb=thumbOf(c); if(r.text.replace(/\s/g,"").length>40) return {text:r.text,conf:0.99,src:"PDF text layer",thumb:thumb,faces:null}}
-  else {c=await toCanvas(file);thumb=thumbOf(c)}
+  else {c=await toCanvas(file);thumb=thumbOf(c);
+    /* C1: a photo that fails the quality check is held before OCR, unless the applicant chose "Use this photo anyway" (force). */
+    if(!force){var codes=photoQuality(c,k==="SELFIE");if(codes.length) return {hold:true,canvas:c,thumb:thumb,codes:codes}}}
+  return ocrCanvas(k,c,thumb);
+}
+async function ocrCanvas(k,c,thumb){
+  var faces=null;
   if(k==="SELFIE"&&"FaceDetector" in window){try{faces=(await new window.FaceDetector().detect(c)).length}catch(e){faces=null}}
   var w=await getWorker(),out=await withTimeout(w.recognize(c),120000);
   return {text:out.data.text||"",conf:(out.data.confidence||0)/100,src:"On-device OCR",thumb:thumb,faces:faces};
+}
+/* C4: SHA-256 of the file's bytes, first 16 hex characters. null when crypto.subtle is unavailable. */
+async function hashOf(file){
+  try{ if(!(window.crypto&&crypto.subtle)||!file.arrayBuffer) return null;
+    var dg=new Uint8Array(await crypto.subtle.digest("SHA-256",await file.arrayBuffer())),h="";
+    for(var i=0;i<dg.length;i++) h+=("0"+dg[i].toString(16)).slice(-2);
+    return h.slice(0,16);
+  }catch(e){return null}
+}
+/* C5: a version entry per accepted or refused upload into a slot. Metadata only, never the image. */
+function addVersion(d,status){
+  var vs=(d.versions||[]).slice();
+  vs.push({v:vs.length+1,round:S.round,t:Date.now(),hash16:d.file?(d.hash||"unknown"):"specimen",status:status});
+  d.versions=vs; var e=vs[vs.length-1];
+  log("DOC_VERSION:"+d.k,"SYSTEM","v"+e.v+" · round "+e.round+" · "+status);
 }
 function art(s){return (/^[AEIOU]/i.test(s)?"an ":"a ")+s}
 function classify(T){
@@ -1463,12 +1542,15 @@ function judge(k,r,file){
   o.fields=parseDoc(k,r.text,r.conf); /* only the parsed fields are kept; the raw OCR text is dropped here */
   return o;
 }
-function addDoc(k,file){
+/* Uploads held by the photo check (C1), by slot: the File is kept here in memory only, never in S or the save. */
+var PHOTO_HOLD={};
+function addDoc(k,file,force){
   var old=S.docs[k]; if(old&&old.url&&old.url.indexOf("blob:")===0) try{URL.revokeObjectURL(old.url)}catch(e){}
   /* Specimens are built from the typed details, so a blank application cannot take one. */
   if(!file&&(!S.f.name||!S.f.pan)){ S.docs[k]={status:"rejected",file:false,name:"Synthetic placeholder",url:null,ocr:null,reason:"Fill in your details first (Back to details, then Demo controls, Load sample applicant), then use a specimen."}; render(); return; }
   if(S.decision==="NEEDS_MORE_INFO"&&!S.rechecking) S.changed[k]=true; /* a fix for the open follow-up */
-  var d={status:"reading",file:!!file,name:file?file.name:"Synthetic placeholder",url:null,ocr:null,reason:""};
+  var d={k:k,status:"reading",file:!!file,name:file?file.name:"Synthetic placeholder",url:null,ocr:null,reason:"",versions:(old&&old.versions)?old.versions.slice():[]};
+  delete PHOTO_HOLD[k];
   S.docs[k]=d; render();
   if(!file){ setTimeout(function(){ if(S.docs[k]!==d) return;
       var vv=S.specv[k]||"clean",vl=(VARIANTS[k].filter(function(o){return o[0]===vv})[0]||["","Clean"])[1];
@@ -1476,19 +1558,45 @@ function addDoc(k,file){
       var vlc=vl.replace(/\s*·\s*T\d+\s*$/,""); /* the test tag stays in the audit log only */
       d.name=vlc;
       d.ocr={det:SLOT[k].want,detName:"Synthetic specimen ("+SLOT[k].n+", "+vlc.toLowerCase()+")",src:k==="SELFIE"?"Specimen photo (synthetic)":"Specimen text",conf:0.97,words:0,found:[],fields:fl,spec:true};
-      d.ocr.conf=vv==="blurry"?0.61:0.97; d.status="ok"; S.lastDocAt=Date.now(); afterDoc(k); cheerDoc(k); log((S.changed[k]?"DOC_REUPLOADED:":"DOC_UPLOADED:")+k,"APPLICANT","Specimen ("+vl+"): synthetic document text built from the typed details, read by the same parser"+(fl.missing.length?" · not read: "+fl.missing.join(", "):"")); render(); },500+Math.random()*400); return; }
-  if(!/^image\//.test(file.type)&&file.type!=="application/pdf"&&!/\.pdf$/i.test(file.name)){ d.status="rejected"; d.reason="This file type is not supported. Upload a JPG, PNG or PDF."; render(); return; }
-  ocrChain=ocrChain.then(function(){ if(S.docs[k]!==d) return null; curKey=k; return readDoc(k,file); }).then(function(r){
+      d.ocr.conf=vv==="blurry"?0.61:0.97; d.status="ok"; addVersion(d,"accepted"); S.lastDocAt=Date.now(); afterDoc(k); cheerDoc(k); log((S.changed[k]?"DOC_REUPLOADED:":"DOC_UPLOADED:")+k,"APPLICANT","Specimen ("+vl+"): synthetic document text built from the typed details, read by the same parser"+(fl.missing.length?" · not read: "+fl.missing.join(", "):"")); render(); },500+Math.random()*400); return; }
+  if(!/^image\//.test(file.type)&&file.type!=="application/pdf"&&!/\.pdf$/i.test(file.name)){ d.status="rejected"; d.reason="This file type is not supported. Upload a JPG, PNG or PDF."; addVersion(d,"refused"); render(); return; }
+  /* C3: the selfie slot takes images only. */
+  if(k==="SELFIE"&&!/^image\//.test(file.type)){ d.status="rejected"; d.reason="A selfie must be a photo (JPG or PNG), not a PDF. Take a selfie or choose a photo of your face."; addVersion(d,"refused"); render(); return; }
+  ocrChain=ocrChain.then(function(){ if(S.docs[k]!==d) return null;
+    /* C4: the same file in two slots is refused before any OCR runs. */
+    return hashOf(file).then(function(h){
+      if(S.docs[k]!==d) return null;
+      d.hash=h||undefined;
+      var dup=h&&DOCS.filter(function(o){return o.k!==k&&S.docs[o.k]&&S.docs[o.k].status==="ok"&&S.docs[o.k].hash===h})[0];
+      if(dup) return {dup:dup.k};
+      curKey=k; return readDoc(k,file,force);
+    });
+  }).then(function(r){
     curKey=null; if(!r||S.docs[k]!==d) return;
+    if(r.dup){ d.status="rejected"; d.reason="This is the same file you used for your "+slotName(r.dup)+". Please add your "+slotName(k)+" instead.";
+      log("DOC_REJECTED:"+k,"SYSTEM","Same file as "+r.dup+" · no OCR run"); addVersion(d,"refused"); afterDoc(k); render(); return; }
+    if(r.hold){ /* C1: show the photo card and wait for the applicant; OCR has not run */
+      PHOTO_HOLD[k]={file:file}; d.status="photo"; d.photo=r.codes; d.url=r.thumb||null;
+      log("PHOTO_CHECK:"+k,"APPLICANT","Held before reading: "+r.codes.join(", "));
+      render();
+      announce("The photo for your "+DOC_LABEL[k][0]+" may be hard to read. Choose Retake photo or Use this photo anyway.");
+      var hb=document.querySelector('[data-act="photo-retake"][data-k="'+k+'"]'); if(hb) hb.focus();
+      return; }
+    if(!force&&/^image\//.test(file.type)) log("PHOTO_CHECK:"+k,"APPLICANT","Photo check passed");
     var v=judge(k,r,file); if(r.thumb) d.url=r.thumb;
-    d.ocr=v; d.status=v.ok?"ok":"rejected"; d.reason=v.msg; if(v.ok) S.lastDocAt=Date.now(); afterDoc(k); if(v.ok) cheerDoc(k);
+    d.ocr=v; d.status=v.ok?"ok":"rejected"; d.reason=v.msg; if(v.ok) S.lastDocAt=Date.now(); addVersion(d,v.ok?"accepted":"refused"); afterDoc(k); if(v.ok) cheerDoc(k);
     log((v.ok?(S.changed[k]?"DOC_REUPLOAD_ACCEPTED:":"DOC_ACCEPTED:"):"DOC_REJECTED:")+k,"SYSTEM",v.ok?"Recognised as "+v.detName+" · "+v.src+" · confidence "+v.conf.toFixed(2)+(v.fields&&v.fields.missing.length?" · not read: "+v.fields.missing.join(", "):""):"Wrong or unreadable document"+(TYPE_NAME[v.det]?" (looks like "+TYPE_NAME[v.det]+")":"")+" · applicant asked to re-upload");
     render();
   },function(e){
     curKey=null; if(S.docs[k]!==d) return;
-    d.status="rejected"; d.reason=(e&&(e.message==="load"||e.message==="timeout"))?"The OCR engine could not load here. Check your internet connection, or open the local copy of this page in your browser.":"We could not open this file. Upload a JPG, PNG or PDF of the document."; afterDoc(k); render();
+    d.status="rejected"; d.reason=(e&&(e.message==="load"||e.message==="timeout"))?"The OCR engine could not load here. Check your internet connection, or open the local copy of this page in your browser.":"We could not open this file. Upload a JPG, PNG or PDF of the document."; addVersion(d,"refused"); afterDoc(k); render();
   });
 }
+/* C1 card actions: retake opens this slot's file chooser; "use anyway" runs OCR on the same file. */
+/* Duplicate-file wording: the two Aadhaar sides must read differently. */
+function slotName(k){ return k==="AADHAAR_FRONT"?"Aadhaar card (front side)":DOC_LABEL[k][0]; }
+function photoRetake(k){ var i=document.getElementById("up-"+k); if(i) i.click(); }
+function photoAnyway(k){ var h=PHOTO_HOLD[k]; if(!h||!h.file) return; log("PHOTO_CHECK:"+k,"APPLICANT","Applicant chose to use the photo anyway"); addDoc(k,h.file,true); }
 /* FR-23: time to decision runs from t0 (the later of the last accepted document and Submit) to S.decAt,
    the moment the decision object exists. The reveal animation is not part of it. */
 /* One place for the time-to-decision text. The engine takes milliseconds, so anything under a second reads "under 1 s". */
@@ -1596,6 +1704,8 @@ document.addEventListener("click",function(e){
   else if(a==="cp-close"){ cpOpen(false); }
   else if(a.indexOf("m-")===0){ modalAct(a); }
   else if(a==="spec-all"){ DOCS.forEach(function(d){ if(!S.docs[d.k]) addDoc(d.k,null); }); }
+  else if(a==="photo-retake"){ photoRetake(t.getAttribute("data-k")); }
+  else if(a==="photo-anyway"){ photoAnyway(t.getAttribute("data-k")); }
   else if(a==="submit"){ if(allDocs()) submit(); }
   else if(a==="resubmit"){ if(fixesReady()) recheck(); }
   else if(a==="theme"){ THEME=THEME==="dark"?"light":"dark"; try{localStorage.setItem("pn-theme",THEME)}catch(e){} applyTheme(); }
@@ -1864,7 +1974,7 @@ function modalAct(a){
 }
 document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!$("cp").hidden){ cpOpen(false); } });
 /* Leaving the focused screen: warn and log, never wipe. Opening the file picker or camera does not count. */
-document.addEventListener("click",function(e){ if(e.target.closest&&e.target.closest('label[for^="up-"],input[type=file]')){ PICKING=true; setTimeout(function(){PICKING=false},60000); } },true);
+document.addEventListener("click",function(e){ if(e.target.closest&&e.target.closest('label[for^="up-"],label[for^="cam-"],input[type=file]')){ PICKING=true; setTimeout(function(){PICKING=false},60000); } },true);
 window.addEventListener("focus",function(){ setTimeout(function(){PICKING=false},1500); });
 function watching(){return S.focus&&S.sess&&!S.sess.ended&&S.step<2&&VIEW==="apply"}
 /* Desktop only: a hidden page during a sitting is a focus exit. Touch devices get no exit warnings. No duration is logged. */
@@ -1913,7 +2023,8 @@ function restore(){
     if(S.obs&&typeof S.obs==="object") Object.keys(S.obs).forEach(function(k){ S.obs[k]=scrubEv(S.obs[k]); });
     if(S.review) S.review.note="";
     S.consentAt=S.consentAt||null;
-    Object.keys(S.docs).forEach(function(k){ var d=S.docs[k]; if(d.status==="reading") delete S.docs[k]; else d.restored=true; });
+    /* An upload still reading or held by the photo check cannot resume (its file is not saved). Its version history is kept. */
+    Object.keys(S.docs).forEach(function(k){ var d=S.docs[k]; if(d.status==="reading"||d.status==="photo"){ if(d.versions&&d.versions.length) S.docs[k]={status:"rejected",file:!!d.file,name:d.name||"",url:null,ocr:null,reason:"That upload was not finished before the page was closed. Please upload it again.",versions:d.versions}; else delete S.docs[k]; } else d.restored=true; });
     if(S.status==="IN_REVIEW"&&S.checks.length){ S.shown=S.checks.length; }
     log("PROGRESS_RESTORED","SYSTEM","Saved progress restored on this device · "+Math.round(days*24)+" h since last save");
     return true; }catch(e){ return false; }
