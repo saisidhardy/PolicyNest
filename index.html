@@ -2364,7 +2364,7 @@ function roleOf(k){ var key=(k===undefined)?ROLE:k; for(var i=0;i<ROLES.length;i
 function canSee(v){ var r=roleOf(); return !!r&&r.views.indexOf(v)>=0 }
 function rolesFor(v){ return ROLES.filter(function(r){return r.k!=="all"&&r.views.indexOf(v)>=0}) }
 function rvRoleNote(){ var r=roleOf(); return " · demo role: "+(r?r.label:"not set") }
-function roleChrome(){ var c=$("rolechip"); if(c) c.textContent="Viewing as "+roleOf().label+" · demo"; var s=$("role-sel"); if(s&&s.value!==ROLE) s.value=ROLE }
+function roleChrome(){ var c=$("rolechip"); if(c) c.textContent="Viewing as "+roleOf().label.replace(/ \(demo\)$/,"")+" · demo"; var s=$("role-sel"); if(s&&s.value!==ROLE) s.value=ROLE }
 function setRole(k,goto){
   var r=roleOf(k); if(!r) return;
   ROLE=k; try{ localStorage.setItem("pn-role",k) }catch(e){}
