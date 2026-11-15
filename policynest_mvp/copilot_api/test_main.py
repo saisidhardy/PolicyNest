@@ -149,6 +149,28 @@ class ProxyContract(unittest.TestCase):
         self.assertTrue(h["ok"])
         self.assertEqual(h["model"], main.MODEL)
 
+    def test_cookie_login_refresh_logout(self):
+        import http.cookiejar
+        import secrets
+        os.environ['JWT_SECRET'] = 'test-only-long-enough-cookie-signing-secret'
+        jar = http.cookiejar.CookieJar()
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+        def request(path, body=None):
+            req = urllib.request.Request(self.url + path, data=None if body is None else json.dumps(body).encode(),
+                                         headers={'Origin': SITE, 'Content-Type': 'application/json'})
+            return opener.open(req)
+        email = secrets.token_hex(8) + '@example.test'
+        with request('/api/auth/register', {'email': email, 'password': 'correct horse battery', 'display_name': 'Test Applicant', 'role': 'reviewer'}) as r:
+            data = json.loads(r.read())
+            self.assertEqual(data['user']['role'], 'applicant')
+            self.assertNotIn('token', data)
+            self.assertTrue(all('HttpOnly' in c for c in r.headers.get_all('Set-Cookie')))
+        with request('/api/auth/me') as r: self.assertEqual(json.loads(r.read())['user']['email'], email)
+        with request('/api/auth/refresh', {}) as r: self.assertEqual(r.status, 200)
+        with request('/api/auth/logout', {}) as r: self.assertEqual(r.status, 200)
+        with self.assertRaises(urllib.error.HTTPError) as error: request('/api/auth/me')
+        self.assertEqual(error.exception.code, 401)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -1,10 +1,10 @@
 {
- "run_at": "2026-11-14T19:58:47.068Z",
+ "run_at": "2026-11-15T13:34:09.764Z",
  "engine": "policy-engine 3.4.0 · rulebook v3.2 · OCR-read cross-checks · simulated external services",
  "engine_sha256": "c206388747e8381e0ce21f7677cfb83594b51db9f6581b6aca3f1d1ed9824350",
  "n": 600,
  "accuracy": 1,
- "engine_ms_per_application": 0.04275183333333336,
+ "engine_ms_per_application": 0.11846349999999992,
  "confusion_rows_truth_cols_pred": {
   "APPROVE": {
    "APPROVE": 364,

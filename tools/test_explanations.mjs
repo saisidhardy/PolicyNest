@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const html=fs.readFileSync('policynest_mvp/PolicyNest.html','utf8');
+const block=html.slice(html.indexOf('/* ENGINE:START'),html.indexOf('/* ENGINE:END */'));
+const adapter=html.slice(html.indexOf('function safeRejectReasons'),html.indexOf('function validate'));
+const explain=new Function(block+'\n'+adapter+';return safeRejectReasons')();
+const checks=[{res:'REJECT',code:'UNDERAGE',rule:'§2'},{res:'REJECT',code:'EDU_NOT_ELIGIBLE',rule:'§2',label:'Declared education'}];
+const dated=explain(checks,{},'2012-06-01');assert.equal(dated.length,2);assert.match(dated[0].en,/2030/);
+const unknown=explain(checks,{},null);assert.equal(unknown.length,2);assert.ok(unknown.some(r=>r.code==='EDU_NOT_ELIGIBLE'));
+console.log('PASS F-10 typed DOB fallback and multi-issue explanations without engine changes');
