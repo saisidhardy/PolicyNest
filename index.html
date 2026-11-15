@@ -126,6 +126,10 @@ p{margin:0} button,input,select{font:inherit;color:inherit}
 details.demo{background:var(--sunken);border-radius:12px;padding:10px 14px;font-size:.85rem}
 details.demo>summary{cursor:pointer;font-weight:700;min-height:32px;display:flex;align-items:center}
 details.demo .demo-body{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.scn{display:flex;flex-direction:column;gap:6px} .scn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center} .scn-row .sel{flex:1 1 220px}
+.ifsc-line{display:block}
+details.rules-applied{padding:14px 16px} details.rules-applied>summary{cursor:pointer;font-weight:700;min-height:32px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+details.rules-applied .rules-wrap{margin-top:10px}
 .demo-rows{display:flex;flex-direction:column;gap:8px}
 .demo-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
@@ -1172,6 +1176,16 @@ function renderEval(){
   $("view-eval").innerHTML=head+'<div class="bento">'+note+engineBox()+g+heat+prs+reasons+fair+first+nm+simb+pmt+'</div>';
 }
 var AUDF="ALL";
+/* C11: read-only "Rules applied" panel. Derived from the engine's own S.checks; no rule editing. */
+var RULES_OPEN=false,RES_WORDS={PASS:"Passed",INFO:"Noted",NEEDS_INFO:"Asked the applicant",HUMAN:"A person decides",REJECT:"Not accepted",PENDING:"Not checked yet"};
+function ruleResult(c){ if(c.reviewer) return "Passed (confirmed by a reviewer)"; return RES_WORDS[c.res]||String(c.res||"—"); }
+function rulesPanel(){
+  var cs=S.decision&&S.checks&&S.checks.length?S.checks:null;
+  /* Codes for neutral-only checks are never printed (applicant-visible copy); FACE_MATCH_LOW_REPEAT shows as FACE_MATCH_LOW, as elsewhere. */
+  var ruleCode=function(c){ var cd=c.code==="FACE_MATCH_LOW_REPEAT"?"FACE_MATCH_LOW":(NEUTRAL_CODES[c.code]?"":c.code); return cd?' <span class="mono small muted">'+esc(cd)+'</span>':''; };
+  var body=cs?'<div class="rules-wrap" role="region" aria-label="Rules applied table" tabindex="0" style="overflow-x:auto"><table><caption class="sr-only">Every check the engine ran, with its rulebook section and result</caption><thead><tr><th>Group</th><th>Check</th><th>Rule</th><th>Result</th></tr></thead><tbody>'+cs.map(function(c){return '<tr><td>'+esc(c.doc||"—")+'</td><td>'+esc(c.label||"—")+ruleCode(c)+'</td><td class="mono">'+esc(c.rule||"—")+'</td><td>'+esc(ruleResult(c))+'</td></tr>'}).join("")+'</tbody></table></div>':'<p class="small muted">Appears after the first decision.</p>';
+  return '<details class="box rules-applied"'+(RULES_OPEN?' open':'')+'><summary><span>Rules applied</span><span class="small muted">'+(cs?cs.length+' checks, with rulebook section and result':'Appears after the first decision')+'</span></summary><p class="small muted">Every check the engine ran on this application, with its rulebook section. Read-only, for the ops and compliance view.</p>'+body+'</details>';
+}
 function renderAudit(){
   var ev=S.events,act={};ev.forEach(function(e){act[e.actor]=(act[e.actor]||0)+1});
   var head='<div class="hello"><div><p class="muted small"><span class="mono">'+S.appId+'</span> · '+esc(ENGINE)+'</p><h1>Audit trail</h1><p class="small muted">Ops and compliance view (this demo shows both roles)</p></div><div class="kpis">'+
@@ -1182,7 +1196,7 @@ function renderAudit(){
   var list=ev.filter(function(e){return AUDF==="ALL"||e.actor===AUDF}).slice().reverse();
   var tl='<div class="box"><div class="bh" style="flex-wrap:wrap"><div><h2>Timeline</h2><p class="small muted">Newest first. Every decision names its rule and engine version.</p></div><div class="ftabs" role="group" aria-label="Filter by actor">'+F.map(function(f){return '<button type="button" data-audf="'+f[0]+'" aria-pressed="'+(AUDF===f[0])+'">'+f[1]+' '+f[2]+'</button>'}).join("")+'</div></div>'+
     '<ol class="tl">'+list.map(function(e){return '<li><span class="t">'+clock(e.t)+'</span><span class="rail"><i class="a-'+e.actor+'"></i></span><div class="ev2"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>'+esc(e.event)+'</b><span class="chip n">'+esc(e.actor.toLowerCase().replace("_engine",""))+'</span><span class="chip n">round '+(e.round||1)+'</span><span class="chip n">'+esc(e.state)+'</span>'+(e.engine?'<span class="chip n">'+esc(e.engine.split(" · ")[0])+' · hash '+esc(e.hash||"")+'</span>':'')+(e.audience==="internal"?'<span class="chip w">internal</span>':'')+'</div>'+(e.note?'<p>'+esc(e.note)+'</p>':'')+(e.rules?'<p class="small muted">Rules behind it: '+esc(e.rules)+'</p>':'')+'</div></li>'}).join("")+'</ol>'+(list.length?'':'<div class="empty">No events from this actor yet.</div>')+'</div>';
-  $("view-audit").innerHTML=head+rounds+tl;
+  $("view-audit").innerHTML=head+rounds+rulesPanel()+tl;
 }
 /* ---------- Applicant view ---------- */
 function fld(id,label,type,hint,full,extra){
@@ -1195,6 +1209,23 @@ var DPAGES=[
  {t:"Your ID numbers",d:"Your PAN, and only the last four digits of your Aadhaar.",f:["pan","aadhaar4"]},
  {t:"How we reach you",d:"Where we send your one follow-up message, if one is needed, and where you will work.",f:["mobile","email","state","city"]},
  {t:"Bank account and consent",d:"Commission is paid only into an account in your own name.",f:["acct","ifsc","consent"]}];
+/* C8: offline IFSC helper. Bank names come from this bundled table only (first four letters of the IFSC). No lookup is sent anywhere. */
+var IFSC_BANKS={SBIN:"State Bank of India",HDFC:"HDFC Bank",ICIC:"ICICI Bank",UTIB:"Axis Bank",KKBK:"Kotak Mahindra Bank",PUNB:"Punjab National Bank",BARB:"Bank of Baroda",CNRB:"Canara Bank",UBIN:"Union Bank of India",IDIB:"Indian Bank",IOBA:"Indian Overseas Bank",BKID:"Bank of India",MAHB:"Bank of Maharashtra",UCBA:"UCO Bank",CBIN:"Central Bank of India",PSIB:"Punjab & Sind Bank",YESB:"Yes Bank",INDB:"IndusInd Bank",IDFB:"IDFC FIRST Bank",FDRL:"Federal Bank",KARB:"Karnataka Bank",SIBL:"South Indian Bank",AUBL:"AU Small Finance Bank",RATN:"RBL Bank",DBSS:"DBS Bank India",CIUB:"City Union Bank",KVBL:"Karur Vysya Bank",TMBL:"Tamilnad Mercantile Bank",JAKA:"Jammu and Kashmir Bank",DCBL:"DCB Bank",BDBL:"Bandhan Bank"};
+function ifscHint(v){
+  v=String(v||"").toUpperCase();
+  var fmt=/^[A-Z]{4}0[A-Z0-9]{6}$/.test(v),parts=[],bank="";
+  /* Kept short: this text is the aria-live region, read on each keystroke. The "no lookup" note is a separate static span (ifscField). */
+  if(!v) parts.push("Four letters, a zero, then six letters or digits.");
+  else if(v.length<11) parts.push("Keep typing.");
+  else if(!fmt) parts.push("Format does not match: four letters, a zero, then six letters or digits.");
+  else parts.push("Format looks right.");
+  if(/^[A-Z]{4}/.test(v)){ var code=v.slice(0,4); bank=Object.prototype.hasOwnProperty.call(IFSC_BANKS,code)?"Bank: "+IFSC_BANKS[code]+".":"Bank not in this demo's offline list (that is fine)."; parts.push(bank); }
+  return parts.join(" ");
+}
+function ifscField(){
+  var e=S.errs.ifsc;
+  return '<div class="fld'+(e?" bad":"")+'"><label for="f-ifsc">IFSC</label><input id="f-ifsc" data-f="ifsc" type="text" value="'+esc(S.f.ifsc)+'" maxlength="11" style="text-transform:uppercase" autocomplete="off" aria-describedby="'+(e?'err-ifsc ':'')+'ifsc-hint ifsc-note"'+(e?' aria-invalid="true"':'')+'>'+(e?'<span class="err" id="err-ifsc">'+e+'</span>':'')+'<span class="hint" id="ifsc-hint" aria-live="polite">'+esc(ifscHint(S.f.ifsc))+'</span><span class="hint" id="ifsc-note">Checked on this device; no lookup is sent anywhere.</span></div>';
+}
 function fieldHtml(id){
   if(id==="name") return fld("name","Full name as on PAN","text","",true,'autocomplete="name"');
   if(id==="dob") return fld("dob","Date of birth","date","You must be 18 or older");
@@ -1204,17 +1235,35 @@ function fieldHtml(id){
   if(id==="email") return fld("email","Email","email","",false);
   if(id==="city") return fld("city","City","text","");
   if(id==="acct") return fld("acct","Account number","text","Savings or current account in your own name",false,'inputmode="numeric" maxlength="18" autocomplete="off"');
-  if(id==="ifsc") return fld("ifsc","IFSC","text","Four letters, a zero, six characters",false,'maxlength="11" style="text-transform:uppercase" autocomplete="off"');
+  if(id==="ifsc") return ifscField();
   if(id==="education") return '<div class="fld'+(S.errs.education?" bad":"")+'"><label for="f-education">Highest education</label><select id="f-education" data-f="education"'+(S.errs.education?' aria-invalid="true" aria-describedby="err-education"':'')+'><option value="">Choose</option>'+["Class 8 or below","Class 10","Class 12","Graduate","Post-graduate"].map(function(s){return '<option'+(s===S.f.education?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.education?'<span class="err" id="err-education">'+S.errs.education+'</span>':'<span class="hint">Class 10 pass is the minimum</span>')+'</div>';
   if(id==="state") return '<div class="fld'+(S.errs.state?" bad":"")+'"><label for="f-state">State</label><select id="f-state" data-f="state"'+(S.errs.state?' aria-invalid="true" aria-describedby="err-state"':'')+'><option value="">Choose</option>'+STATE_LIST.map(function(s){return '<option'+(s===S.f.state?" selected":"")+'>'+s+'</option>'}).join("")+'</select>'+(S.errs.state?'<span class="err" id="err-state">'+S.errs.state+'</span>':'')+'</div>';
   if(id==="consent") return '<div class="fld full"><label class="consent" for="f-consent"><input id="f-consent" data-f="consent" type="checkbox"'+(S.f.consent?" checked":"")+(S.errs.consent?' aria-invalid="true" aria-describedby="err-consent"':'')+'><span>I consent to PolicyNest processing my identity, education and bank documents solely to assess and register me as a Point of Sales Person, as described under the Digital Personal Data Protection Act, 2023. I can withdraw consent at any time.</span></label>'+(S.errs.consent?'<span class="err" id="err-consent">'+S.errs.consent+'</span>':'')+'</div>';
   return "";
 }
+/* C9: scenario launcher (inside Demo controls only). Labels follow brief Table 6. T10 uses the T5 variants. */
+var SCENARIOS=[["T1","T1 · Clean application, every document agrees"],["T2","T2 · Marksheet shows the name with initials"],["T3","T3 · Marksheet spells the name differently"],["T4","T4 · Different person on Aadhaar and marksheet"],["T5","T5 · Blurry marksheet, DOB unreadable, parent's bank account"],["T6","T6 · Company PAN (fourth character C)"],["T7","T7 · Aadhaar DOB one year off the PAN"],["T8","T8 · Face-match score 0.68"],["T9","T9 · Other address state on Aadhaar"],["T10","T10 · Corrected marksheet after a follow-up"]];
+function scenarioChip(note){
+  if(!S.scenario) return "";
+  return '<span class="chip">Scenario '+esc(S.scenario)+' set</span>'+(note&&S.scenario==="T10"?'<p class="small muted">After the follow-up, replace the two documents with clean specimens and re-check.</p>':"");
+}
+function scenarioUI(){
+  var cur=S.scnPick||"T1",hasDocs=Object.keys(S.docs||{}).length>0;
+  /* Set up overwrites the form and specimen choices, so it is offered only before any document has been added. */
+  return '<div class="scn"><label for="scn-sel"><b>Run a test scenario</b></label><div class="scn-row"><select id="scn-sel" class="sel" data-scn="1">'+SCENARIOS.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===cur?" selected":"")+'>'+esc(s[1])+'</option>'}).join("")+'</select>'+(hasDocs?'':'<button class="btn sm" type="button" data-act="scn-setup">Set up</button>')+'</div><p class="small muted">'+(hasDocs?'Documents are already added to this application, so the scenario cannot be set up again on it.':'Loads the sample applicant and sets the specimen variants for the chosen scenario. Synthetic data, labelled as a demo.')+'</p>'+scenarioChip(false)+'</div>';
+}
+/* Runs once when the documents page first renders after Set up; the applicant can change any picker afterwards. */
+function applyScenario(){
+  if(!S.scenario||S.scenarioApplied) return;
+  S.scenarioApplied=true;
+  var n=S.scenario==="T10"?"5":S.scenario.slice(1),re=new RegExp("\\u00b7 T"+n+"$");
+  Object.keys(VARIANTS).forEach(function(k){ var hit=null; VARIANTS[k].forEach(function(o){ if(!hit&&re.test(o[1])) hit=o[0]; }); S.specv[k]=hit||"clean"; });
+}
 function stepDetails(){
   var P=DPAGES[S.dpage]||DPAGES[0],last=S.dpage===DPAGES.length-1;
   return '<div class="split"><div class="panel"><div class="head"><span class="small muted">Your details · page '+(S.dpage+1)+' of '+DPAGES.length+'</span><div class="pages" aria-hidden="true">'+DPAGES.map(function(_,i){return '<i class="'+(i<=S.dpage?"on":"")+'"></i>'}).join("")+'</div><h1>'+P.t+'</h1><p>'+P.d+'</p></div>'+
   (S.dpage===0?(S.isSample?'<div class="note"><span><b>Sample applicant loaded.</b> These are synthetic example details. Continue with them or replace them with your own.</span><button class="btn sm" type="button" data-act="clear">Clear form</button></div>':''):'')+
-  (S.dpage===0?demoBox('<p class="small muted">To see the flow quickly, load a synthetic applicant. Its details are invented.</p><button class="btn sm" type="button" data-act="sample">Load sample applicant</button>'):'')+
+  (S.dpage===0?demoBox('<p class="small muted">To see the flow quickly, load a synthetic applicant. Its details are invented.</p><button class="btn sm" type="button" data-act="sample">Load sample applicant</button>'+scenarioUI()):'')+
   '<form id="f-form" class="grid" novalidate>'+P.f.map(fieldHtml).join("")+'</form>'+
   '<div class="actions">'+(S.dpage>0?'<button class="btn" type="button" data-act="details-back">Back</button>':'')+'<button class="btn pri" type="button" data-act="details-next">'+(last?"Continue to documents":"Next")+'</button></div>'+
   (S.saveOK?'<p class="small muted">Saved on this device as you type.</p>':'')+'</div>'+
@@ -1304,12 +1353,13 @@ function fbHtml(fb){
 function nextDocIndex(){ for(var i=1;i<=DOCS.length;i++){ var j=(S.dk+i)%DOCS.length,st=S.docs[DOCS[j].k]; if(!st||st.status!=="ok") return j; } return -1; }
 function allDocs(){return DOCS.every(function(d){return S.docs[d.k]&&S.docs[d.k].status==="ok"})}
 function stepDocs(){
+  applyScenario();
   var n=DOCS.filter(function(d){return docClean(d.k)}).length;
   return '<div class="panel"><div class="ophead"><div class="head"><h1>Upload your documents</h1><p>Six items. Each file is read by OCR on your device as soon as you add it, and is accepted only if it is the right document for that slot. JPG, PNG or PDF.</p></div><div class="actions"><button class="btn" type="button" data-act="back-details">Back</button><button class="btn pri" type="button" data-act="submit"'+(allDocs()?"":" disabled")+'>Submit for verification</button></div></div>'+
   '<div class="bento"><div class="box s4" style="background:var(--sunken);box-shadow:none"><span class="small muted">Verified on your device</span><div><b class="num" style="font-size:3.2rem">'+n+'</b><span class="muted" style="font-size:1.4rem"> / 6</span></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(docClean(d.k)?"on":st&&st.status==="ok"?"bad":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div></div>'+
   '<div class="box s8" style="background:var(--sunken);box-shadow:none"><div class="dtiles">'+DOCS.map(function(d,i){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected";return '<button type="button" data-dk="'+i+'" aria-current="'+(i===S.dk?"step":"false")+'" class="dtile c-'+d.k+(i===S.dk?" cur":"")+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&docClean(d.k)?'<span class="badge" aria-hidden="true" style="background:var(--ok)">✓</span>':ok||bad?'<span class="badge" aria-hidden="true" style="background:var(--bad)">!</span>':'')+'<span style="min-width:0;display:block"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(ok?(docClean(d.k)?"verified":docFixLabel(d.k)):bad?"not accepted":st?"reading":"to upload")+'</small></span></button>'}).join("")+'</div></div></div>'+
   '<div class="note"><span><b>'+n+' of 6 verified.</b> Document '+(S.dk+1)+' of 6 is open below; pick any tile to switch.</span></div>'+
-  demoBox('<p class="small muted">No documents to hand? Specimens are synthetic document text built from your typed details and go through the same field reader as a real upload.</p><div class="demo-rows">'+DOCS.map(function(d){return '<div class="demo-row"><b>'+d.label+'</b>'+specCtl(d.k)+'</div>'}).join("")+'</div><button class="btn sm" type="button" data-act="spec-all">Use specimens for all</button>')+
+  demoBox('<p class="small muted">No documents to hand? Specimens are synthetic document text built from your typed details and go through the same field reader as a real upload.</p><div class="demo-rows">'+DOCS.map(function(d){return '<div class="demo-row"><b>'+d.label+'</b>'+specCtl(d.k)+'</div>'}).join("")+'</div><button class="btn sm" type="button" data-act="spec-all">Use specimens for all</button>'+scenarioChip(true))+
   '<div class="cards">'+docCard(DOCS[S.dk]||DOCS[0])+'</div></div>';
 }
 function groupState(g){
@@ -1764,14 +1814,15 @@ function recheck(){
 document.addEventListener("input",function(e){
   var t=e.target,k=t.getAttribute&&t.getAttribute("data-f");
   if(t.id==="rv-note"&&S.review){ S.review.note=t.value; var rb=document.querySelector('[data-act="rv-reject"],[data-act="rv-uphold"]'); if(rb) rb.disabled=!t.value.trim(); return; }
-  if(k){ var v=t.type==="checkbox"?t.checked:t.value; if(k==="pan"||k==="ifsc") v=v.toUpperCase().trim(); if(k==="mobile"||k==="aadhaar4"||k==="acct") v=v.replace(/\D/g,""); S.f[k]=v; S.isSample=false; if(k==="consent") S.consentAt=v?Date.now():null; persist(); }
+  if(k){ var v=t.type==="checkbox"?t.checked:t.value; if(k==="pan"||k==="ifsc") v=v.toUpperCase().trim(); if(k==="mobile"||k==="aadhaar4"||k==="acct") v=v.replace(/\D/g,""); S.f[k]=v; if(k==="ifsc"){ var ih=$("ifsc-hint"),nt=ifscHint(v); if(ih&&ih.textContent!==nt) ih.textContent=nt; } S.isSample=false; if(k==="consent") S.consentAt=v?Date.now():null; persist(); }
 });
 /* Remember whether the applicant opened a demo-controls disclosure, so a re-render does not close it (toggle does not bubble: capture). */
-document.addEventListener("toggle",function(e){ var t=e.target; if(t&&t.classList&&t.classList.contains("demo")) S.demoOpen=t.open; },true);
+document.addEventListener("toggle",function(e){ var t=e.target; if(t&&t.classList&&t.classList.contains("demo")) S.demoOpen=t.open; else if(t&&t.classList&&t.classList.contains("rules-applied")) RULES_OPEN=t.open; },true);
 document.addEventListener("change",function(e){
   var t=e.target;
   if(t.getAttribute("data-up")){ PICKING=false; if(t.files&&t.files[0]) addDoc(t.getAttribute("data-up"),t.files[0]); }
   else if(t.getAttribute("data-specv")){ S.specv[t.getAttribute("data-specv")]=t.value; }
+  else if(t.getAttribute("data-scn")!==null){ S.scnPick=t.value; }
   else if(t.getAttribute("data-rvask")){ S.review.ask[t.getAttribute("data-rvask")]=t.checked; }
   else if(t.getAttribute("data-q")!==null&&t.name){ S.exam.ans[Number(t.getAttribute("data-q"))]=Number(t.value); var b=document.querySelector('[data-act="submit-exam"]'); if(b) b.disabled=!QUIZ.every(function(_,i){return S.exam.ans[i]!==undefined}); }
 });
@@ -1792,6 +1843,7 @@ document.addEventListener("click",function(e){
   var a=t.getAttribute("data-act"); if(!a) return;
   if(a==="clear"){ S.f=Object.assign({},BLANK); S.consentAt=null; S.isSample=false; S.errs={}; render(); }
   else if(a==="sample"){ S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; /* no consent time for a tick nobody made */ S.errs={}; render(); }
+  else if(a==="scn-setup"){ var scn=S.scnPick||"T1"; S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; S.errs={}; S.scenario=scn; S.scenarioApplied=false; S.specv={}; render(); }
   else if(a==="details-next"){ var all=validate(S.f),pg=DPAGES[S.dpage],lastPg=S.dpage===DPAGES.length-1; S.errs={}; Object.keys(all).forEach(function(f){ if(lastPg||pg.f.indexOf(f)>=0) S.errs[f]=all[f]; });
     if(Object.keys(S.errs).length){ if(lastPg){ var bad=-1; DPAGES.forEach(function(p,i){ if(bad<0&&p.f.some(function(f){return S.errs[f]})) bad=i; }); S.dpage=bad; }
       render(); var b=document.querySelector(".fld.bad input,.fld.bad select"); if(b) b.focus(); cpNudge("detail-err","A field on this page needs a fix: "+Object.keys(S.errs).map(function(f){return S.errs[f]}).join(" ")); return; }
