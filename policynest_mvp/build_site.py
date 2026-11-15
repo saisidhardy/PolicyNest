@@ -19,6 +19,9 @@ page = (
 )
 site = here / "site"
 site.mkdir(exist_ok=True)
+vitals = here.parent / 'node_modules' / 'web-vitals' / 'dist' / 'web-vitals.iife.js'
+if vitals.is_file():
+    (site / 'web-vitals.iife.js').write_bytes(vitals.read_bytes())
 (site / "index.html").write_text(page, encoding="utf-8")
 for name in ("ocr-worker.js", "pdf-worker.js"):
     (site / name).write_text((here / name).read_text(encoding="utf-8"), encoding="utf-8")

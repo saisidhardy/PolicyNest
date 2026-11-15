@@ -538,6 +538,10 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   <span class="env" title="Documents are read by OCR inside this browser. Government, bank and face-match services are simulated: none is called. Only questions you ask the Copilot, with your first name and progress (never your ID numbers or images), are sent to the AI service."><i></i>Demo environment · on-device OCR</span>
   <div class="role" id="role-box"><label for="role-sel">View as</label><select id="role-sel"><option value="applicant">Applicant</option><option value="reviewer">Reviewer</option><option value="ops">Ops and compliance</option><option value="all">All views (demo)</option></select><small>Demo role switch, not a login. Anyone can switch.</small></div>
   <nav class="menu" id="menu" aria-label="Sections"></nav>
+  <button class="btn" type="button" id="account-open">Sign in / create account</button>
+  <button class="btn" type="button" id="workspace-open">Account workspace</button>
+  <label class="small"><input id="account-sync" type="checkbox"> Sync document status and progress to my account (no images or ID numbers)</label>
+  <label class="small"><input id="analytics-consent" type="checkbox"> Share anonymous performance and usage measurements</label>
   <div class="help"><b>Need help?</b><span>A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
 </div></aside>
 <div class="main">
@@ -563,12 +567,15 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
 <aside class="cp" id="cp" hidden role="dialog" aria-label="Onboarding Copilot">
   <header><b>Onboarding Copilot</b><span class="cp-mode" id="cp-mode">Rulebook answers</span><button type="button" data-act="cp-close" aria-label="Close Copilot">×</button></header>
   <div class="cp-log" id="cp-log" aria-live="polite"></div>
+  <div class="cp-chips"><button type="button" id="guide-next">Show next action</button><button type="button" id="guide-read">Read guidance</button><button type="button" id="guide-stop">Stop voice</button><button type="button" id="guide-mic">Ask by voice</button><select id="guide-lang" aria-label="Voice language"><option value="en-IN">English voice</option><option value="hi-IN">Hindi voice</option></select><button type="button" id="guide-appeal">Ask a human reviewer</button></div>
+  <p class="cp-foot" id="guide-status" role="status"></p><button class="btn sm" type="button" id="guide-helped">This helped resolve my question</button>
   <div class="cp-chips"><button type="button" data-cpq="What should I do next?">What next?</button><button type="button" data-cpq="Why was my document not accepted and how do I fix it?">Why was it refused?</button><button type="button" data-cpq="Which documents do I need and what makes a good photo?">Documents needed</button><button type="button" data-cpq="What happens after I submit?">After I submit</button></div>
   <form id="cp-form" autocomplete="off"><label class="sr-only" for="cp-q">Ask a question</label><input id="cp-q" maxlength="600" placeholder="Ask about your documents or the steps"><button class="btn sm pri" type="submit">Send</button></form>
   <p class="cp-foot">Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.</p>
 </aside>
 <dialog id="modal" role="alertdialog" aria-labelledby="m-t" aria-describedby="m-b"><div class="mbox"><h2 id="m-t"></h2><p id="m-b"></p><div class="actions" id="m-a"></div></div></dialog>
 
+<script src="web-vitals.iife.js"></script>
 <script>
 (function(){
 "use strict";
@@ -619,7 +626,7 @@ var DECISION_EVENTS={DECISION:1,ROUTED_TO_REVIEWER:1,FOLLOWUP_SENT:1,RECHECK:1,R
 var ENG_HASH="";
 function ruleTrail(){var out=[];var cd=function(c){return c.code==='FACE_MATCH_LOW_REPEAT'?'FACE_MATCH_LOW':c.code};(S.checks||[]).forEach(function(c){if(c.reviewer){var t0=(cd(c)||c.label||"check")+" "+c.rule+" (reviewer-confirmed)";if(out.indexOf(t0)<0)out.push(t0);return}if(c.res==="PASS"||c.res==="INFO"||c.res==="PENDING")return;var t=(cd(c)||c.res)+" "+c.rule;if(out.indexOf(t)<0)out.push(t)});return out.length?out.join("; "):"every check passed or was noted (§2, §4)"}
 var PEND=[];
-function log(event,actor,note){var e={t:Date.now(),state:S.status,round:S.round,event:event,actor:actor,note:note||"",audience:INTERNAL_EVENTS[event]?"internal":"applicant"};if(DECISION_EVENTS[event]){e.engine=ENGINE;e.hash=ENG_HASH?ENG_HASH.slice(0,12):"not computed";e.rules=ruleTrail();if(!ENG_HASH&&ENG_STATE==="pending")PEND.push(e)}S.events.push(e)}
+function log(event,actor,note){var e={t:Date.now(),state:S.status,round:S.round,event:event,actor:actor,note:note||"",audience:INTERNAL_EVENTS[event]?"internal":"applicant"};if(DECISION_EVENTS[event]){e.engine=ENGINE;e.hash=ENG_HASH?ENG_HASH.slice(0,12):"not computed";e.rules=ruleTrail();if(!ENG_HASH&&ENG_STATE==="pending")PEND.push(e)}S.events.push(e);if(typeof trackProductAction==='function')trackProductAction(event)}
 function pill(cls,txt){return '<span class="pill '+cls+'">'+txt+'</span>'}
 /* ---------- Theme (warm light by default; dark on request, remembered in this browser if storage allows) ---------- */
 var THEME="light"; try{ THEME=localStorage.getItem("pn-theme")==="dark"?"dark":"light" }catch(e){}
@@ -937,6 +944,16 @@ function rejectReasons(checks,x){
   return out;
 }
 /* ENGINE:END */
+
+/* F-10: explanation-only adapter. The decision and pinned engine remain unchanged. */
+function safeRejectReasons(checks,x,typedDob){
+  var explanation=x||{};
+  if(checks.some(function(c){return c.code==='UNDERAGE'})&&!(explanation.PAN&&explanation.PAN.dob)){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(typedDob||''))return safeRejectReasons(checks.filter(function(c){return c.code!=='UNDERAGE'}),explanation,null).concat(checks.filter(function(c){return c.res==='REJECT'&&c.code==='UNDERAGE'}).map(function(c){return {code:c.code,rule:c.rule,en:'You must be 18 or older to register. Ask a reviewer if your date of birth was read incorrectly.',hi:'पंजीकरण के लिए आपकी आयु कम से कम 18 वर्ष होनी चाहिए। जन्म तिथि गलत पढ़ी गई हो तो समीक्षक से सहायता लें।'}}));
+    explanation=Object.assign({},explanation,{PAN:Object.assign({},explanation.PAN||{},{dob:typedDob})});
+  }
+  return rejectReasons(checks,explanation);
+}
 
 function validate(f){
   var e={};
@@ -1359,7 +1376,7 @@ function feedbackFor(k){
   var cs=r.checks.filter(function(c){return c.key===k||(G&&c.doc===G.g&&!c.key)});
   var good=cs.filter(function(c){return c.res==="PASS"}).map(function(c){return c.label});
   var fix=followupItems(cs.filter(function(c){return c.res==="NEEDS_INFO"||c.res==="REUPLOAD"}),x).map(function(i){return {what:i.en,steps:i.code&&/IMAGE|REUPLOAD/.test(i.code)?PHOTO_STEPS:null,code:i.code}});
-  var stop=rejectReasons(cs.filter(function(c){return c.res==="REJECT"}),x).map(function(i){return {what:i.en,code:i.code}});
+  var stop=safeRejectReasons(cs.filter(function(c){return c.res==="REJECT"}),x,S.f.dob).map(function(i){return {what:i.en,code:i.code}});
   var human=cs.filter(function(c){return c.res==="HUMAN"}).map(function(c){return {what:c.label+": a person on our team checks this after you submit (rulebook §9). You do not need to do anything now.",code:c.code}});
   var later=cs.filter(function(c){return c.res==="PENDING"}).map(function(c){return c.label});
   return {good:good,fix:fix,stop:stop,human:human,later:later,codes:fix.concat(stop,human).map(function(i){return i.code}).filter(Boolean)};
@@ -1772,6 +1789,7 @@ function judge(k,r,file){
 /* Uploads held by the photo check (C1), by slot: the File is kept here in memory only, never in S or the save. */
 var PHOTO_HOLD={};
 function addDoc(k,file,force){
+  var uploadStarted=performance.now();
   var old=S.docs[k]; if(old&&old.url&&old.url.indexOf("blob:")===0) try{URL.revokeObjectURL(old.url)}catch(e){}
   /* Specimens are built from the typed details, so a blank application cannot take one. */
   if(!file&&(!S.f.name||!S.f.pan)){ S.docs[k]={status:"rejected",file:false,name:"Synthetic placeholder",url:null,ocr:null,reason:"Fill in your details first (Back to details, then Demo controls, Load sample applicant), then use a specimen."}; render(); return; }
@@ -1812,6 +1830,7 @@ function addDoc(k,file,force){
     if(!force&&/^image\//.test(file.type)) log("PHOTO_CHECK:"+k,"APPLICANT","Photo check passed");
     var v=judge(k,r,file); if(r.thumb) d.url=r.thumb;
     d.ocr=v; d.status=v.ok?"ok":"rejected"; d.reason=v.msg; if(v.ok) S.lastDocAt=Date.now(); addVersion(d,v.ok?"accepted":"refused"); afterDoc(k); if(v.ok) cheerDoc(k);
+    performanceMetric('upload_ms',performance.now()-uploadStarted);performanceMetric('ocr_ms',performance.now()-uploadStarted);productEvent(v.ok?'ocr_succeeded':'ocr_failed',v.ok?'success':'failure',performance.now()-uploadStarted);
     log((v.ok?(S.changed[k]?"DOC_REUPLOAD_ACCEPTED:":"DOC_ACCEPTED:"):"DOC_REJECTED:")+k,"SYSTEM",v.ok?"Recognised as "+v.detName+" · "+v.src+" · confidence "+v.conf.toFixed(2)+(v.fields&&v.fields.missing.length?" · not read: "+v.fields.missing.join(", "):""):"Wrong or unreadable document"+(TYPE_NAME[v.det]?" (looks like "+TYPE_NAME[v.det]+")":"")+" · applicant asked to re-upload");
     render();
   },function(e){
@@ -1839,7 +1858,7 @@ function finishDecision(t0){
     var items=followupItems(S.checks,S.ex); S.fu={items:items,round:S.round}; cheer("you are almost there.","Everything we need is in one message, so you can fix it in one go.","heart"); items.forEach(function(i){S.specv[i.key]="clean"}); rec.items=items; S.followups++; S.changed={};
     log("FOLLOWUP_SENT","SYSTEM","Round "+S.round+" · one consolidated message · "+items.length+" item"+(items.length>1?"s":"")+" ("+items.map(function(i){return DOC_LABEL[i.key]?DOC_LABEL[i.key][0]+": "+i.code:i.code}).join("; ")+") · WhatsApp and SMS, English and Hindi (simulated send)");
   }
-  else if(S.decision==="REJECT"){ setState("REJECTED"); S.rej=rejectReasons(S.checks,S.ex); log("DECISION","SYSTEM","Decision REJECT · "+codes.filter(function(c){return S.rej.some(function(r){return r.code===c})}).join(", ")+" · "+(S.touches>0?"decided by a person":"rule-based, decided automatically")+" · applicant told in plain words"); }
+  else if(S.decision==="REJECT"){ setState("REJECTED"); S.rej=safeRejectReasons(S.checks,S.ex,S.f.dob); log("DECISION","SYSTEM","Decision REJECT · "+codes.filter(function(c){return S.rej.some(function(r){return r.code===c})}).join(", ")+" · "+(S.touches>0?"decided by a person":"rule-based, decided automatically")+" · applicant told in plain words"); }
   else { setState("HUMAN_REVIEW"); openReview(false); log("ROUTED_TO_REVIEWER","SYSTEM","Decision HUMAN_REVIEW · "+codes.map(function(x){return x==="FACE_MATCH_LOW_REPEAT"?"FACE_MATCH_LOW":x}).join(", ")+" · evidence laid out side by side in the review console"); log("ROUTED_TO_REVIEWER_DETAIL","SYSTEM","Internal: AI recommendation: "+S.review.rec); }
   S.rounds.push(rec);
 }
@@ -2239,6 +2258,9 @@ function persist(force){
    the review console after a reload says they are not kept on this device. */
 function savedCopy(){
   var o=JSON.parse(JSON.stringify(S,function(k,v){ return (k==="url"||k==="thumb"||k==="text")?undefined:v })),drop={};
+  /* The full typed account number is only needed while this page is open. A resumed application can compare the
+     last four digits, so retain no more than that on this shared-device local copy (FR-09 / data minimisation). */
+  if(o.f&&o.f.acct) o.f.acct=o.f.acct.slice(-4);
   (o.checks||[]).forEach(function(c){ if(c.reviewer||c.res==="HUMAN"||NEUTRAL_CODES[c.code]){ c.ev=applicantEv(c); delete c.ev0; if(c.key&&c.key!=="PAN") drop[c.key]=1; } if(c.code==="FACE_MATCH_LOW_REPEAT") c.code="FACE_MATCH_LOW"; });
   Object.keys(drop).forEach(function(k){ if(o.ex&&o.ex[k]) delete o.ex[k].name; var d=o.docs&&o.docs[k]; if(d&&d.ocr&&d.ocr.fields) delete d.ocr.fields.name; });
   (o.events||[]).forEach(function(e){ if(e.rules) e.rules=String(e.rules).replace(/FACE_MATCH_LOW_REPEAT/g,"FACE_MATCH_LOW"); });
@@ -2297,7 +2319,7 @@ function nextStepText(){
   return "You are certified. Your POSP code is on the certificate.";
 }
 /* ---------- Onboarding Copilot: live app state + rulebook retrieval (BM25) + Claude through a key-holding proxy ---------- */
-var COPILOT_URL="https://policynest-copilot.embarko.app";
+var COPILOT_URL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'http://localhost:8787':"https://policynest-copilot.embarko.app";
 var CP={log:[],kb:null,idf:null,llm:null,busy:false,seen:{},idleT:null};
 function cpOpen(on){ var p=$("cp"),f=$("cp-fab"); p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a","Hi "+fname()+". I can see where you are and what each document needs. "+nextStepText()); cpDraw(); setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else f.focus(); }
 function cpPush(who,text,meta){ CP.log.push({who:who,text:text,meta:meta||""}); if(CP.log.length>40) CP.log.shift(); cpDraw(); }
@@ -2334,18 +2356,22 @@ function intentAnswer(q){
   return null;
 }
 function cpAsk(q){
+  var assistantStarted=performance.now();
   q=String(q||"").trim(); if(!q||CP.busy) return; if($("cp").hidden) cpOpen(true);
   if(/\b\d{4}\s?\d{4}\s?\d{4}\b|\b[A-Za-z]{5}\d{4}[A-Za-z]\b|\b\d{9,18}\b/.test(q)){ cpPush("a","Please don't type your PAN, Aadhaar or account number here. I don't need them to help you; ask your question without the number."); return; }
   cpPush("u",q); var hits=retrieve(q+" "+(S.step===1?"document photo upload":""),5),ctx=copilotContext();
   var hist=CP.log.filter(function(m){return m.who==="u"||m.who==="a"}).slice(-7,-1).map(function(m){return {role:m.who==="u"?"user":"assistant",text:m.text}});
   function offline(){ var t=intentAnswer(q)||(hits.length?"From the "+hits[0].cite+": "+hits[0].text.replace(/[|#*`>]/g," ").replace(/\s+/g," ").slice(0,420)+"…":"I couldn't find that in the rulebook. "+nextStepText());
     var why=CP.capped?"AI answers paused for today (daily limit)":"AI answers not connected"; cpPush("a",t,(hits.length?"Sources: "+hits.slice(0,3).map(function(h){return h.cite}).join(", ")+" · ":"")+why); }
-  if(CP.llm===false||typeof fetch!=="function") return offline();
+  if(typeof fetch!=="function") return offline();
   CP.busy=true; cpPush("a","Thinking…"); var ctl=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort()},30000);
-  fetch(COPILOT_URL+"/api/copilot",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,context:ctx,history:hist,passages:hits.map(function(h){return {cite:h.cite,text:h.text}})}),signal:ctl?ctl.signal:undefined})
+  Promise.resolve(ACCOUNT&&$('account-sync').checked?syncProgress():null).then(function(){return fetch(COPILOT_URL+"/api/assistant",{method:"POST",credentials:'include',headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,history:hist}),signal:ctl?ctl.signal:undefined})})
    .then(function(r){return r.ok?r.json():Promise.reject(r.status)}).then(function(o){ CP.log.pop(); var ans=String(o.answer||"");
       if(/\b(fraud|fake|forged|tamper)/i.test(ans)||/\byou (are|have been) (approved|rejected)\b/i.test(ans)) ans="I can't say how your application will be decided; the verification checks and our team do that. "+nextStepText(); /* client-side guardrail */
-      cpPush("a",ans,hits.length?"Sources: "+hits.slice(0,3).map(function(h){return h.cite}).join(", "):""); log("COPILOT_ANSWER","SYSTEM","Copilot answered a question · "+hits.length+" rulebook passages · first name and progress only");})
+      if(o.context_source==='general_policy_only')ans+='\n\nOn this device: '+guidanceText();
+      cpPush("a",ans,o.sources&&o.sources.length?"Sources: "+o.sources.join(", "):"");
+      $('guide-status').textContent=o.mode==='ai_grounded'?'AI answer grounded in retrieved sources.':'Policy retrieval and deterministic guidance. Ask a reviewer if this does not resolve your concern.';
+      productEvent('assistant_question');performanceMetric('assistant_ms',performance.now()-assistantStarted);log("COPILOT_ANSWER","SYSTEM","Copilot answered a question · server retrieval · first name and progress only");})
    .catch(function(st){ CP.log.pop(); CP.llm=false; if(st===429) CP.capped=true; offline(); }).then(function(){ clearTimeout(to); CP.busy=false; cpDraw(); });
 }
 document.addEventListener("submit",function(e){ if(e.target&&e.target.id==="cp-form"){ e.preventDefault(); var i=$("cp-q"); cpAsk(i.value); i.value=""; } });
@@ -2393,9 +2419,156 @@ function show(v){
 }
 function fromHash(){var h=location.hash.slice(1),v=null;Object.keys(HASH).forEach(function(k){if(HASH[k]===h)v=k});return v}
 window.addEventListener("hashchange",function(){var v=fromHash(); if(v&&v!==VIEW) show(v)});
+/* Account sessions use server-set HttpOnly cookies. Demo progress remains available without an account. */
+var ACCOUNT=null,accountDialog=document.createElement('dialog');
+accountDialog.setAttribute('aria-labelledby','account-heading');
+accountDialog.innerHTML='<form class="mbox" id="account-form"><h2 id="account-heading">Your PolicyNest account</h2><p class="small muted">Sign in to your account. Your current demo application stays on this device.</p><label for="account-name">Name (new accounts)</label><input id="account-name" autocomplete="name" maxlength="80"><label for="account-email">Email</label><input id="account-email" type="email" autocomplete="username" required><label for="account-password">Password (at least 12 characters)</label><input id="account-password" type="password" autocomplete="current-password" minlength="12" maxlength="256"><p id="account-message" role="status"></p><div class="actions"><button class="btn pri" type="submit" value="login">Sign in</button><button class="btn" type="submit" value="register">Create account</button><button class="btn" type="submit" value="recover" formnovalidate>Account recovery</button><button class="btn" type="button" id="account-close">Close</button></div></form>';
+document.body.appendChild(accountDialog);
+var resetDialog=document.createElement('dialog');resetDialog.setAttribute('aria-labelledby','reset-heading');
+resetDialog.innerHTML='<form class="mbox" id="reset-form"><h2 id="reset-heading">Reset your password</h2><label for="reset-password">New password (12–256 characters)</label><input id="reset-password" type="password" autocomplete="new-password" minlength="12" maxlength="256" required><p id="reset-result" role="status"></p><button class="btn pri" type="submit">Set new password</button><button class="btn" type="button" id="reset-close">Close</button></form>';
+document.body.appendChild(resetDialog);var resetToken='';
+$('reset-close').onclick=function(){resetToken='';$('reset-password').value='';resetDialog.close()};
+$('reset-form').onsubmit=function(e){e.preventDefault();var b=e.submitter;b.disabled=true;accountRequest('/api/auth/reset',{reset_token:resetToken,password:$('reset-password').value},false).then(function(){resetToken='';$('reset-password').value='';$('reset-result').textContent='Password changed. Sign in with your new password.'}).catch(function(){$('reset-result').textContent='The reset link is invalid or expired. Request a new link or contact your administrator.'}).finally(function(){b.disabled=false})};
+function accountChrome(){ $('account-open').textContent=ACCOUNT?'Sign out · '+ACCOUNT.display_name:'Sign in / create account'; }
+function enterAccount(user){
+  ACCOUNT=user;SAVEKEY='pn-onboarding-user-'+user.id;lastSynced='';$('account-sync').checked=false;
+  stopSpeech();if(timer)clearInterval(timer);fresh();restore();CP.log=[];cpDraw();accountChrome();show('apply');
+}
+function accountRequest(path,body,retry){
+  return fetch(COPILOT_URL+path,{method:body===undefined?'GET':'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){
+    if(r.status===401&&retry!==false&&path!=='/api/auth/refresh'){
+      if(!accountRefreshing)accountRefreshing=accountRequest('/api/auth/refresh',{},false).finally(function(){accountRefreshing=null});
+      return accountRefreshing.then(function(){return accountRequest(path,body,false)});
+    }
+    return r.json().then(function(data){if(!r.ok)throw new Error(data.error||'Request failed');return data});
+  });
+}
+var accountRefreshing=null;
+$('account-open').addEventListener('click',function(){
+  if(ACCOUNT){accountRequest('/api/auth/logout',{},false).then(function(){ACCOUNT=null;$('account-sync').checked=false;SAVEKEY='pn-onboarding-v1';if(timer)clearInterval(timer);fresh();CP.log=[];cpDraw();accountChrome();workspaceDialog.close();show('apply')}).catch(function(){announce('Could not sign out. Please try again.')});return;}
+  accountDialog.showModal();$('account-email').focus();
+});
+$('account-close').addEventListener('click',function(){accountDialog.close()});
+$('account-form').addEventListener('submit',function(e){
+  e.preventDefault();var action=e.submitter?e.submitter.value:'login',msg=$('account-message');
+  msg.textContent='Please wait…';var buttons=accountDialog.querySelectorAll('button');buttons.forEach(function(b){b.disabled=true});
+  accountRequest('/api/auth/'+action,{email:$('account-email').value,password:$('account-password').value,display_name:$('account-name').value},false).then(function(data){
+    if(data.user){enterAccount(data.user);productEvent(action==='register'?'registration':'login');$('account-password').value='';accountDialog.close();announce('Signed in successfully.')}else msg.textContent=data.message||'Request received.';
+  }).catch(function(err){msg.textContent=err.message==='Failed to fetch'?'Account service is unavailable. Your demo work is still available.':err.message.replace(/_/g,' ')}).finally(function(){buttons.forEach(function(b){b.disabled=false})});
+});
+accountRequest('/api/auth/me',undefined,true).then(function(data){enterAccount(data.user)}).catch(function(){ACCOUNT=null;accountChrome()});
+var lastSynced='',syncBusy=null;
+function progressSnapshot(){
+  var context=copilotContext();
+  return {stage:context.stage,documents:DOCS.map(function(d){var st=S.docs[d.k],fb=S.fb[d.k];return {key:d.k,status:st?st.status:'not uploaded',open_issues:fb?fb.codes:[],version:st&&st.versions?st.versions.length||1:1}}),training_hours:context.training_hours,exam_score:context.exam_score,decision:context.decision};
+}
+function syncProgress(){
+  if(!ACCOUNT||ACCOUNT.role!=='applicant'||!$('account-sync').checked)return Promise.resolve();
+  if(syncBusy)return syncBusy;
+  var snapshot=progressSnapshot(),signature=JSON.stringify(snapshot);
+  if(signature===lastSynced)return Promise.resolve();
+  syncBusy=accountRequest('/api/applications/me',{snapshot:snapshot}).then(function(){lastSynced=signature}).finally(function(){syncBusy=null});return syncBusy;
+}
+$('account-sync').addEventListener('change',function(){lastSynced='';syncProgress().catch(function(){announce('Could not sync progress. Please sign in and try again.')})});
+setInterval(function(){syncProgress().catch(function(){})},5000);
+var workspaceDialog=document.createElement('dialog');workspaceDialog.setAttribute('aria-labelledby','workspace-heading');
+workspaceDialog.innerHTML='<div class="mbox"><h2 id="workspace-heading">Account workspace</h2><p class="small muted">Account records are separate from the synthetic demo console. Only document statuses and issue codes are synced.</p><div id="workspace-body"></div><div class="actions"><button class="btn" id="workspace-refresh" type="button">Refresh</button><button class="btn" id="workspace-close" type="button">Close</button></div></div>';
+document.body.appendChild(workspaceDialog);
+$('workspace-close').addEventListener('click',function(){workspaceDialog.close()});
+$('workspace-refresh').addEventListener('click',workspaceLoad);
+$('workspace-open').addEventListener('click',function(){if(!ACCOUNT){accountDialog.showModal();return}workspaceDialog.showModal();workspaceLoad()});
+function workspaceLoad(){
+  var box=$('workspace-body');box.textContent='Loading account records…';
+  if(!ACCOUNT)return;
+  if(ACCOUNT.role==='applicant'){
+    Promise.all([accountRequest('/api/cases/me'),accountRequest('/api/appeals/me'),accountRequest('/api/applications/me')]).then(function(r){
+      box.innerHTML='<p><b>'+esc(r[0].id)+'</b> · Reviewer status: '+esc(r[0].status)+'</p><p>Saved stage: '+esc(r[2].snapshot?r[2].snapshot.stage:'Not synced')+'</p><h3>Appeals</h3>'+(r[1].appeals.length?r[1].appeals.map(function(a){return '<div class="box"><b>'+esc(a.id)+'</b><p>'+esc(a.status)+'</p><p>'+esc(a.response||'Awaiting human review')+'</p></div>'}).join(''):'<p>No appeals submitted.</p>');
+    }).catch(function(){box.textContent='Unable to load account records. Check your session.'});
+  }else if(ACCOUNT.role==='reviewer'){
+    accountRequest('/api/reviewer/queue').then(function(r){box.innerHTML='<h3>Assigned cases</h3>'+(r.cases.length?r.cases.map(function(c){return '<button type="button" class="btn" data-account-case="'+esc(c.id)+'">'+esc(c.id)+' · '+esc(c.status)+'</button>'}).join(''):'<p>No cases assigned to you.</p>')}).catch(function(){box.textContent='Unable to load assigned cases.'});
+  }else{
+    box.innerHTML='<label>Time window <select id="report-days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select></label><label>Activity <select id="report-source"><option value="demo">Demo</option><option value="operational">Operational</option></select></label><button class="btn" type="button" id="report-load">Load measurements</button><div id="report-body"></div>';
+    $('report-load').onclick=loadReport;loadReport();
+  }
+}
+function loadReport(){
+  accountRequest('/api/reports?days='+$('report-days').value+'&source='+$('report-source').value).then(function(r){
+    $('report-body').innerHTML='<h3>Business funnel</h3><p>'+esc(r.limitations)+'</p>'+Object.keys(r.metrics).map(function(k){var m=r.metrics[k];return '<p>'+esc(k.replace(/_/g,' '))+': '+m.numerator+' / '+m.denominator+' · '+(m.rate===null?'No denominator':Math.round(m.rate*100)+'%')+'</p>'}).join('')+'<h3>Stage and activity events</h3>'+reportTable(r.events)+'<h3>API reliability</h3>'+reportTable(r.technical)+'<h3>Browser performance</h3>'+reportTable(r.frontend)+'<h3>Reviewer workload</h3>'+reportTable(r.reviewer_workload)+'<h3>Appeal outcomes</h3>'+reportTable(r.appeals);
+  }).catch(function(){$('report-body').textContent='Measurements unavailable or access denied.'});
+}
+function reportTable(rows){if(!rows.length)return '<p>No measured data in this window.</p>';var keys=Object.keys(rows[0]);return '<div style="overflow:auto"><table><thead><tr>'+keys.map(function(k){return '<th>'+esc(k.replace(/_/g,' '))+'</th>'}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+keys.map(function(k){return '<td>'+esc(r[k]===null?'Not measured':String(r[k]))+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
+workspaceDialog.addEventListener('click',function(e){var b=e.target.closest('[data-account-case]');if(!b)return;loadAccountCase(b.getAttribute('data-account-case'))});
+function loadAccountCase(id){accountRequest('/api/reviewer/case?id='+encodeURIComponent(id)).then(function(c){
+  var body=$('workspace-body');body.innerHTML='<h3>'+esc(c.id)+'</h3><p>Device-reported demo progress. No original images or OCR text are stored on the server.</p>'+reportTable(c.progress?c.progress.documents:[])+'<h3>Appeals</h3>'+c.appeals.map(function(a){return '<div class="box"><b>'+esc(a.id)+'</b><p>'+esc(a.explanation)+'</p><p>'+esc(a.status)+'</p><label>Applicant-facing response<textarea data-resolution-text="'+esc(a.id)+'" minlength="10" maxlength="1500"></textarea></label><select data-resolution-status="'+esc(a.id)+'" aria-label="Appeal outcome"><option>RESOLVED</option><option>MORE_INFO</option><option>ESCALATED</option></select><button class="btn" type="button" data-resolve-appeal="'+esc(a.id)+'">Record response</button></div>'}).join('')+'<h3>Reviewer decision</h3><p>Use only evidence available to you. Request more information when evidence is insufficient.</p><label>Outcome<select id="account-review-status"><option>NEEDS_MORE_INFO</option><option>HUMAN_REVIEW</option><option>KYC_APPROVED</option><option>REJECTED</option></select></label><label>Rulebook clause<input id="account-review-rule" placeholder="§9" pattern="§[0-9.]+"></label><label>Internal rationale<textarea id="account-review-note" minlength="10" maxlength="1500"></textarea></label><button class="btn pri" id="account-review-save">Record decision</button><p id="account-review-result" role="status"></p><h3>Internal notes</h3>'+reportTable(c.notes)+'<h3>Audit</h3>'+reportTable(c.audit);
+  body.querySelectorAll('[data-resolve-appeal]').forEach(function(b){b.onclick=function(){var ref=b.getAttribute('data-resolve-appeal');b.disabled=true;accountRequest('/api/reviewer/appeals/resolve',{reference:ref,status:body.querySelector('[data-resolution-status="'+ref+'"]').value,response:body.querySelector('[data-resolution-text="'+ref+'"]').value}).then(function(){loadAccountCase(id)}).catch(function(){b.disabled=false;announce('Response could not be recorded. Check access and response length.')})}});
+  $('account-review-save').onclick=function(){accountRequest('/api/reviewer/decide',{case_id:id,status:$('account-review-status').value,rule:$('account-review-rule').value,note:$('account-review-note').value}).then(function(){$('account-review-result').textContent='Reviewer decision recorded.'}).catch(function(){$('account-review-result').textContent='Decision not recorded. Check the rule, rationale and assignment.'})};
+}).catch(function(){$('workspace-body').textContent='Case unavailable or not assigned to you.'})}
+var performanceQueue=[];
+function performanceMetric(name,value){if($('analytics-consent').checked&&Number.isFinite(value))performanceQueue.push({name:name,value:value})}
+function productEvent(name,result,duration){if(ACCOUNT&&$('analytics-consent').checked)accountRequest('/api/events',{event_name:name,stage:S.begun?STEPS[S.step]:'Before you start',source:'demo',duration_ms:duration,result:result||'success'},false).catch(function(){})}
+function trackProductAction(event){
+  var key=event.split(':')[0],map={ONBOARDING_OPENED:'onboarding_started',REGISTRATION_STARTED:'stage_completed',DOC_UPLOADED:'document_uploaded',DOC_ACCEPTED:'document_uploaded',DOC_REUPLOADED:'document_corrected',DOC_REUPLOAD_ACCEPTED:'document_corrected',DOC_REJECTED:'ocr_failed',STP_PASS:'verification_completed',LMS_LOGIN:'training_started',TRAINING_COMPLETE:'training_completed',EXAM_SUBMIT:'exam_passed',EXAM_FAIL:'exam_failed',ISSUE_CREDENTIAL:'certificate_issued',PROGRESS_RESTORED:'application_resumed',ROUTED_TO_REVIEWER:'human_escalation'};
+  if(map[key])productEvent(map[key]);
+}
+setInterval(function(){if(performanceQueue.length&&$('analytics-consent').checked){var batch=performanceQueue.splice(0,20);fetch(COPILOT_URL+'/api/telemetry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({metrics:batch})}).catch(function(){})}},10000);
+window.addEventListener('error',function(){performanceMetric('js_error',1)});
+window.addEventListener('unhandledrejection',function(){performanceMetric('js_error',1)});
+if(window.webVitals){window.webVitals.onLCP(function(m){performanceMetric('lcp',m.value)});window.webVitals.onINP(function(m){performanceMetric('inp',m.value)});window.webVitals.onCLS(function(m){performanceMetric('cls',m.value)})}
+$('analytics-consent').addEventListener('change',function(){if(this.checked){var navigation=performance.getEntriesByType('navigation')[0];if(navigation)performanceMetric('load',navigation.loadEventEnd||navigation.domContentLoadedEventEnd)}else performanceQueue=[]});
+$('guide-helped').addEventListener('click',function(){productEvent('assistant_resolved');$('guide-status').textContent='Thanks. You can continue with the next action.'});
+/* Optional guidance follows the same live state used by the application; audio is never retained. */
+function guidanceText(){
+  var t=nextStepText();
+  return t.replace(/\b[A-Z]{5}\d{4}[A-Z]\b|\b\d{9,18}\b/g,'[number hidden]');
+}
+function guideTarget(){
+  var root=$('view-apply');
+  if(!S.begun)return root.querySelector('[data-act="begin-nofs"]');
+  if(S.step===0)return root.querySelector('[aria-invalid="true"], input:not([type="hidden"]), [data-act="details-next"]');
+  if(S.step===1)return root.querySelector('label[for^="up-"], [data-act="submit"]');
+  if(S.decision==='NEEDS_MORE_INFO')return root.querySelector('.fix input, .fix label, [data-act="resubmit"]');
+  return root.querySelector('.actions button:not([disabled]), button.btn:not([disabled])');
+}
+$('guide-next').addEventListener('click',function(){
+  show('apply');cpOpen(true);var target=guideTarget();
+  $('guide-status').textContent=guidanceText();
+  if(target){target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});target.style.outline='3px solid var(--brand)';target.style.outlineOffset='5px';target.setAttribute('tabindex','0');target.focus({preventScroll:true});setTimeout(function(){target.style.outline='';target.style.outlineOffset=''},5000)}
+});
+$('guide-read').hidden=!SPEECH_OK;
+$('guide-read').addEventListener('click',function(){
+  var last=CP.log.slice().reverse().find(function(m){return m.who==='a'&&m.text!=='Thinking…'});
+  var text=last?last.text:guidanceText();
+  text=text.replace(/\b[A-Z]{5}\d{4}[A-Z]\b|\b\d{4}\s?\d{4}\s?\d{4}\b|\b\d{9,18}\b/g,'number hidden');
+  toggleSpeak(text,$('guide-lang').value);
+});
+var recognition=null,Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+$('guide-mic').hidden=!Recognition;
+$('guide-mic').addEventListener('click',function(){
+  if(recognition){recognition.stop();return}
+  recognition=new Recognition();recognition.lang=$('guide-lang').value;recognition.continuous=false;recognition.interimResults=false;
+  $('guide-status').textContent='Listening. Press Stop voice to cancel.';$('guide-mic').setAttribute('aria-pressed','true');
+  recognition.onresult=function(e){$('cp-q').value=e.results[0][0].transcript;$('guide-status').textContent='Review the recognised question, then press Send.'};
+  recognition.onerror=function(){$('guide-status').textContent='Voice input is unavailable or permission was declined. Please type your question.'};
+  recognition.onend=function(){recognition=null;$('guide-mic').setAttribute('aria-pressed','false')};
+  try{recognition.start()}catch(e){recognition=null;$('guide-status').textContent='Please type your question.'}
+});
+$('guide-stop').addEventListener('click',function(){stopSpeech();if(recognition)recognition.abort();$('guide-status').textContent='Voice stopped.'});
+$('guide-lang').addEventListener('change',function(){stopSpeech();if(recognition)recognition.abort()});
+var appealDialog=document.createElement('dialog');appealDialog.setAttribute('aria-labelledby','appeal-heading');
+appealDialog.innerHTML='<form class="mbox" id="appeal-form"><h2 id="appeal-heading">Ask a human reviewer</h2><p>Explain the blocker you would like reviewed. Do not include identity or bank numbers. Submitting a request does not change your application decision.</p><label for="appeal-concern">Your concern</label><textarea id="appeal-concern" minlength="10" maxlength="1500" required></textarea><p id="appeal-result" role="status"></p><div class="actions"><button class="btn pri" type="submit">Confirm and submit appeal</button><button class="btn" type="button" id="appeal-close">Close</button></div></form>';
+document.body.appendChild(appealDialog);
+$('guide-appeal').addEventListener('click',function(){
+  if(!ACCOUNT){$('guide-status').textContent='Sign in before submitting a persistent appeal.';accountDialog.showModal();return}
+  $('appeal-concern').value='';$('appeal-result').textContent='';appealDialog.showModal();$('appeal-concern').focus();
+});
+$('appeal-close').addEventListener('click',function(){appealDialog.close()});
+$('appeal-form').addEventListener('submit',function(e){e.preventDefault();var button=e.submitter;button.disabled=true;
+  accountRequest('/api/appeals',{explanation:$('appeal-concern').value}).then(function(result){productEvent('appeal_submitted');$('appeal-result').textContent='Appeal submitted. Reference '+result.reference+'. Status: '+result.status;cpPush('a','Your appeal was submitted to the human review process. Reference '+result.reference+'. It is awaiting reviewer assignment.');}).catch(function(){ $('appeal-result').textContent='The appeal could not be submitted. Please check your session and try again.';}).finally(function(){button.disabled=false});
+});
 var RESTORED=restore();
 applyTheme(); VIEW=fromHash()||"dash"; if(!fromHash()&&!canSee(VIEW)) VIEW=roleOf().first; if(RESTORED&&VIEW==="dash"&&canSee("apply")) VIEW="apply"; show(VIEW); kbLoad(); idleReset();
 if(DROPPED) cheer("your earlier saved progress expired.","Saved applications are kept for 30 days (14 days once a follow-up is open). Please start again.","heart");
+if(location.hash.indexOf('#reset=')===0){resetToken=decodeURIComponent(location.hash.slice(7));history.replaceState(null,'',location.pathname+location.search+'#apply');resetDialog.showModal();$('reset-password').focus()}
 })();
 </script>
 

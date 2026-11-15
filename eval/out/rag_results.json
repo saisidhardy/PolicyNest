@@ -1,0 +1,335 @@
+{
+  "scope": "Development retrieval and metadata checks; not held-out decision evaluation or independent factual-answer assessment",
+  "cases": 24,
+  "retrieval_passes": 24,
+  "citation_metadata_passes": 24,
+  "median_latency_ms": 112.37,
+  "answer_correctness": "Not independently measured; live LLM not exercised",
+  "answer_completeness": "Requires human rubric scoring",
+  "rows": [
+    {
+      "id": "eligibility",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 1293.37,
+      "mode": "hybrid",
+      "sources": [
+        "IRDAI reference \u00a72.2",
+        "IRDAI reference \u00a72.1",
+        "POSP Manual p.1 \u00b7 1.1 Mandatory Eligibility Criteria",
+        "Defect guide \u00a72.2",
+        "Regulatory matrix \u00a72"
+      ]
+    },
+    {
+      "id": "exclusivity",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 120.82,
+      "mode": "hybrid",
+      "sources": [
+        "IRDAI reference \u00a74",
+        "POSP Manual p.1 \u00b7 1.1 Mandatory Eligibility Criteria",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q2: Can I work as a POSP if I already hold a regular LIC or General Insurance individual",
+        "Regulatory matrix \u00a71",
+        "Rulebook \u00a78"
+      ]
+    },
+    {
+      "id": "registration",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 97.91,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.2 \u00b7 1. Stage 1 \u2014 Lead Registration & Mobile/Email Verification: Applicant registers on [POSP",
+        "Rulebook \u00a77",
+        "IRDAI reference \u00a74",
+        "IRDAI reference \u00a73.2",
+        "Regulatory matrix \u00a72"
+      ]
+    },
+    {
+      "id": "documents",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 99.26,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.2 \u00b7 2. Stage 2 \u2014 KYC & Document Upload: Applicant submits mandatory KYC documents and bank",
+        "Rework spec \u00a73",
+        "POSP Manual p.5 \u00b7 CKYC Verification Failed During Proposal",
+        "POSP Manual p.5 \u00b7 3.2 System Error Matrix & Resolution Protocols",
+        "Rulebook \u00a77"
+      ]
+    },
+    {
+      "id": "registry",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 102.0,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.2 \u00b7 3. Stage 3 \u2014 IIB Blacklist & Deduplication Check: The system queries the Insurance Information",
+        "POSP Manual p.4 \u00b7 PAN Already Exists / IIB Active Flag",
+        "IRDAI reference \u00a74",
+        "POSP Manual p.4 \u00b7 3.2 System Error Matrix & Resolution Protocols",
+        "Rulebook \u00a710"
+      ]
+    },
+    {
+      "id": "training",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 101.91,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.3 \u00b7 4. Stage 4 \u2014 Mandatory 15-Hour Training: Once KYC is approved, the Learning Management",
+        "IRDAI reference \u00a73.1",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q1: I completed my 15-hour training, why is the exam button still locked?",
+        "Regulatory matrix \u00a72",
+        "IRDAI reference \u00a73.2"
+      ]
+    },
+    {
+      "id": "examination",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 102.91,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.3 \u00b7 5. Stage 5 \u2014 Online Certification Examination: Upon completing 15 hours of logged study time,",
+        "IRDAI reference \u00a73.2",
+        "Regulatory matrix \u00a72",
+        "IRDAI reference \u00a72.2",
+        "Rulebook \u00a72"
+      ]
+    },
+    {
+      "id": "agreement",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 103.16,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.3 \u00b7 6. Stage 6 \u2014 Agreement E-Sign & POSP Code Generation: Passing candidates execute the",
+        "POSP Manual p.6 \u00b7 5. Code of Conduct, Compliance & Commission Governance",
+        "POSP Manual p.2 \u00b7 2. End-to-End POSP Onboarding & Certification Workflow",
+        "IRDAI reference \u00a74",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q2: Can I work as a POSP if I already hold a regular LIC or General Insurance individual"
+      ]
+    },
+    {
+      "id": "pan",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 91.24,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.3 \u00b7 PAN Card",
+        "Rulebook \u00a74.2",
+        "POSP Manual p.3 \u00b7 2.2 Document Verification Standards & Rejection Reasons",
+        "POSP Manual p.3 \u00b7 Photograph",
+        "POSP Manual p.3 \u00b7 Educational Proof"
+      ]
+    },
+    {
+      "id": "aadhaar",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 92.54,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.3 \u00b7 Aadhaar Card",
+        "Rulebook \u00a73",
+        "Regulatory matrix \u00a72",
+        "POSP Manual p.3 \u00b7 2.2 Document Verification Standards & Rejection Reasons",
+        "Regulatory matrix"
+      ]
+    },
+    {
+      "id": "bank",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 96.25,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.4 \u00b7 Bank Penny-Drop Failure",
+        "POSP Manual p.4 \u00b7 3.2 System Error Matrix & Resolution Protocols",
+        "Rework spec \u00a72.4",
+        "Rulebook \u00a74.5",
+        "Regulatory matrix \u00a73.1"
+      ]
+    },
+    {
+      "id": "timer",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 84.79,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.4 \u00b7 Training Timer Not Progressing",
+        "POSP Manual p.4 \u00b7 3.2 System Error Matrix & Resolution Protocols",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q1: I completed my 15-hour training, why is the exam button still locked?",
+        "POSP Manual p.3 \u00b7 4. Stage 4 \u2014 Mandatory 15-Hour Training: Once KYC is approved, the Learning Management",
+        "IRDAI reference \u00a73.1"
+      ]
+    },
+    {
+      "id": "vahan",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 113.5,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.4 \u00b7 VAHAN Fetch Timeout / Vehicle Not Found",
+        "POSP Manual p.4 \u00b7 3.2 System Error Matrix & Resolution Protocols",
+        "POSP Manual p.4 \u00b7 3.1 Core Portal Modules",
+        "POSP Manual p.4 \u00b7 Payment Deducted, Policy Not Generated",
+        "POSP Manual p.4 \u00b7 Training Timer Not Progressing"
+      ]
+    },
+    {
+      "id": "payment",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 138.66,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.4 \u00b7 Payment Deducted, Policy Not Generated",
+        "POSP Manual p.4 \u00b7 3.2 System Error Matrix & Resolution Protocols",
+        "POSP Manual p.6 \u00b7 5.1 Strict Prohibitions (Zero-Tolerance Violations)",
+        "POSP Manual p.6 \u00b7 5.2 Commission & Payout Rules",
+        "POSP Manual p.6 \u00b7 4.3 Endorsements & Policy Cancellation"
+      ]
+    },
+    {
+      "id": "ckyc",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 126.08,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.5 \u00b7 CKYC Verification Failed During Proposal",
+        "POSP Manual p.5 \u00b7 3.2 System Error Matrix & Resolution Protocols",
+        "Rework spec \u00a72.4",
+        "Regulatory matrix \u00a73.2",
+        "Regulatory matrix \u00a72"
+      ]
+    },
+    {
+      "id": "ncb",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 138.84,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.5 \u00b7 4.1 Motor Insurance Rules (Break-in, NCB & Transfer)",
+        "POSP Manual p.6 \u00b7 4.3 Endorsements & Policy Cancellation",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q3: A customer sold their car and wants to transfer their 50% NCB to their newly purchased",
+        "IRDAI reference \u00a71",
+        "Rulebook \u00a710"
+      ]
+    },
+    {
+      "id": "breakin",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 133.31,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.5 \u00b7 4.1 Motor Insurance Rules (Break-in, NCB & Transfer)",
+        "POSP Manual p.6 \u00b7 4.3 Endorsements & Policy Cancellation",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q4: Why was my policy payout held or reversed in the ledger?",
+        "POSP Manual p.4 \u00b7 Payment Deducted, Policy Not Generated",
+        "POSP Manual p.6 \u00b7 5.1 Strict Prohibitions (Zero-Tolerance Violations)"
+      ]
+    },
+    {
+      "id": "health",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 157.44,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.5 \u00b7 4.2 Health & Life Insurance Rules",
+        "IRDAI reference \u00a71.1",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q5: Can I issue a health insurance policy with a \u20b915 Lakh Sum Insured using my POSP",
+        "POSP Manual p.2 \u00b7 Health Insurance",
+        "POSP Manual p.2 \u00b7 1.2 Permitted Insurance Products (POSP Scope)"
+      ]
+    },
+    {
+      "id": "life",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 138.63,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.5 \u00b7 4.2 Health & Life Insurance Rules",
+        "POSP Manual p.2 \u00b7 Life Insurance",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q4: Why was my policy payout held or reversed in the ledger?",
+        "IRDAI reference \u00a71.1",
+        "POSP Manual p.2 \u00b7 1.2 Permitted Insurance Products (POSP Scope)"
+      ]
+    },
+    {
+      "id": "endorsement",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 125.23,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.6 \u00b7 4.3 Endorsements & Policy Cancellation",
+        "POSP Manual p.1 \u00b7 1.2 Permitted Insurance Products (POSP Scope)",
+        "POSP Manual p.4 \u00b7 3.1 Core Portal Modules",
+        "Regulatory matrix \u00a72",
+        "IRDAI reference \u00a75"
+      ]
+    },
+    {
+      "id": "commission",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 137.01,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.6 \u00b7 5.2 Commission & Payout Rules",
+        "POSP Manual p.7 \u00b7 6. Golden Q&A Reference Set for RAG Grounding \u00b7 Q4: Why was my policy payout held or reversed in the ledger?",
+        "POSP Manual p.4 \u00b7 3.1 Core Portal Modules",
+        "POSP Manual p.6 \u00b7 5.1 Strict Prohibitions (Zero-Tolerance Violations)",
+        "POSP Manual p.1 \u00b7 Introduction"
+      ]
+    },
+    {
+      "id": "compliance",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 132.71,
+      "mode": "hybrid",
+      "sources": [
+        "POSP Manual p.6 \u00b7 5.1 Strict Prohibitions (Zero-Tolerance Violations)",
+        "IRDAI reference \u00a71.1",
+        "POSP Manual p.2 \u00b7 Personal Accident",
+        "Regulatory matrix \u00a72",
+        "Rulebook \u00a74.5"
+      ]
+    },
+    {
+      "id": "unanswerable",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 111.24,
+      "mode": "hybrid",
+      "sources": []
+    },
+    {
+      "id": "ambiguous",
+      "retrieval_pass": true,
+      "citation_metadata_valid": true,
+      "latency_ms": 0,
+      "mode": "abstention",
+      "sources": []
+    }
+  ]
+}

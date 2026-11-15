@@ -1,0 +1,53 @@
+{
+  "run_at": "2026-11-15T13:37:49Z",
+  "checks": [
+    {
+      "name": "backend",
+      "exit_code": 0,
+      "seconds": 11.39,
+      "log": "test-results/backend.log"
+    },
+    {
+      "name": "static",
+      "exit_code": 0,
+      "seconds": 0.84,
+      "log": "test-results/static.log"
+    },
+    {
+      "name": "explanations",
+      "exit_code": 0,
+      "seconds": 0.24,
+      "log": "test-results/explanations.log"
+    },
+    {
+      "name": "engine",
+      "exit_code": 0,
+      "seconds": 0.85,
+      "log": "test-results/engine.log"
+    },
+    {
+      "name": "rag",
+      "exit_code": 0,
+      "seconds": 4.13,
+      "log": "test-results/rag.log"
+    },
+    {
+      "name": "assistant_browser",
+      "exit_code": 1,
+      "seconds": 14.11,
+      "log": "test-results/assistant_browser.log"
+    },
+    {
+      "name": "integrated_browser",
+      "exit_code": 0,
+      "seconds": 18.98,
+      "log": "test-results/integrated_browser.log"
+    },
+    {
+      "name": "T1_T10",
+      "exit_code": 0,
+      "seconds": 182.42,
+      "log": "test-results/T1_T10.log"
+    }
+  ]
+}
