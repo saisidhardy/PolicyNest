@@ -10,6 +10,9 @@ import subprocess
 import threading
 import time
 import atexit
+import logging
+
+log=logging.getLogger('policynest.rag')
 
 HERE=Path(__file__).resolve().parent
 INDEX=HERE/'rag_index.json'
@@ -26,7 +29,10 @@ def prepare():
         chunks.append(dict(c,document_id='challenge-rulebook-corpus',document_name=c['src'],page_number=None,
                            section=c['head'],subsection='',version=hashlib.sha256(c['text'].encode()).hexdigest(),
                            source_type='approved_challenge_source',source_classification='Internal operational rule'))
-    manual=json.loads((HERE/'posp_manual.json').read_text(encoding='utf-8'))
+    degraded=False
+    try: manual=json.loads((HERE/'posp_manual.json').read_text(encoding='utf-8'))
+    except (OSError,ValueError):
+        log.warning('posp_manual.json missing or unreadable: using the rulebook passages only (index not written)'); manual={'chunks':[]}; degraded=True
     for c in manual['chunks']:
         # Original extraction is retained unchanged; only applicant-safe text enters the answer corpus.
         text='\n'.join(line for line in c['text'].splitlines() if not BANNED.search(line))
@@ -37,7 +43,9 @@ def prepare():
         chunks.append(dict(c,text=text,head=c['subsection'] or c['section'],cite=cite,audience='applicant',source_classification=classification))
     for i,c in enumerate(chunks): c['chunk_id']=f'kb-{i}'
     out={'chunks':chunks,'schema_version':1,'embedding_model':None}
-    INDEX.write_text(json.dumps(out,ensure_ascii=False),encoding='utf-8')
+    if degraded: return out
+    try: INDEX.write_text(json.dumps(out,ensure_ascii=False),encoding='utf-8')
+    except OSError as e: log.warning('could not write the retrieval index (%s)',type(e).__name__)
     return out
 
 
@@ -67,11 +75,37 @@ def embed(text):
             return None
 
 
+def _kb_only():
+    """Applicant-safe rulebook passages from kb.json alone (used when the index or the manual is missing)."""
+    try:
+        raw=json.loads((HERE/'kb.json').read_text(encoding='utf-8'))
+    except (OSError,ValueError):
+        log.warning('kb.json missing or unreadable: no retrieval corpus')
+        return {'chunks':[],'schema_version':1,'embedding_model':None}
+    chunks=[dict(c,document_id='challenge-rulebook-corpus',document_name=c.get('src',''),page_number=None,section=c['head'],subsection='',
+                 version=hashlib.sha256(c['text'].encode()).hexdigest(),source_type='approved_challenge_source',
+                 source_classification='Internal operational rule') for c in raw if c.get('audience','applicant')=='applicant']
+    for i,c in enumerate(chunks): c['chunk_id']=f'kb-{i}'
+    return {'chunks':chunks,'schema_version':1,'embedding_model':None}
+
+
+def _load_index():
+    """Index file, else rebuild it, else keyword/kb-only with a logged warning. Never raises."""
+    try:
+        if INDEX.exists(): return json.loads(INDEX.read_text(encoding='utf-8'))
+        return prepare()
+    except (OSError,ValueError,KeyError) as e:
+        log.warning('retrieval index unavailable (%s); using the rulebook passages only',type(e).__name__)
+        return _kb_only()
+
+
 def retrieve(question,limit=5,semantic=True):
     start=time.perf_counter()
     if re.search(r'\b(secret|unpublished|confidential)\b',question,re.I):
         return [],{'mode':'abstention','latency_ms':0,'candidate_count':0,'reason':'No approved evidence for confidential or unpublished information'}
-    data=json.loads(INDEX.read_text(encoding='utf-8')) if INDEX.exists() else prepare()
+    data=_load_index()
+    if not data['chunks']:
+        return [],{'mode':'unavailable','latency_ms':0,'candidate_count':0,'embedding_model':None}
     chunks=data['chunks'];qt=tokens(question);vector=embed(question) if semantic and data.get('embedding_model') else None
     terms=[tokens(c['head']+' '+c['text']) for c in chunks];avg=sum(map(len,terms))/max(1,len(terms))
     df={t:sum(t in set(ts) for ts in terms) for t in set(qt)}

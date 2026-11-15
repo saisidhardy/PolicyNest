@@ -3,7 +3,7 @@
 Resources are plain dictionaries so handlers and tests cannot bypass the policy with UI state.
 """
 
-APPLICANT_ACTIONS = {"application.read", "application.save", "progress.save", "appeal.create", "assistant.ask"}
+APPLICANT_ACTIONS = {"application.read", "application.save", "progress.save", "appeal.create", "assistant.ask", "portal.read", "portal.write"}
 REVIEWER_ACTIONS = {"application.read", "review.decide", "appeal.read", "appeal.resolve", "audit.read"}
 
 

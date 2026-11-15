@@ -5,9 +5,14 @@ import time
 import re
 import auth
 import policy
+import portal
+
+
+REVIEW_EVENT={'NEEDS_MORE_INFO':'review_more_info','KYC_APPROVED':'review_approved','REJECTED':'review_rejected','HUMAN_REVIEW':'review_in_progress'}
 
 
 def init():
+    portal.init()
     with auth._db() as db:
         db.execute('CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, applicant_id INTEGER NOT NULL UNIQUE, reviewer_id INTEGER, status TEXT NOT NULL)')
         db.execute('CREATE TABLE IF NOT EXISTS appeals (id TEXT PRIMARY KEY, case_id TEXT NOT NULL, explanation TEXT NOT NULL, status TEXT NOT NULL, response TEXT, created INTEGER NOT NULL, resolved INTEGER)')
@@ -81,6 +86,7 @@ def resolve(actor, reference, status, response):
         if current['status']=='RESOLVED':raise ValueError('already_resolved')
         db.execute('UPDATE appeals SET status=?,response=?,resolved=? WHERE id=?', (status,response,int(time.time()),reference))
         _audit(db,row['id'],actor,'APPEAL_'+status)
+        portal.record_reviewer_event(db,row['applicant_id'],'appeal_update')  # key only: no response text
         return {'reference':reference,'status':status}
 
 
@@ -108,4 +114,5 @@ def review(actor,case_id,status,note,rule):
         db.execute('UPDATE cases SET status=? WHERE id=?',(status,case_id))
         db.execute('INSERT INTO review_notes(case_id,reviewer_id,note,created) VALUES(?,?,?,?)',(case_id,actor['id'],rule+' '+note,int(time.time())))
         _audit(db,case_id,actor,'REVIEW_'+status)
+        portal.record_reviewer_event(db,row['applicant_id'],REVIEW_EVENT[status])  # key only: no note, rule or evidence
     return {'status':status,'rule':rule}

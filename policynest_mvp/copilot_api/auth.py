@@ -16,7 +16,15 @@ from contextlib import contextmanager, closing
 
 
 HERE = Path(__file__).resolve().parent
-DB_PATH = Path(os.environ.get("POLICYNEST_DB_PATH", str(HERE / "policynest.sqlite3")))
+def resolve_db_path(env=None):
+    """DATA_DIR (Embarko's durable folder) wins, then POLICYNEST_DB_PATH, then the local default."""
+    env = os.environ if env is None else env
+    if env.get("DATA_DIR"):
+        return Path(os.path.join(env["DATA_DIR"], "policynest.sqlite3"))
+    return Path(env.get("POLICYNEST_DB_PATH") or str(HERE / "policynest.sqlite3"))
+
+
+DB_PATH = resolve_db_path()
 JWT_TTL = int(os.environ.get("JWT_TTL_SECONDS", "3600"))
 
 
@@ -50,6 +58,10 @@ def init_db():
           digest TEXT PRIMARY KEY, user_id INTEGER NOT NULL, expires INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0)""")
         if 'token_version' not in {r[1] for r in db.execute('PRAGMA table_info(users)')}:
             db.execute('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0')
+        cols = {r[1] for r in db.execute('PRAGMA table_info(users)')}
+        for name, ddl in (('language', "TEXT NOT NULL DEFAULT 'en'"), ('mobile', 'TEXT'), ('analytics_consent', 'INTEGER NOT NULL DEFAULT 0')):
+            if name not in cols:
+                db.execute('ALTER TABLE users ADD COLUMN ' + name + ' ' + ddl)
         db.commit()
 
 

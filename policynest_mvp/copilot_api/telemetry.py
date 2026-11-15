@@ -7,6 +7,19 @@ import secrets
 import time
 import auth
 
+# Rows per UTC day that anonymous or abusive traffic can add (the DB is on a small durable disk).
+FRONTEND_DAILY_CAP=int(os.environ.get('TELEMETRY_DAILY_CAP','5000'))
+TECHNICAL_DAILY_CAP=int(os.environ.get('TECHNICAL_DAILY_CAP','50000'))
+BUSINESS_DAILY_CAP=int(os.environ.get('BUSINESS_DAILY_CAP','20000'))
+
+
+def _day_start():
+    return int(time.time())//86400*86400
+
+
+def _count_today(db,table):
+    return db.execute('SELECT COUNT(*) FROM '+table+' WHERE timestamp>=?',(_day_start(),)).fetchone()[0]
+
 EVENTS={'registration','login','onboarding_started','stage_completed','application_submitted','application_approved','application_rejected','document_uploaded','document_corrected','ocr_succeeded','ocr_failed','verification_completed','training_started','training_completed','exam_passed','exam_failed','assistant_opened','assistant_question','assistant_resolved','human_escalation','appeal_submitted','appeal_resolved','reviewer_action','certificate_issued','application_resumed'}
 METRICS={'load','lcp','inp','cls','js_error','api_failure','upload_ms','ocr_ms','assistant_ms'}
 STAGES={'Before you start','Your details','Documents','Verification','Training','Exam','Certificate'}
@@ -29,7 +42,9 @@ def init():
 def technical(route,status,duration,request_id):
     init()
     # Only route templates supplied by the handler; no request bodies, URLs, query strings or IPs.
-    with auth._db() as db: db.execute('INSERT INTO technical VALUES(?,?,?,?,?)',(request_id,int(time.time()),route,int(status),float(duration)))
+    with auth._db() as db:
+        if _count_today(db,'technical')>=TECHNICAL_DAILY_CAP: return  # bounded growth: drop, never fail the request
+        db.execute('INSERT INTO technical VALUES(?,?,?,?,?)',(request_id,int(time.time()),route,int(status),float(duration)))
 
 
 def business(actor,event):
@@ -44,7 +59,9 @@ def business(actor,event):
     event_id=secrets.token_hex(16)
     document=event.get('document_type') if event.get('document_type') in ('PAN','AADHAAR_FRONT','AADHAAR_BACK','CLASS10','BANK','SELFIE') else None
     issue=event.get('issue_code') if event.get('issue_code') in ('IMAGE_BLURRY','IMAGE_CROPPED','NAME_MISMATCH','DOB_MISMATCH','BANK_NAME_MISMATCH','NOT_ACCEPTED','DOC_MISSING') else None
-    with auth._db() as db: db.execute('INSERT INTO business_events(event_id,timestamp,subject,name,actor_type,stage,source,duration,result,document_type,issue_code) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(event_id,int(time.time()),subject,event['event_name'],actor['role'],stage,source,duration,event.get('result') if event.get('result') in ('success','failure','pending') else 'pending',document,issue))
+    with auth._db() as db:
+        if _count_today(db,'business_events')>=BUSINESS_DAILY_CAP: raise ValueError('daily_cap')
+        db.execute('INSERT INTO business_events(event_id,timestamp,subject,name,actor_type,stage,source,duration,result,document_type,issue_code) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(event_id,int(time.time()),subject,event['event_name'],actor['role'],stage,source,duration,event.get('result') if event.get('result') in ('success','failure','pending') else 'pending',document,issue))
     return event_id
 
 
@@ -52,7 +69,9 @@ def frontend(values):
     if not isinstance(values,list) or len(values)>20: raise ValueError('invalid_metrics')
     init()
     with auth._db() as db:
-        for value in values:
+        room=FRONTEND_DAILY_CAP-_count_today(db,'frontend_metrics')
+        if room<=0: raise ValueError('daily_cap')
+        for value in values[:room]:
             if not isinstance(value,dict) or value.get('name') not in METRICS or not isinstance(value.get('value'),(int,float)): continue
             db.execute('INSERT INTO frontend_metrics VALUES(?,?,?,?)',(secrets.token_hex(16),int(time.time()),value['name'],max(0,min(86400000,float(value['value'])))))
 

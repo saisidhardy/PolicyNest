@@ -13,8 +13,10 @@ import auth  # noqa: E402
 
 class AuthStoreTest(unittest.TestCase):
     def setUp(self):
-        try: os.unlink(_tmp.name)
-        except FileNotFoundError: pass
+        # Reset the database the modules actually use (POLICYNEST_DB_PATH from the environment wins over the temp file).
+        for path in {_tmp.name, str(auth.DB_PATH)}:
+            try: os.unlink(path)
+            except FileNotFoundError: pass
 
     def test_register_login_and_owner_snapshot(self):
         user = auth.register("applicant@example.test", "correct horse battery", "Test Applicant")

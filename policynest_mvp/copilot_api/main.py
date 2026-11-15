@@ -27,8 +27,10 @@ for envfile in [p / ".env" for p in (_here.parent, *_here.parents[1:3])]:
                 k, v = line.split("=", 1)
                 os.environ.setdefault(k.strip(), v.strip())
 
+import logging
 import auth
 import policy
+import portal
 import workflows
 import application_state
 import rag
@@ -38,6 +40,7 @@ import secrets
 import threading
 from urllib.parse import urlsplit, parse_qs
 
+log = logging.getLogger('policynest.api')
 MODEL = os.environ.get("COPILOT_MODEL", "claude-opus-5-5")
 EFFORT = os.environ.get("COPILOT_EFFORT", "low")
 # Production (Embarko sets APP_NAME) allows only the live site; local runs also allow the dev server.
@@ -77,7 +80,7 @@ def _cors(h, origin):
         h.send_header("Access-Control-Allow-Origin", origin)
         h.send_header("Vary", "Origin")
         h.send_header("Access-Control-Allow-Credentials", "true")
-        h.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+        h.send_header("Access-Control-Allow-Methods", "POST, GET, PUT, PATCH, OPTIONS")
         h.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 
@@ -122,7 +125,10 @@ def _daily_left():
             db.execute('CREATE TABLE IF NOT EXISTS ai_daily_usage (day TEXT PRIMARY KEY,requests INTEGER NOT NULL)')
             row=db.execute('SELECT requests FROM ai_daily_usage WHERE day=?',(today,)).fetchone()
             used=row['requests'] if row else 0
-    except Exception:used=DAILY_CAP
+    except Exception as e:
+        # A database error must not silently turn the budget to zero: log it and count in memory instead.
+        log.warning('daily usage table unavailable (%s); using the in-memory counter',type(e).__name__)
+        used=0
     return max(0, DAILY_CAP - max(_day['n'],used))
 
 
@@ -131,11 +137,15 @@ def _reserve_answer():
     with _budget_lock:
         if _daily_left()<=0:return False
         today=time.strftime('%Y-%m-%d',time.gmtime())
-        with auth._db() as db:
-            db.execute('CREATE TABLE IF NOT EXISTS ai_daily_usage (day TEXT PRIMARY KEY,requests INTEGER NOT NULL)')
-            db.execute('BEGIN IMMEDIATE')
-            db.execute('INSERT OR IGNORE INTO ai_daily_usage VALUES(?,0)',(today,))
-            changed=db.execute('UPDATE ai_daily_usage SET requests=requests+1 WHERE day=? AND requests<?',(today,DAILY_CAP)).rowcount
+        try:
+            with auth._db() as db:
+                db.execute('CREATE TABLE IF NOT EXISTS ai_daily_usage (day TEXT PRIMARY KEY,requests INTEGER NOT NULL)')
+                db.execute('BEGIN IMMEDIATE')
+                db.execute('INSERT OR IGNORE INTO ai_daily_usage VALUES(?,0)',(today,))
+                changed=db.execute('UPDATE ai_daily_usage SET requests=requests+1 WHERE day=? AND requests<?',(today,DAILY_CAP)).rowcount
+        except Exception as e:
+            log.warning('could not persist the daily usage (%s); counting in memory',type(e).__name__)
+            changed=1 if _day['n']<DAILY_CAP else 0
         if changed:_day['n']+=1
         return bool(changed)
 
@@ -190,6 +200,13 @@ def retrieve(q, n=5, kb=None):
 # ---------- Input checks ----------
 ID_NUMBER = re.compile(r"\b\d{4}\s?\d{4}\s?\d{4}\b|\b[A-Za-z]{5}\d{4}[A-Za-z]\b|\b\d{9,18}\b")
 CODE = re.compile(r"^[A-Za-z0-9_:\- ]{1,40}$")
+# The rulebook's own PAN *format example* (AAAAA9999A: one repeated letter, one repeated digit) is not a real number.
+_PLACEHOLDER = re.compile(r"^([A-Za-z])\1{4}(\d)\2{3}[A-Za-z]$")
+
+
+def id_in(text):
+    """True if the text holds a real-looking ID number. Format examples such as AAAAA9999A are allowed."""
+    return any(not _PLACEHOLDER.match(m.group(0)) for m in ID_NUMBER.finditer(str(text)))
 
 
 def _s(v, n):
@@ -246,7 +263,7 @@ def has_id_number(body):
     ctx = body.get("context") if isinstance(body.get("context"), dict) else {}
     texts += [str(ctx.get("suggested_next_step", ""))] + [str(d.get("refusal_reason", "")) for d in
                                                          (ctx.get("documents") or []) if isinstance(d, dict)]
-    return any(ID_NUMBER.search(str(t)) for t in texts)
+    return any(id_in(t) for t in texts)
 
 
 # ---------- Output filter (the page has the same one; this is the second line) ----------
@@ -290,7 +307,7 @@ def ask(body):
     stop, text = call_model(kw)
     if stop == "refusal":
         return REFUSED, cites
-    if not text or BANNED_OUT.search(text):
+    if not text or BANNED_OUT.search(text) or id_in(text):
         return SAFE, cites
     return text, cites
 
@@ -335,7 +352,7 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         try:
             route=urlsplit(self.path).path
-            known=route if route in ('/api/auth/login','/api/auth/register','/api/auth/refresh','/api/auth/logout','/api/assistant','/api/appeals','/api/applications/me','/api/copilot') else '/api/other'
+            known=route if route in ('/api/auth/login','/api/auth/register','/api/auth/refresh','/api/auth/logout','/api/assistant','/api/appeals','/api/applications/me','/api/copilot','/api/me','/api/notifications','/api/notifications/read','/api/applications/me/events','/api/applications/me/timeline','/api/events','/api/telemetry') else '/api/other'
             elapsed=(time.perf_counter()-self._started)*1000
             telemetry.technical(known,code,elapsed,self._request_id)
             if os.environ.get('STRUCTURED_LOGS')=='1':print(json.dumps({'request_id':self._request_id,'route':known,'status':code,'latency_ms':round(elapsed,2)}),flush=True)
@@ -349,6 +366,8 @@ class H(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed=urlsplit(self.path);params=parse_qs(parsed.query);self.path=parsed.path
+        legacy=self.path=='/api/applications/me' and params.get('view',[''])[0]=='snapshot'
+        if not legacy and self._portal('GET',None,params):return
         if self.path=='/api/reviewer/case':
             try:return self._json(200,workflows.case_detail(self._identity(),params.get('id',[''])[0]))
             except ValueError:return self._json(403,{'error':'forbidden'})
@@ -400,16 +419,24 @@ class H(BaseHTTPRequestHandler):
             return self._json(400, {"error": "bad_json"})
         if not isinstance(body, dict):
             return self._json(400, {"error": "schema"})
+        if not (self.path=='/api/applications/me' and 'snapshot' in body) and self._portal('POST',body,{}):return
         if self.path=='/api/reviewer/decide':
             try:return self._json(200,workflows.review(self._identity(),body.get('case_id'),body.get('status'),body.get('note'),body.get('rule')))
             except ValueError:return self._json(403,{'error':'forbidden_or_invalid_review'})
         if self.path=='/api/events':
-            try:return self._json(201,{'event_id':telemetry.business(self._identity(),body)})
-            except ValueError:return self._json(400,{'error':'invalid_event_or_identity'})
+            try:
+                user=self._identity()
+                if not portal.has_analytics_consent(user):return self._json(403,{'error':'consent_required'})
+                return self._json(201,{'event_id':telemetry.business(user,body)})
+            except ValueError as e:
+                capped=str(e)=='daily_cap'
+                return self._json(429 if capped else 400,{'error':'daily_cap' if capped else 'invalid_event_or_identity'})
         if self.path=='/api/telemetry':
             if _limited('telemetry:'+_client(self)):return self._json(429,{'error':'rate_limited'})
             try:telemetry.frontend(body.get('metrics'));return self._json(200,{'ok':True})
-            except ValueError:return self._json(400,{'error':'invalid_metrics'})
+            except ValueError as e:
+                capped=str(e)=='daily_cap'
+                return self._json(429 if capped else 400,{'error':'daily_cap' if capped else 'invalid_metrics'})
         if self.path=='/api/assistant':
             if _limited(_client(self)):return self._json(429,{'error':'rate_limited'})
             if not isinstance(body.get('question'),str) or not 1<=len(body['question'].strip())<=1200:return self._json(400,{'error':'schema'})
@@ -451,12 +478,12 @@ class H(BaseHTTPRequestHandler):
                     stop,generated=call_model(kw)
                     telemetry.technical('/internal/llm',200,(time.perf_counter()-llm_started)*1000,self._request_id+'-llm')
                     referenced=re.findall(r'\[([^\]]+)\]',generated)
-                    if stop!='refusal' and generated and not BANNED_OUT.search(generated) and not ID_NUMBER.search(generated) and referenced and all(s in sources for s in referenced):
+                    if stop!='refusal' and generated and not BANNED_OUT.search(generated) and not id_in(generated) and referenced and all(s in sources for s in referenced):
                         answer=generated;mode='ai_grounded'
                 except Exception:
                     telemetry.technical('/internal/llm',502,(time.perf_counter()-llm_started)*1000,self._request_id+'-llm')
                     mode='deterministic_upstream_unavailable'
-            if BANNED_OUT.search(answer) or ID_NUMBER.search(answer):answer=SAFE
+            if BANNED_OUT.search(answer) or id_in(answer):answer=SAFE
             return self._json(200,{'answer':state_line+'\n\n'+answer,'sources':sources,'mode':mode,'retrieval':diagnostics,'offer_appeal':True,'context_source':'authenticated_saved_progress' if ctx else 'general_policy_only'})
         if self.path in ('/api/appeals', '/api/reviewer/appeals/resolve', '/api/admin/assign'):
             try:
@@ -533,6 +560,46 @@ class H(BaseHTTPRequestHandler):
             return self._json(200, {"answer": answer, "sources": cites, "model": MODEL, "daily_left": _daily_left()})
         except Exception as e:  # never leak the key or stack to the browser
             return self._json(502, {"error": "upstream", "type": type(e).__name__})
+
+    def _portal(self, method, body, params):
+        """Applicant-portal routes (portal.ROUTES). Returns True when the request was handled."""
+        route = portal.ROUTES.get((method, self.path))
+        if not route:
+            return False
+        try:
+            user = self._identity()
+        except ValueError:
+            self._json(401, {'error': 'unauthenticated'})
+            return True
+        if method == 'POST' and self.path == '/api/applications/me/events' and _limited('portal:' + _client(self)):
+            self._json(429, {'error': 'rate_limited'})
+            return True
+        try:
+            code, out = route(user, body if isinstance(body, dict) else {}, params)
+            self._json(code, out)
+        except portal.PortalError as e:
+            self._json(e.status, e.payload)
+        return True
+
+    def _body_request(self, method):
+        self.path = urlsplit(self.path).path
+        if self.headers.get("Origin", "") not in ALLOWED:
+            return self._json(403, {"error": "origin_not_allowed"})
+        try: n = int(self.headers.get("Content-Length") or 0)
+        except ValueError: return self._json(400, {'error': 'bad_length'})
+        if n <= 0 or n > MAX_BODY:
+            return self._json(413, {"error": "body_too_large"})
+        try: body = json.loads(self.rfile.read(n))
+        except ValueError: return self._json(400, {"error": "bad_json"})
+        if not isinstance(body, dict): return self._json(400, {"error": "schema"})
+        if not self._portal(method, body, {}):
+            return self._json(404, {"error": "not_found"})
+
+    def do_PUT(self):
+        self._body_request('PUT')
+
+    def do_PATCH(self):
+        self._body_request('PATCH')
 
     def log_message(self, fmt, *args):  # no request bodies in logs
         pass
