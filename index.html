@@ -239,6 +239,24 @@ details.rules-applied .rules-wrap{margin-top:10px}
 .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 18px}
 .kv div{display:flex;flex-direction:column;gap:1px;min-width:0} .kv span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600} .kv b{overflow-wrap:anywhere}
 .stampline{font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+/* C10: integrity seal and the verify disclosure on the certificate */
+.seal{overflow-wrap:anywhere;color:var(--muted)} .seal .mono{color:var(--text)}
+.certcheck{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.certcheck summary{cursor:pointer;font-weight:600;min-height:24px;display:flex;align-items:center}
+.certcheck[open]{display:flex;flex-direction:column;gap:10px}
+/* C10: print or save as PDF. Only the certificate card prints, on white, A4. */
+@media print{
+  @page{size:A4;margin:12mm}
+  html,body{background:#fff!important;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body *{visibility:hidden!important}
+  #view-apply .cert-print,#view-apply .cert-print *{visibility:visible!important}
+  #view-apply .cert-print{position:absolute;left:0;top:0;width:100%;max-width:none;margin:0;padding:0;border:0;box-shadow:none;background:#fff!important;gap:12px}
+  .cert-print .no-print,.cert-print .no-print *{display:none!important}
+  .cert-print .cert{background:#fff!important;border:2px solid #000!important;box-shadow:none;padding:18mm 16mm}
+  .cert-print *{color:#000!important;text-shadow:none!important;background-image:none!important}
+  .cert-print .cert .kv span,.cert-print .stampline,.cert-print .eyebrow{color:#000!important}
+  .cert-print .stampline{border-top-color:#000!important}
+}
 
 .ops{display:flex;flex-direction:column;gap:18px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-width:0;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
@@ -1532,14 +1550,54 @@ function stepExam(){
   QUIZ.map(function(q,i){return '<fieldset class="q"><legend>'+(i+1)+'. '+q.q+'</legend>'+q.o.map(function(o,j){return '<label for="q'+i+'o'+j+'"><input type="radio" id="q'+i+'o'+j+'" name="q'+i+'" data-q="'+i+'" value="'+j+'"'+(S.exam.ans[i]===j?" checked":"")+'><span>'+o+'</span></label>'}).join("")+'</fieldset>'}).join("")+
   '</div><div class="actions"><button class="btn pri" type="button" data-act="submit-exam"'+(all?"":" disabled")+'>Submit answers</button></div></div>';
 }
+/* C10: the certificate's fields, exactly as displayed. The seal is computed over these strings and the verify panel re-reads them from the page. */
+function certView(){
+  var pn=(S.ex&&S.ex.PAN&&S.ex.PAN.name)||S.f.name||"";
+  return {posp:String(S.posp||""),name:norm(pn),pan:maskPan(S.f.pan||""),date:fmtDate(S.issued),eng:ENGINE.split(" · ")[0]};
+}
+var CERT_KEYS=["posp","name","pan","date","eng"];
+function sealInput(v){ return JSON.stringify(["PN-CERT-1",v.posp,v.name,v.pan,v.date,v.eng]); }
+function canSeal(){ return !!(window.crypto&&crypto.subtle&&window.TextEncoder); }
+function sha256Hex(str){
+  return crypto.subtle.digest("SHA-256",new TextEncoder().encode(str)).then(function(buf){
+    return Array.prototype.map.call(new Uint8Array(buf),function(x){return ("0"+x.toString(16)).slice(-2)}).join("");
+  });
+}
+var SEALING=false;
+function sealSoon(v){
+  if(SEALING||!canSeal()||!S.posp) return; SEALING=true;
+  var posp=S.posp;
+  sha256Hex(sealInput(v)).then(function(h){
+    SEALING=false; if(S.posp!==posp) return;
+    S.seal=h; var el=$("cert-seal"); if(el){ el.setAttribute("data-seal",h); el.textContent=h.slice(0,16); }
+    persist(true);
+  },function(){ SEALING=false; });
+}
+function verifyCert(){
+  var out=$("cert-verify-out"); if(!out) return;
+  if(!canSeal()){ out.textContent="Verification needs a secure page (https or localhost) in this browser."; return; }
+  var el=$("cert-seal"), want=el?el.getAttribute("data-seal"):"";
+  if(!want){ out.textContent="The seal is still being computed. Try again in a moment."; return; }
+  var v={};
+  CERT_KEYS.forEach(function(k){ var n=document.querySelector('.cert [data-f="'+k+'"]'); v[k]=n?n.textContent.trim():""; });
+  sha256Hex(sealInput(v)).then(function(h){
+    out.textContent=h===want?"Seal matches the fields on this certificate.":"Mismatch: the fields on this page do not match the seal. Do not rely on this copy.";
+  },function(){ out.textContent="Verification failed in this browser."; });
+}
 function stepCert(){
   var mins=Math.max(1,Math.round((Date.now()-S.started)/60000));
-  return '<div class="panel narrow"><div class="head"><h1>You are certified</h1><p>Your POSP code is active. You can start selling motor, health and life products on PolicyNest.</p></div>'+
-  '<div class="cert"><span class="eyebrow">PolicyNest Insurance Brokers · Point of Sales Person</span><div><div class="small muted">This certifies that</div><div class="name">'+esc(norm(S.f.name))+'</div><div class="small muted">has completed the prescribed training and passed the POSP examination.</div></div>'+
-  '<div class="kv"><div><span>POSP code</span><b class="mono">'+S.posp+'</b></div><div><span>PAN</span><b class="mono">'+maskPan(S.f.pan)+'</b></div><div><span>Issued</span><b>'+fmtDate(new Date().toISOString().slice(0,10))+'</b></div><div><span>Training</span><b>15.0 hours</b></div><div><span>Exam score</span><b>'+S.exam.score+'%</b></div><div><span>Location</span><b>'+esc(S.f.city)+', '+esc(S.f.state)+'</b></div></div>'+
-  '<div class="stampline">Demonstration certificate for a fictional broker. Not a valid IRDAI credential.</div></div>'+
-  '<div class="stats"><div class="stat"><b>'+mins+' min</b><span>Start to certificate (this demo, on this device)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>'+
-  '<div class="actions"><button class="btn" type="button" data-act="go-ops">See the audit trail</button><button class="btn pri" type="button" data-act="reset">Start a new application</button></div></div>';
+  if(!S.issued){ var iss=(S.events||[]).filter(function(e){return e.event==="ISSUE_CREDENTIAL"}).pop(); S.issued=(iss&&iss.t)?new Date(iss.t).toISOString().slice(0,10):new Date().toISOString().slice(0,10); }
+  var v=certView(), seal=(S.seal&&S.seal.length===64)?S.seal:"";
+  if(!seal) sealSoon(v);
+  var sealTxt=seal?seal.slice(0,16):(canSeal()?"computing…":"not available in this browser");
+  return '<div class="panel narrow cert-print"><div class="head"><h1>You are certified</h1><p class="no-print">Your POSP code is active. You can start selling motor, health and life products on PolicyNest.</p></div>'+
+  '<div class="cert"><span class="eyebrow">PolicyNest Insurance Brokers · Point of Sales Person</span><div><div class="small muted">This certifies that</div><div class="name" data-f="name">'+esc(v.name)+'</div><div class="small muted">has completed the prescribed training and passed the POSP examination.</div></div>'+
+  '<div class="kv"><div><span>POSP code</span><b class="mono" data-f="posp">'+esc(v.posp)+'</b></div><div><span>PAN</span><b class="mono" data-f="pan">'+esc(v.pan)+'</b></div><div><span>Issued</span><b data-f="date">'+esc(v.date)+'</b></div><div><span>Engine version</span><b class="mono" data-f="eng">'+esc(v.eng)+'</b></div><div><span>Training</span><b>15.0 hours</b></div><div><span>Exam score</span><b>'+S.exam.score+'%</b></div><div><span>Location</span><b>'+esc(S.f.city)+', '+esc(S.f.state)+'</b></div></div>'+
+  '<div class="seal small">Integrity seal: <span id="cert-seal" class="mono" data-seal="'+esc(seal)+'">'+esc(sealTxt)+'</span></div>'+
+  '<div class="stampline">Demonstration certificate. The seal shows these fields were not changed on this device; it does not prove that IRDAI or an insurer issued it. Fictional broker; not a valid IRDAI credential.</div></div>'+
+  '<details class="certcheck no-print" id="cert-verify"><summary>Verify this certificate</summary><p class="small muted">Seal covers: POSP code, name, PAN (masked), issue date and engine version. Training hours, exam score and location are printed but not sealed.</p><div class="actions" style="justify-content:flex-start"><button class="btn" type="button" data-act="verify-cert">Recompute the seal from these fields</button></div><p class="small" id="cert-verify-out" role="status" aria-live="polite"></p></details>'+
+  '<div class="stats no-print"><div class="stat"><b>'+mins+' min</b><span>Start to certificate (this demo, on this device)</span></div><div class="stat"><b>'+S.touches+'</b><span>Human touches</span></div><div class="stat"><b>'+S.followups+'</b><span>Follow-up messages</span></div></div>'+
+  '<div class="actions no-print"><button class="btn" type="button" data-act="print-cert">Print or save as PDF</button><button class="btn" type="button" data-act="go-ops">See the audit trail</button><button class="btn pri" type="button" data-act="ask-new">Start a new application</button></div></div>';
 }
 function render(){
   flow();
@@ -1877,12 +1935,14 @@ document.addEventListener("click",function(e){
   else if(a==="start-exam"){ setState("EXAM_IN_PROGRESS"); log("EXAM_START","APPLICANT","Attempt started"); go(4); }
   else if(a==="retry"){ S.exam={ans:{},score:null}; setState("EXAM_IN_PROGRESS"); log("EXAM_START","APPLICANT","Re-attempt (24-hour cooldown waived in demo)"); render(); }
   else if(a==="submit-exam"){ var ok=0; QUIZ.forEach(function(q,i){ if(S.exam.ans[i]===q.a) ok++; }); S.exam.score=Math.round(ok/QUIZ.length*100);
-    if(S.exam.score>=50){ setState("EXAM_PASSED"); log("EXAM_SUBMIT","SYSTEM","Score "+S.exam.score+"% · demo pass mark 50%"); S.posp="PN-POSP-"+S.appId.slice(-5); setState("CERTIFIED"); cheer("congratulations, you are certified!","You scored "+S.exam.score+"%. Your POSP code "+S.posp+" is active. Welcome to PolicyNest.","star"); log("ISSUE_CREDENTIAL","SYSTEM","POSP code "+S.posp+" issued · registry notification simulated"); go(5); }
+    if(S.exam.score>=50){ setState("EXAM_PASSED"); log("EXAM_SUBMIT","SYSTEM","Score "+S.exam.score+"% · demo pass mark 50%"); S.posp="PN-POSP-"+S.appId.slice(-5); S.issued=new Date().toISOString().slice(0,10); S.seal=null; setState("CERTIFIED"); cheer("congratulations, you are certified!","You scored "+S.exam.score+"%. Your POSP code "+S.posp+" is active. Welcome to PolicyNest.","star"); log("ISSUE_CREDENTIAL","SYSTEM","POSP code "+S.posp+" issued · registry notification simulated"); go(5); }
     else { setState("TRAINING_COMPLETED"); log("EXAM_FAIL","SYSTEM","Score "+S.exam.score+"%"); cheer("not this time, and that is fine.","You can retake the exam after 24 hours (rulebook §2). Review the modules before you try again.","heart"); render(); } }
   else if(a==="go-ops"){ show("audit"); }
   else if(a==="go-apply"){ show("apply"); }
   else if(a==="go-review"){ show("ops"); }
   else if(a==="reset"){ if(timer) clearInterval(timer); forgetSaved(true); fresh(); show("apply"); go(0); }
+  else if(a==="print-cert"){ window.print(); }
+  else if(a==="verify-cert"){ verifyCert(); }
   else if(a==="ask-new"){ askNewApp(); }
   else if(a==="ask-delete"){ askDelete(); }
 });
