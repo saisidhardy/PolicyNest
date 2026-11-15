@@ -38,6 +38,8 @@ The numbered folders `01_…` to `08_…` in this directory are the source packa
   - **Build order:** accessibility fixes → queue data → Node and held-out set → process map → specimen prints and photo bench → deck last.
   - **Go-ahead:** on 15 Nov, passes 1–2 and the original list were built and deployed after the user's OK (accessibility and trust, honest numbers, queue data, the §4.6 selfie rule, discovery questions). Live check passed: engine hash match, T1–T10. Still open: the deploy with the user's OK and a live check, held-out labels, specimen prints, the optional phone-photo bench, the deck, and the console redesign (waits for references).
 
+- **PR #1 (15 Nov, Hardik Nagpal, written with Codex; merged on GitHub, NOT deployed):** it adds accounts and JWT cookies, a SQLite store, reviewer assignment, appeals, telemetry and analytics, a hybrid-retrieval Copilot over a "POSP manual", and an account/workspace UI. It reverses the "no accounts, no server store" decision; the team must confirm the direction. Verified review, defects and deploy blockers: `planning/PR1_CODEX_REVIEW.md`. The live site runs the pre-PR build plus the role switch. Do not redeploy the proxy with the old recipe: it now needs `kb.json`, `rag_index.json`, `posp_manual.json` and a writable `POLICYNEST_DB_PATH`.
+
 **Product spec:** `PRODUCT.md` lists every functional goal with its status (Built / Partial / Not built / Future), the T1–T10 results and the success metrics. Update it when a goal's status changes.
 
 ## Where things are
