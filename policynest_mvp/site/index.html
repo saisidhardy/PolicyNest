@@ -73,7 +73,7 @@ p{margin:0} button,input,select{font:inherit;color:inherit}
 .top-in{max-width:1160px;margin:0 auto;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap}
 .top-in>b{font-family:var(--display);font-weight:600;font-size:.92rem}
 .pbar{flex:1 1 180px;display:flex;gap:10px;align-items:center;min-width:0} .pbar .prog{flex:1}
-#view-dash,#view-apply{display:flex;flex-direction:column;gap:20px}
+#view-dash,#view-apply,#view-notif,#view-hist,#view-acct,#view-help{display:flex;flex-direction:column;gap:20px}
 .stepper{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 8px 14px;box-shadow:var(--shadow)}
 .sp{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;text-align:center;font-size:.8rem;font-weight:700;color:var(--muted);min-width:0}
 .sp::before{content:"";position:absolute;top:17px;right:50%;width:100%;height:2px;background:var(--line)}
@@ -523,6 +523,120 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
 .role small{font-size:.76rem;color:var(--muted);line-height:1.35}
 .rolechip{font-size:.78rem;font-weight:700;color:var(--ink);background:var(--sunken);border-radius:999px;padding:6px 12px;white-space:nowrap}
 @media (max-width:900px){.role{flex-direction:row;flex-wrap:wrap;align-items:center}.role label{flex:none}.role select{flex:1 1 160px;width:auto}.role small{flex-basis:100%}}
+/* ===== Applicant shell and calm dashboard (lane P3+P4). Same tokens in both themes. ===== */
+.top-in{flex-direction:column;align-items:stretch;gap:8px;padding-block:10px}
+.tb-row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;min-width:0}
+.tb-1 .tools{margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.tb-who{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.tb-who b{font-family:var(--display);font-size:.98rem;overflow-wrap:anywhere}
+.tb-ver{display:flex;gap:6px;flex-wrap:wrap}
+.vchip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:.74rem;font-weight:700;white-space:nowrap}
+.vchip svg,.stbadge svg,.sv svg,.actline svg,.drow svg,.savedline svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.vchip.ok{background:var(--ok-soft);color:var(--ok)} .vchip.no{background:var(--sunken);color:var(--muted)}
+.tb-ref{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;font-size:.86rem}
+.stbadge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-size:.8rem;font-weight:800;white-space:nowrap}
+.tone-neutral{background:var(--sunken);color:var(--ink)}
+.tone-info{background:var(--info-soft);color:var(--info)}
+.tone-warn{background:var(--brand-soft);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--brand)}
+.tone-ok{background:var(--ok-soft);color:var(--ok)}
+.tone-bad{background:var(--bad-soft);color:var(--bad-ink)}
+.sv{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);font-weight:600}
+.sv.failed,.sv.offline{color:var(--bad-ink)} .sv.saved svg{color:var(--ok)}
+.langsw{display:inline-flex;background:var(--surface);border-radius:999px;padding:3px;box-shadow:var(--shadow)}
+.langsw button{border:0;background:none;border-radius:999px;min-height:34px;min-width:44px;padding:0 12px;font-weight:700;font-size:.8rem;cursor:pointer;color:var(--ink)}
+.langsw button[aria-pressed="true"]{background:var(--night);color:var(--night-ink)}
+.amwrap{position:relative}
+.amb{display:inline-flex;align-items:center;gap:8px;border:0;background:var(--surface);border-radius:999px;padding:3px 12px 3px 3px;min-height:44px;cursor:pointer;color:var(--ink);box-shadow:var(--shadow);font:inherit;font-weight:700;font-size:.85rem}
+.top .amb .avatar{width:38px;height:38px}
+.amb .amn{max-width:12ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amb>svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ampop{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(320px,calc(100vw - 32px));background:var(--surface);color:var(--ink);border-radius:20px;border:1px solid var(--line);box-shadow:0 24px 60px -20px rgba(0,0,0,.4);padding:8px}
+.amhead{display:flex;flex-direction:column;gap:5px;padding:10px 12px 12px;border-bottom:1px solid var(--line);align-items:flex-start}
+.ampop [role="menu"]{display:flex;flex-direction:column;padding-top:6px}
+.ampop [role="menuitem"]{display:flex;width:100%;justify-content:space-between;align-items:center;gap:8px;border:0;background:none;text-align:left;padding:10px 12px;min-height:44px;border-radius:12px;cursor:pointer;font-weight:700;font-size:.9rem;color:var(--ink)}
+.ampop [role="menuitem"]:hover,.ampop [role="menuitem"]:focus-visible{background:var(--sunken)}
+.menu a span{min-width:0}
+.mgrp{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:12px 14px 2px;font-weight:700}
+.navx{display:flex;flex-direction:column}
+.navx>summary{cursor:pointer;font-weight:700;font-size:.82rem;min-height:44px;display:flex;align-items:center;color:var(--muted)}
+.navx>*:not(summary){margin-top:10px}
+.wrap{padding-bottom:96px}
+/* Dashboard */
+.dash{display:flex;flex-direction:column;gap:16px}
+.dhello h1{font-size:clamp(1.6rem,3vw,2.3rem);font-weight:600;overflow-wrap:anywhere}
+.refline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.dtop{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px}
+.lbl{font-weight:700;color:var(--muted)}
+.box.hot .lbl{color:rgba(20,20,20,.88)}
+.dstatus .big{font-size:1.02rem;font-weight:600}
+.actline{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.88rem}
+.actline.yes svg{color:var(--bad-ink)} .actline.no svg{color:var(--ok)}
+.dnext h2{font-size:1.5rem;font-weight:600}
+.dnext .dest{font-weight:700;font-size:.92rem}
+.dnext .btn.pri{align-self:flex-start;min-height:48px;padding:12px 26px;font-size:1rem}
+.dnext .btn.sm{align-self:flex-start;background:rgba(255,255,255,.55);border-color:transparent;color:#141414}
+.signin-strip{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--accent-soft);border-radius:var(--r);padding:14px 20px}
+.jny{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.jny li{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;position:relative}
+.jny li::before{content:"";position:absolute;top:18px;right:50%;width:100%;height:2px;background:var(--line)}
+.jny li:first-child::before{display:none}
+.jny li.done::before,.jny li.now::before{background:var(--brand)}
+.jc{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;font-family:var(--display);font-weight:700;position:relative;z-index:1}
+.jny .done .jc{background:var(--night);border-color:var(--night);color:var(--night-ink)}
+.jny .now .jc{background:var(--brand);border-color:var(--brand);color:#141414;outline:4px solid var(--brand-soft)}
+.jl{font-size:.82rem;font-weight:700;overflow-wrap:anywhere} .js{font-size:.72rem;color:var(--muted)}
+.dgrid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.dsum{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
+.drow{display:flex;align-items:center;gap:8px;font-size:.84rem;min-width:0;flex-wrap:wrap}
+.drow .dn{font-weight:700;flex:1 1 auto;min-width:0} .drow .ds{font-size:.74rem;font-weight:700;color:var(--muted)}
+.drow.verified svg{color:var(--ok)} .drow.action svg,.drow.action .ds{color:var(--bad-ink)}
+.nlist,.tlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.nrow,.tlist li{display:flex;gap:10px;align-items:flex-start}
+.nrow>div,.tlist li>div{flex:1;min-width:0;display:flex;flex-direction:column}
+.nrow.unread b{font-weight:800}
+.savedline{display:flex;align-items:center;gap:6px}
+.dds{display:flex;flex-direction:column;gap:8px}
+.dd{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.box .dd{background:var(--sunken);border-color:transparent}
+.dd>summary{cursor:pointer;padding:0 16px;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700;list-style:none}
+.dd>summary::-webkit-details-marker{display:none}
+.dd>summary::after{content:"+";font-size:1.2rem;line-height:1}
+.dd[open]>summary::after{content:"\2212"}
+.ddb{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;font-size:.9rem}
+.ddb h3{font-size:.9rem}
+.agentline{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line);padding-top:10px}
+.ddlink{display:flex;align-items:center;justify-content:space-between;padding:0 16px;min-height:48px;border:1px solid var(--line);border-radius:18px;background:var(--surface);font-weight:700;color:var(--ink);text-decoration:none}
+.adl{display:flex;flex-direction:column;margin:0}
+.arow{display:flex;gap:6px 12px;justify-content:space-between;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.arow dt{color:var(--muted);font-weight:700;font-size:.86rem}
+.arow dd{margin:0;font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media (max-width:900px){
+  .top{position:static}
+  .btn,.btn.sm{min-height:44px}
+  .top .iconbtn{width:44px;height:44px}
+  .langsw button{min-height:44px}
+  .role select{min-height:44px}
+  .rolechip{display:none}
+  .menu{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:6px;scrollbar-width:thin}
+  .menu a{flex:none;min-height:44px}
+  .mgrp{display:none}
+  .dgrid2{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:800px){.dtop{grid-template-columns:minmax(0,1fr)} .dnext{order:-1}}
+@media (max-width:700px){
+  .jny{grid-template-columns:minmax(0,1fr);gap:0}
+  .jny li{flex-direction:row;gap:12px;text-align:left;padding:5px 0;align-items:center}
+  .jny li::before{display:none}
+  .js{margin-left:auto}
+  .dsum{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:600px){
+  .tb-ver{display:none}
+  .amb .amn{display:none}
+  .amb{padding:3px}
+  .top .iconbtn{width:44px;height:44px}
+  .tb-row{gap:6px 10px}
+}
 </style>
 </head>
 <body style="margin:0">
@@ -535,21 +649,31 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
     <div><b>PolicyNest</b><span>POSP agent onboarding</span></div>
   </div>
   <div class="who2"><span class="ph"><span id="sb-ph"></span></span><b id="sb-name">New applicant</b><small id="sb-id"></small></div>
-  <span class="env" title="Documents are read by OCR inside this browser. Government, bank and face-match services are simulated: none is called. Only questions you ask the Copilot, with your first name and progress (never your ID numbers or images), are sent to the AI service."><i></i>Demo environment · on-device OCR</span>
+  <span class="env" id="envchip"><i></i>Documents are read on your device</span>
   <div class="role" id="role-box"><label for="role-sel">View as</label><select id="role-sel"><option value="applicant">Applicant</option><option value="reviewer">Reviewer</option><option value="ops">Ops and compliance</option><option value="all">All views (demo)</option></select><small>Demo role switch, not a login. Anyone can switch.</small></div>
-  <nav class="menu" id="menu" aria-label="Sections"></nav>
+  <nav class="menu" id="menu" aria-label="Main navigation"></nav>
+  <details class="navx" id="navx" open><summary id="navx-sum">Account, privacy and sync</summary>
   <button class="btn" type="button" id="account-open">Sign in / create account</button>
   <button class="btn" type="button" id="workspace-open">Account workspace</button>
   <label class="small"><input id="account-sync" type="checkbox"> Sync document status and progress to my account (no images or ID numbers)</label>
   <label class="small"><input id="analytics-consent" type="checkbox"> Share anonymous performance and usage measurements</label>
-  <div class="help"><b>Need help?</b><span>A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
+  <div class="help"><b>Need help?</b><span id="foot-note">A wrong or unclear document is refused with the reason, so you fix it once.</span></div>
+  </details>
 </div></aside>
 <div class="main">
-<header class="top"><div class="top-in">
-  <b id="progt"></b>
-  <div class="pbar"><div class="prog"><i id="pfill"></i></div><span class="mono" id="ppct"></span></div>
-  <span id="flowmeta" class="small"></span>
-  <div class="tools"><span class="rolechip" id="rolechip"></span><button class="iconbtn" type="button" data-act="theme" id="themebtn" aria-label="Switch to dark mode"></button><span class="avatar" title="Applicant"><span id="avatar"></span></span></div>
+<header class="top"><div class="top-in" id="topbar">
+  <div class="tb-row tb-1">
+    <div class="tb-who" id="tb-who"></div>
+    <div class="tb-ver" id="tb-ver"></div>
+    <div class="tools">
+      <span class="rolechip" id="rolechip" hidden></span>
+      <div class="langsw" id="tb-lang" role="group" aria-label="Language"></div>
+      <button class="iconbtn" type="button" data-act="theme" id="themebtn" aria-label="Switch to dark mode"></button>
+      <div class="amwrap"><button class="amb" type="button" id="acct-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="acct-pop" aria-label="Account menu"></button>
+        <div class="ampop" id="acct-pop" hidden><div class="amhead" id="am-head"></div><div role="menu" id="acct-menu" aria-labelledby="acct-btn"></div></div></div>
+    </div>
+  </div>
+  <div class="tb-row tb-2"><div class="tb-ref" id="tb-ref"></div><span id="tb-status"></span><span id="savestate" role="status" aria-live="polite" aria-atomic="true"></span></div>
 </div></header>
 <div class="fbar" id="focusbar" hidden><b>PolicyNest onboarding</b><span class="fstep" id="fb-step"></span><span class="ftime" id="fb-time" role="timer" aria-live="off" aria-label="Time left in this sitting"></span><button type="button" id="fb-extend" data-act="m-extend" hidden>Extend 10 minutes</button><button type="button" id="fb-hide" data-act="timer-hide">Hide timer</button><button type="button" id="fb-off" data-act="timer-off">Turn off time limit</button><button type="button" id="fb-on" data-act="timer-on" hidden>Turn time limit on</button><button type="button" data-act="cp-open">Ask Copilot</button><button type="button" data-act="fb-exit">Save and exit</button></div>
 <div class="fsbanner" id="fs-banner" role="status" hidden><span>Full screen closed. Your sitting carries on.</span><button type="button" class="btn pri" data-act="fs-return">Return to full screen</button><button type="button" class="btn" data-act="fs-dismiss">Dismiss</button></div>
@@ -561,6 +685,10 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
   <section id="view-ops" class="ops" hidden></section>
   <section id="view-audit" class="ops" hidden></section>
   <section id="view-eval" class="ops" hidden></section>
+  <section id="view-notif" hidden></section>
+  <section id="view-hist" hidden></section>
+  <section id="view-acct" hidden></section>
+  <section id="view-help" hidden></section>
 </main>
 </div></div>
 <button class="cp-fab" id="cp-fab" type="button" data-act="cp-open" aria-controls="cp" aria-expanded="false">Ask Copilot<i id="cp-badge" hidden aria-label="New suggestion"></i></button>
@@ -610,6 +738,8 @@ var QUIZ=[
 var S; var timer=null;
 /* ?demo=1 opens the demo-controls disclosures (specimens, variant pickers, sample applicant) by default. */
 var DEMO=/[?&]demo=1\b/.test(location.search);
+/* Build mode: build_site.py sets "prod" for the production portal (no demo controls, no View-as switch, no demo wording) or "demo" for the demo site. */
+var BUILD_MODE="demo"; var DEMO_BUILD=BUILD_MODE==="demo";
 /* A new application starts empty: no person's name, no consent (FR-01). */
 var BLANK={name:"",dob:"",mobile:"",email:"",pan:"",aadhaar4:"",state:"",city:"",acct:"",ifsc:"",education:"",consent:false};
 function fresh(){ S={step:0,faceRun:0,faceApproved:null,appId:"PN-2026-"+String(Math.floor(10000+Math.random()*89999)),f:Object.assign({},BLANK),isSample:false,consentAt:null,demoOpen:undefined,errs:{},docs:{},ex:null,checks:[],obs:{},shown:0,decision:null,ttd:null,events:[],status:"DRAFT",reached:{DRAFT:1},mods:MODULES.map(function(){return false}),exam:{ans:{},score:null},started:Date.now(),posp:null,round:1,rounds:[],changed:{},lang:"en",followups:0,fu:null,rej:null,specv:{},rechecking:false,touches:0,review:null,disputed:false,begun:false,saveOK:false,focus:false,sess:null,sittings:0,exits:0,dpage:0,dk:0,fb:{},restored:false}; }
@@ -944,6 +1074,497 @@ function rejectReasons(checks,x){
   return out;
 }
 /* ENGINE:END */
+/* MODEL:START  (pure data model for the applicant portal: no DOM, no globals except its inputs; tools/test_model.mjs runs this same block in Node)
+   Reads the app state object S (fields: step, begun, dpage, dk, docs, status, reached, decision, checks, fu, mods, exam, rechecking, changed, posp, appId, f)
+   and answers: what status is this application in, how far along is it (several separate measures), where to resume, and what is the ONE next action.
+   Hindi strings below were written by Claude, not a native speaker: a native Hindi speaker should review them before production. */
+
+/**
+ * @typedef {'applicant'|'reviewer'|'ops'|'admin'} UserRole
+ * @typedef {'not_started'|'draft'|'in_progress'|'submitted'|'verifying'|'action_required'|'human_review'|'training_pending'|'exam_pending'|'certificate_pending'|'certified'|'rejected'} ApplicationStatus
+ * @typedef {'details'|'documents'|'verification'|'training'|'exam'|'certificate'} JourneyStage
+ * @typedef {{stage:JourneyStage, step:number, page:number, of:number, section:?string, doc:?string, milestone:?string, lastAction:?string, t:?number, labelKey:string, params:Object, route:string}} ResumePosition
+ * @typedef {'saving'|'saved'|'failed'|'offline'|'idle'} SaveState
+ * @typedef {'PAN'|'AADHAAR_FRONT'|'AADHAAR_BACK'|'CLASS10'|'BANK'|'SELFIE'} DocumentRequirement
+ * @typedef {'missing'|'processing'|'verified'|'action_required'} DocumentStatus
+ * @typedef {{name:string, dob:string, mobile:string, email:string, state:string, city:string, education:string, ifsc:string, aadhaar4:string, pan_last4:string, acct_last4:string, language:'en'|'hi'}} ApplicantProfile  (never a full PAN, Aadhaar or account number)
+ * @typedef {{reference:string, version:number, status:ApplicationStatus, details:ApplicantProfile, progress:Object, updated_at:?number}} Application
+ * @typedef {{id:string, type:string, key:string, stage:?JourneyStage, doc:?DocumentRequirement, read:boolean, created_at:number}} Notification
+ * @typedef {{t:number, actor:'you'|'policynest'|'reviewer', key:string, params:Object, stage:?JourneyStage, doc:?DocumentRequirement}} TimelineEvent
+ * @typedef {{hours:number, of:number, done:number, modules:number}} TrainingProgress
+ * @typedef {{state:'locked'|'available'|'in_progress'|'passed'|'failed', score:?number, retakeAt:?number}} ExamStatus
+ * @typedef {{state:'locked'|'pending'|'issued'}} CertificateStatus
+ */
+
+var STAGES=[
+ {k:"details",   step:0,nameKey:"stage.details",   route:"#apply"},
+ {k:"documents", step:1,nameKey:"stage.documents", route:"#documents"},
+ {k:"verification",step:2,nameKey:"stage.verification",route:"#home"},
+ {k:"training",  step:3,nameKey:"stage.training",  route:"#training"},
+ {k:"exam",      step:4,nameKey:"stage.exam",      route:"#exam"},
+ {k:"certificate",step:5,nameKey:"stage.certificate",route:"#certificate"}];
+var M_DOC_KEYS=["PAN","AADHAAR_FRONT","AADHAAR_BACK","CLASS10","BANK","SELFIE"];
+var M_DETAIL_PAGES=4, M_MODULES=5, M_MOD_HOURS=3, M_TRAIN_HOURS=15, M_EXAM_PASS=50;
+
+/* Icon paths (16x16 viewBox, stroke icons) by name. */
+var ICON_PATHS={
+ circle:'<circle cx="8" cy="8" r="5.5"/>',
+ pencil:'<path d="M3 13l.7-3L11 2.7 13.3 5 6 12.3zM9.6 4.1l2.3 2.3"/>',
+ upload:'<path d="M8 11V3M4.5 6.5L8 3l3.5 3.5M3 13h10"/>',
+ clock:'<circle cx="8" cy="8" r="5.5"/><path d="M8 4.8V8l2.2 1.4"/>',
+ search:'<circle cx="7" cy="7" r="4"/><path d="M10 10l3.5 3.5"/>',
+ alert:'<path d="M8 2.5l6 10.5H2zM8 6.8v3M8 11.6v.1"/>',
+ person:'<circle cx="8" cy="5.5" r="2.7"/><path d="M2.8 13.5c.6-2.8 2.7-4.2 5.2-4.2s4.6 1.4 5.2 4.2"/>',
+ book:'<path d="M2.5 3.5h4.2c.8 0 1.3.4 1.3 1V13c0-.6-.5-1-1.3-1H2.5zM13.5 3.5H9.3c-.8 0-1.3.4-1.3 1V13c0-.6.5-1 1.3-1h4.2z"/>',
+ pen:'<path d="M3 13h10M4.5 10.5L11 4l1.5 1.5-6.5 6.5-2 .5z"/>',
+ award:'<circle cx="8" cy="6" r="3.5"/><path d="M5.8 8.8L5 14l3-1.6L11 14l-.8-5.2"/>',
+ cross:'<circle cx="8" cy="8" r="5.5"/><path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4"/>',
+ check:'<path d="M3.5 8.4l2.9 2.9 6.1-6.6"/>'};
+
+/* Single source of truth for what a status means to the applicant. All text lives in I18N (keys status.<k>.label/desc/next/eta). */
+function M_S(k,needsAction,tone,icon,eta){ return {key:k,labelKey:"status."+k+".label",descKey:"status."+k+".desc",nextEventKey:"status."+k+".next",timelineKey:eta?"status."+k+".eta":"none",needsAction:needsAction,tone:tone,icon:icon}; }
+var APP_STATUS={
+ not_started:M_S("not_started",true,"neutral","circle",false),
+ draft:M_S("draft",true,"info","pencil",false),
+ in_progress:M_S("in_progress",true,"info","upload",false),
+ submitted:M_S("submitted",false,"info","clock",true),
+ verifying:M_S("verifying",false,"info","search",true),
+ action_required:M_S("action_required",true,"warn","alert",true),
+ human_review:M_S("human_review",false,"info","person",true),
+ training_pending:M_S("training_pending",true,"info","book",false),
+ exam_pending:M_S("exam_pending",true,"info","pen",false),
+ certificate_pending:M_S("certificate_pending",false,"info","award",true),
+ certified:M_S("certified",false,"ok","check",false),
+ rejected:M_S("rejected",true,"bad","cross",false)};
+/* "withdrawn" is deliberately absent: the app has no way to withdraw an application. */
+
+function M_n(v){ return typeof v==="number"&&isFinite(v)?v:0; }
+function M_docs(S){ return (S&&S.docs)||{}; }
+function M_ok(S,k){ var d=M_docs(S)[k]; return !!(d&&d.status==="ok"); }
+function M_hours(S){ var h=0,m=(S&&S.mods)||[]; for(var i=0;i<m.length&&i<M_MODULES;i++) if(m[i]) h+=M_MOD_HOURS; return h; }
+function M_reached(S,k){ return !!(S&&S.reached&&S.reached[k]); }
+function M_hasData(S){ var f=(S&&S.f)||{},any=false; for(var k in f){ if(k!=="consent"&&f[k]) any=true; } return any||Object.keys(M_docs(S)).length>0; }
+/* Document keys the applicant still has to fix (from the one consolidated follow-up), in order. */
+function M_fixKeys(S){
+ var out=[],it=(S&&S.fu&&S.fu.items)||[];
+ for(var i=0;i<it.length;i++){ var k=it[i]&&it[i].key; if(k&&M_DOC_KEYS.indexOf(k)>=0&&out.indexOf(k)<0&&!(S.changed&&S.changed[k])) out.push(k); }
+ return out;
+}
+
+/** @returns {ApplicationStatus} */
+function statusOf(S){
+ var st=(S&&S.status)||"DRAFT";
+ if(st==="CERTIFIED") return "certified";
+ if(st==="REJECTED") return "rejected";
+ if(st==="HUMAN_REVIEW") return "human_review";
+ if(st==="NEEDS_MORE_INFO") return S.rechecking?"verifying":"action_required";
+ if(st==="IN_REVIEW") return "verifying";
+ if(st==="SUBMITTED") return "submitted";
+ if(st==="KYC_APPROVED"||st==="TRAINING_IN_PROGRESS") return "training_pending";
+ if(st==="TRAINING_COMPLETED"||st==="EXAM_IN_PROGRESS") return "exam_pending";
+ if(st==="EXAM_PASSED") return "certificate_pending";
+ /* DRAFT */
+ if(!S||(!S.begun&&!M_hasData(S))) return "not_started";
+ return M_n(S.step)>=1?"in_progress":"draft";
+}
+
+/** Separate measures. There is deliberately no single overall percentage. */
+function progressModel(S){
+ S=S||{};
+ var key=statusOf(S),cert=key==="certified",step=cert?5:Math.max(0,Math.min(5,M_n(S.step)));
+ var hours=M_hours(S),modsDone=((S.mods||[]).slice(0,M_MODULES)).filter(Boolean).length;
+ var fix=(S.decision==="NEEDS_MORE_INFO"&&key==="action_required")?M_fixKeys(S):[];
+ var missing=[],uploaded=0,processing=0,verified=0,flaggedKeys=[];
+ M_DOC_KEYS.forEach(function(k){
+  var d=M_docs(S)[k];
+  if(d&&d.status==="reading") processing++;
+  if(d&&d.status==="ok"){
+   uploaded++;
+   /* S.fb is filled lazily after each upload: a missing S.fb[k] means "not yet assessed", not "clean". */
+   var f=S.fb&&S.fb[k],flagged=!!(f&&((f.stop&&f.stop.length)||(f.fix&&f.fix.length)));
+   if(fix.indexOf(k)>=0||flagged) flaggedKeys.push(k); else verified++;
+  } else if(!(d&&d.status==="reading")) missing.push(k);
+ });
+ var done=[
+  M_n(S.step)>0||M_reached(S,"SUBMITTED")||cert,
+  M_reached(S,"SUBMITTED")||cert,
+  M_reached(S,"KYC_APPROVED")||cert,
+  hours>=M_TRAIN_HOURS||M_reached(S,"TRAINING_COMPLETED")||cert,
+  M_reached(S,"EXAM_PASSED")||cert,
+  cert];
+ var stagesDone=0; while(stagesDone<6&&done[stagesDone]) stagesDone++;
+ var pagesDone=M_n(S.step)>0||M_reached(S,"SUBMITTED")?M_DETAIL_PAGES:Math.max(0,Math.min(M_DETAIL_PAGES,M_n(S.dpage)));
+ var comp=null,ch=Array.isArray(S.checks)?S.checks:[];
+ if(ch.length){
+  var rel=ch.filter(function(c){return c&&c.res!=="INFO"});
+  comp={passed:rel.filter(function(c){return c.res==="PASS"}).length,pending:rel.filter(function(c){return c.res==="PENDING"}).length,total:rel.length};
+ }
+ var sc=(S.exam&&typeof S.exam.score==="number")?S.exam.score:null,exState="locked";
+ if(cert||M_reached(S,"EXAM_PASSED")) exState="passed";
+ else if(S.status==="EXAM_IN_PROGRESS") exState="in_progress";
+ else if(sc!==null&&sc<M_EXAM_PASS) exState="failed";
+ else if(hours>=M_TRAIN_HOURS||M_reached(S,"TRAINING_COMPLETED")) exState="available";
+ var retake=(exState==="failed"&&S.exam&&typeof S.exam.retakeAt==="number")?S.exam.retakeAt:null;
+ return {
+  status:key,
+  journey:{stage:STAGES[step].k,step:step,stagesDone:stagesDone,of:6},
+  form:{pagesDone:pagesDone,of:M_DETAIL_PAGES},
+  documents:{required:6,uploaded:uploaded,processing:processing,verified:verified,actionRequired:flaggedKeys.length,actionKeys:flaggedKeys,missing:missing},
+  compliance:comp,
+  training:{hours:hours,of:M_TRAIN_HOURS,done:modsDone,modules:M_MODULES},
+  exam:{state:exState,score:sc,retakeAt:retake},
+  certificate:{state:cert?"issued":key==="certificate_pending"?"pending":"locked"}};
+}
+
+/** Where "Continue" lands. Routes are hash routes; step is the in-app step index the current UI uses. */
+function resumePosition(S){
+ S=S||{};
+ var key=statusOf(S),step=Math.max(0,Math.min(5,M_n(S.step))),pm=progressModel(S),r;
+ var last=S.resume||{};
+ if(!last.action&&Array.isArray(S.events)){ var tl=applicantTimeline(S.events); if(tl.length){ var le=tl[tl.length-1]; last={action:le.key.replace(/^tl\./,""),t:le.t}; } }
+ function mk(stage,over){
+  var sd=STAGES[STAGES.findIndex(function(x){return x.k===stage})];
+  var o={stage:stage,step:sd.step,page:0,of:0,section:null,doc:null,milestone:null,lastAction:(typeof last.action==="string"&&/^[a-z_.]{1,40}$/.test(last.action))?last.action:null,t:typeof last.t==="number"?last.t:null,labelKey:"resume."+stage,params:{},route:sd.route};
+  for(var k in over) o[k]=over[k];
+  return o;
+ }
+ if(key==="certified") return mk("certificate",{milestone:"issued",labelKey:"resume.certificate.issued"});
+ if(key==="certificate_pending") return mk("certificate",{milestone:"pending"});
+ if(key==="rejected"||key==="human_review"||key==="verifying"||key==="submitted") return mk("verification",{milestone:key,labelKey:"resume.verification."+key});
+ if(key==="action_required"){ var fk=M_fixKeys(S)[0]||null; return mk("documents",{doc:fk,milestone:fk?"fix":"recheck",labelKey:fk?"resume.documents.fix":"resume.documents.recheck",params:{docKey:fk?"doc."+fk:"stage.documents"}}); }
+ if(key==="not_started") return mk("details",{page:1,of:M_DETAIL_PAGES,section:"sec.details.0",labelKey:"resume.not_started",route:"#apply"});
+ if(step===0||key==="draft"){
+  var pg=Math.max(0,Math.min(M_DETAIL_PAGES-1,M_n(S.dpage)));
+  return mk("details",{page:pg+1,of:M_DETAIL_PAGES,section:"sec.details."+pg,labelKey:"resume.details",params:{page:pg+1,of:M_DETAIL_PAGES,sectionKey:"sec.details."+pg}});
+ }
+ if(step===1||key==="in_progress"){
+  var cur=M_DOC_KEYS[Math.max(0,Math.min(5,M_n(S.dk)))],nxt=pm.documents.missing[0]||null,pick=M_ok(S,cur)&&nxt?nxt:cur;
+  return mk("documents",{page:pm.documents.uploaded+1>6?6:pm.documents.uploaded+1,of:6,doc:pick,labelKey:"resume.documents",params:{docKey:"doc."+pick,n:pm.documents.uploaded,of:6}});
+ }
+ if(key==="training_pending"){
+  var mods=S.mods||[],idx=0; while(idx<M_MODULES&&mods[idx]) idx++;
+  if(idx>=M_MODULES) idx=M_MODULES-1;
+  return mk("training",{page:idx+1,of:M_MODULES,milestone:"module"+(idx+1),labelKey:"resume.training",params:{module:idx+1,of:M_MODULES,hours:pm.training.hours,hoursOf:M_TRAIN_HOURS}});
+ }
+ return mk("exam",{milestone:pm.exam.state,labelKey:"resume.exam"});
+}
+
+/** Exactly one next action. cta:false means a wait state: show the status, not a fake button. */
+function nextAction(S,opts){
+ S=S||{}; opts=opts||{};
+ var key=statusOf(S),pm=progressModel(S),rp=resumePosition(S),now=typeof opts.now==="number"?opts.now:Date.now();
+ function A(priority,labelKey,params,descKey,descParams,route,stage,cta){ return {labelKey:labelKey,params:params||{},descKey:descKey,descParams:descParams||{},route:route,priority:priority,stage:stage,cta:cta!==false,status:key}; }
+ switch(key){
+  case "not_started": return A("start","next.start",{},"next.start.desc",{},"#apply","details");
+  case "draft": case "in_progress":
+   return A("continue","next.continue",{},"next.continue."+rp.stage+".desc",rp.params,rp.route,rp.stage);
+  case "action_required":
+   var fk=M_fixKeys(S),n=fk.length;
+   if(n===0) return A("action-required","next.recheck",{},"next.recheck.desc",{},"#documents","documents");
+   return A("action-required",n===1?"next.fix.one":"next.fix.many",{n:n},"next.fix.desc",{docsKeys:fk.map(function(k){return "doc."+k})},"#documents","documents");
+  case "submitted": case "verifying": return A("wait","next.wait.verifying",{},"next.wait.verifying.desc",{},"#home","verification",false);
+  case "human_review": return A("wait","next.wait.review",{},"next.wait.review.desc",{},"#home","verification",false);
+  case "training_pending":
+   return pm.training.hours>0
+    ?A("training","next.training.continue",{hours:pm.training.hours,of:pm.training.of},"next.training.continue.desc",{done:pm.training.done,modules:pm.training.modules},"#training","training")
+    :A("training","next.training.start",{},"next.training.start.desc",{of:pm.training.of},"#training","training");
+  case "exam_pending":
+   if(pm.exam.state==="failed"&&pm.exam.retakeAt&&pm.exam.retakeAt>now)
+    return A("exam","next.exam.wait",{time:M_fmtClock(pm.exam.retakeAt,opts.lang)},"next.exam.wait.desc",{},"#exam","exam",false);
+   return A("exam",pm.exam.state==="failed"?"next.exam.retake":"next.exam.take",{},"next.exam.desc",{},"#exam","exam");
+  case "certificate_pending": return A("certificate","next.certificate.get",{},"next.certificate.get.desc",{},"#certificate","certificate");
+  case "certified": return A("certificate","next.certificate.view",{},"next.certificate.view.desc",{},"#certificate","certificate");
+  default: return A("action-required","next.rejected",{},"next.rejected.desc",{},"#home","verification");
+ }
+}
+
+/* ---- Roles. These mirror the server roles; the server enforces data access, the client only hides what a role cannot use. ---- */
+var USER_ROLES=["applicant","reviewer","ops","admin"];
+var M_APPLICANT_ACTIONS=["view.dashboard","view.application","view.documents","view.training","view.exam","view.certificate","view.notifications","view.history","view.account"];
+var PERMISSIONS={
+ applicant:M_APPLICANT_ACTIONS,
+ reviewer:["view.account","view.notifications","view.review","review.decide"],
+ ops:["view.account","view.notifications","view.review","view.evaluation","view.audit","reports.read"],
+ admin:["view.account","view.notifications","view.review","view.evaluation","view.audit","review.decide","admin.assign","reports.read"]};
+function can(role,action){ var p=Object.prototype.hasOwnProperty.call(PERMISSIONS,role)?PERMISSIONS[role]:null; return !!p&&p.indexOf(action)>=0; }
+
+/* ---- Applicant-safe timeline. Allow-list only: anything not listed (focus, copilot, fraud, reviewer notes, security, engine payloads) is dropped. ---- */
+var TIMELINE_EVENTS={
+ /* app log names */
+ ONBOARDING_OPENED:{k:"application_created",stage:"details"},
+ REGISTRATION_STARTED:{k:"details_started",stage:"details"},
+ DOCS_UPLOADED:{k:"documents_received",stage:"documents"},
+ TRIAGE_START:{k:"verification_started",stage:"verification"},
+ STP_PASS:{k:"verification_completed",stage:"verification"},
+ KYC_APPROVED:{k:"verification_completed",stage:"verification"},
+ FOLLOWUP_SENT:{k:"more_info_requested",stage:"documents"},
+ RECHECK_START:{k:"fixes_received",stage:"documents"},
+ RECHECK:{k:"verification_completed",stage:"verification"},
+ ROUTED_TO_REVIEWER:{k:"human_review_started",stage:"verification"},
+ DISPUTE_RAISED:{k:"dispute_raised",stage:"verification"},
+ LMS_LOGIN:{k:"training_unlocked",stage:"training"},
+ HOURS_LOGGED:{k:"training_milestone",stage:"training"},
+ TRAINING_COMPLETE:{k:"training_complete",stage:"training"},
+ EXAM_START:{k:"exam_started",stage:"exam"},
+ EXAM_SUBMIT:{k:"exam_result",stage:"exam"},
+ EXAM_FAIL:{k:"exam_result",stage:"exam"},
+ ISSUE_CREDENTIAL:{k:"certificate_issued",stage:"certificate"},
+ PROGRESS_RESTORED:{k:"progress_resumed",stage:null},
+ SAVED_PROGRESS_DELETED:{k:"progress_deleted",stage:null},
+ /* server-side keys (same names as the notification keys) */
+ application_created:{k:"application_created",stage:"details"},
+ progress_saved:{k:"progress_saved",stage:null},
+ documents_received:{k:"documents_received",stage:"documents"},
+ processing_completed:{k:"processing_completed",stage:"verification"},
+ document_accepted:{k:"document_accepted",stage:"documents"},
+ needs_correction:{k:"needs_correction",stage:"documents"},
+ verification_started:{k:"verification_started",stage:"verification"},
+ human_review_started:{k:"human_review_started",stage:"verification"},
+ more_info_requested:{k:"more_info_requested",stage:"documents"},
+ training_unlocked:{k:"training_unlocked",stage:"training"},
+ training_milestone:{k:"training_milestone",stage:"training"},
+ exam_unlocked:{k:"exam_unlocked",stage:"exam"},
+ exam_result:{k:"exam_result",stage:"exam"},
+ certificate_issued:{k:"certificate_issued",stage:"certificate"},
+ status_changed:{k:"status_changed",stage:null}};
+function M_has(o,k){ return Object.prototype.hasOwnProperty.call(o,k); }
+/** @returns {TimelineEvent[]} chronological; never carries notes, hashes, rule codes, scores or identifiers. */
+function applicantTimeline(events){
+ var out=[];
+ (Array.isArray(events)?events:[]).forEach(function(e){
+  if(!e||typeof e!=="object") return;
+  if(e.audience&&e.audience!=="applicant") return;
+  if(e.internal===true||e.security===true) return;
+  var name=e.event||e.key; if(typeof name!=="string"||!M_has(TIMELINE_EVENTS,name)) return;
+  var m=TIMELINE_EVENTS[name],a=String(e.actor||"").toUpperCase(),actor=a==="APPLICANT"||a==="YOU"?"you":a==="REVIEWER"?"reviewer":"policynest";
+  var stage=m.stage; if(typeof e.stage==="string"&&STAGES.some(function(s){return s.k===e.stage})) stage=e.stage;
+  var doc=(typeof e.doc==="string"&&M_DOC_KEYS.indexOf(e.doc)>=0)?e.doc:null;
+  var params={}; if(doc) params.docKey="doc."+doc; if(typeof e.round==="number"&&e.round>=1&&e.round<=99) params.round=e.round;
+  out.push({t:M_n(e.t),actor:actor,key:"tl."+m.k,params:params,stage:stage||null,doc:doc});
+ });
+ out.sort(function(x,y){return x.t-y.t});
+ return out;
+}
+
+/* ---- Time formatting (no locale APIs, so output is identical in Node and browsers) ---- */
+var M_MONTHS={en:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],hi:["जन॰","फ़र॰","मार्च","अप्रैल","मई","जून","जुल॰","अग॰","सित॰","अक्टू॰","नव॰","दिस॰"]};
+function M_fmtClock(ms,lang){
+ if(typeof ms!=="number"||!isFinite(ms)) return "";
+ var d=new Date(ms),z=function(n){return n<10?"0"+n:""+n},mo=(M_MONTHS[lang]||M_MONTHS.en)[d.getMonth()];
+ return d.getDate()+" "+mo+", "+z(d.getHours())+":"+z(d.getMinutes());
+}
+
+/* ---- Language ---- */
+/* GLOSSARY: these terms are not translated in Hindi, so they read the same on every screen and in every message. */
+var GLOSSARY=["PAN","Aadhaar","POSP","IRDAI","KYC","OTP","SMS","WhatsApp","IFSC"];
+var I18N={
+en:{
+ "stage.details":"Your details","stage.documents":"Documents","stage.verification":"Verification","stage.training":"Training","stage.exam":"Exam","stage.certificate":"Certificate",
+ "sec.details.0":"Who you are","sec.details.1":"Your ID numbers","sec.details.2":"How we reach you","sec.details.3":"Bank account and consent",
+ "doc.PAN":"PAN card","doc.AADHAAR_FRONT":"Aadhaar, front","doc.AADHAAR_BACK":"Aadhaar, back","doc.CLASS10":"Class 10 marksheet","doc.BANK":"Cancelled cheque or bank statement","doc.SELFIE":"Selfie",
+ "status.not_started.label":"Not started","status.not_started.desc":"You have not started your application yet.","status.not_started.next":"Next: add your details. Most applicants complete details and document upload in about 30 minutes.",
+ "status.draft.label":"Draft","status.draft.desc":"You are filling in your details. Nothing has been sent for checking yet.","status.draft.next":"Next: finish your details, then add your documents.",
+ "status.in_progress.label":"In progress","status.in_progress.desc":"You are adding your documents. Nothing has been sent for checking yet.","status.in_progress.next":"Next: add all six documents, then send them for checking.",
+ "status.submitted.label":"Submitted","status.submitted.desc":"We have received your application and are about to start checking it.","status.submitted.next":"Next: the automatic checks begin.","status.submitted.eta":"This usually takes a short while. You can close this page; your progress is kept.",
+ "status.verifying.label":"Being checked","status.verifying.desc":"We are checking your documents against the onboarding rules.","status.verifying.next":"Next: you will see the result here, and we will tell you if anything is needed.","status.verifying.eta":"This usually takes a short while. You can close this page; your progress is kept.",
+ "status.action_required.label":"Action needed","status.action_required.desc":"A few documents need a fix before we can continue.","status.action_required.next":"Next: send the fixes in one go. We re-check only what changed.","status.action_required.eta":"Nothing moves forward until you send the fixes.",
+ "status.human_review.label":"With a reviewer","status.human_review.desc":"A person on our team is checking a few details. Nothing is needed from you now.","status.human_review.next":"Next: the reviewer decides, or asks you for one more thing.","status.human_review.eta":"We aim to reply within 4 working hours (our service target).",
+ "status.training_pending.label":"Training open","status.training_pending.desc":"Your documents are verified. Complete the 15 hours of training IRDAI requires.","status.training_pending.next":"Next: finish the training modules, then take the exam.",
+ "status.exam_pending.label":"Exam open","status.exam_pending.desc":"Your training is complete. The next step is the exam.","status.exam_pending.next":"Next: pass the exam to receive your certificate.",
+ "status.certificate_pending.label":"Certificate being issued","status.certificate_pending.desc":"You passed the exam. Your certificate is being prepared.","status.certificate_pending.next":"Next: your certificate appears here.","status.certificate_pending.eta":"This usually takes a short while.",
+ "status.certified.label":"Certified","status.certified.desc":"You are a certified POSP. Your certificate is ready.","status.certified.next":"Nothing more to do. You can view your certificate at any time.",
+ "status.rejected.label":"Not approved","status.rejected.desc":"We could not approve this application. The reasons are listed in plain language.","status.rejected.next":"Next: read the reasons. If you disagree, you can ask a person to look again.",
+ "next.start":"Start your application","next.start.desc":"Most applicants complete details and document upload in about 30 minutes. Your progress is saved as you go.",
+ "next.continue":"Continue your application",
+ "next.continue.details.desc":"You are on page {page} of {of}: {section}.","next.continue.documents.desc":"You have added {n} of {of} documents. Next: {doc}.",
+ "next.continue.verification.desc":"Your application is with us.","next.continue.training.desc":"Next: module {module} of {of}.","next.continue.exam.desc":"The exam is ready.","next.continue.certificate.desc":"Your certificate is ready.",
+ "next.recheck":"Send your fixes for re-checking","next.recheck.desc":"All your fixes are in. We will check only the documents you changed.","next.fix.one":"Fix 1 document","next.fix.many":"Fix {n} documents","next.fix.desc":"Documents to fix: {docs}. Send them together and we re-check only what changed.",
+ "next.wait.verifying":"We are checking your application","next.wait.verifying.desc":"There is nothing for you to do right now.",
+ "next.wait.review":"A reviewer is looking at your application","next.wait.review.desc":"Nothing is needed from you right now. We will tell you if that changes.",
+ "next.training.start":"Start training","next.training.start.desc":"IRDAI requires {of} hours of training. You can stop and come back at any point.",
+ "next.training.continue":"Continue training ({hours} of {of} hours)","next.training.continue.desc":"{done} of {modules} modules are complete.",
+ "next.exam.take":"Take the exam","next.exam.retake":"Retake the exam","next.exam.desc":"Answer the questions at your own pace. Your answers are saved as you go.",
+ "next.exam.wait":"You can retake the exam from {time}","next.exam.wait.desc":"Review the training modules in the meantime.",
+ "next.certificate.get":"Get your certificate","next.certificate.get.desc":"You passed the exam.","next.certificate.view":"View your certificate","next.certificate.view.desc":"Your certificate is ready.",
+ "next.rejected":"See the reasons","next.rejected.desc":"The reasons are in plain language. If you disagree, you can ask a person to review the decision.",
+ "resume.not_started":"Start with page 1 of 4: Who you are","resume.details":"Your details, page {page} of {of}: {section}","resume.documents":"Documents: {doc}","resume.documents.fix":"Documents: fix {doc}","resume.documents.recheck":"Documents: send your fixes for re-checking",
+ "resume.verification.submitted":"Verification: received","resume.verification.verifying":"Verification: in progress","resume.verification.human_review":"Verification: with a reviewer","resume.verification.rejected":"Verification: decision",
+ "resume.training":"Training: module {module} of {of} ({hours} of {hoursOf} hours)","resume.exam":"Exam","resume.certificate.issued":"Certificate: ready","resume.certificate":"Certificate",
+ "save.saving":"Saving…","save.saved":"Saved","save.failed":"Save failed","save.offline":"Offline changes pending","save.last":"Last saved {time}","save.retry":"Retry","save.idle":"Not saved yet",
+ "nt.application_created":"Application created","nt.progress_saved":"Progress saved","nt.documents_received":"Documents received","nt.processing_completed":"Processing completed","nt.document_accepted":"Document accepted",
+ "nt.needs_correction":"A document needs correction","nt.verification_started":"Verification started","nt.human_review_started":"A reviewer has started looking at your application","nt.more_info_requested":"More information requested",
+ "nt.training_unlocked":"Training unlocked","nt.training_milestone":"Training milestone reached","nt.exam_unlocked":"Exam unlocked","nt.exam_result":"Exam result available","nt.certificate_issued":"Certificate issued","nt.status_changed":"Your application status changed",
+ "tl.application_created":"You started your application","tl.details_started":"You began adding your details","tl.progress_saved":"Progress saved","tl.documents_received":"We received your documents","tl.document_accepted":"Document accepted: {doc}",
+ "tl.needs_correction":"Document needs correction: {doc}","tl.processing_completed":"Processing completed","tl.verification_started":"Verification started","tl.verification_completed":"Verification step completed","tl.human_review_started":"A reviewer started looking at your application",
+ "tl.more_info_requested":"We asked for more information","tl.fixes_received":"We received your fixes","tl.dispute_raised":"You asked a person to review the decision","tl.training_unlocked":"Training unlocked","tl.training_milestone":"Training milestone reached",
+ "tl.training_complete":"Training complete","tl.exam_unlocked":"Exam unlocked","tl.exam_started":"You started the exam","tl.exam_result":"Exam submitted","tl.certificate_issued":"Certificate issued","tl.status_changed":"Status changed","tl.progress_resumed":"You came back and continued","tl.progress_deleted":"You deleted your saved progress",
+ "actor.you":"You","actor.policynest":"PolicyNest","actor.reviewer":"Reviewer",
+ "acct.title":"Your account","acct.reference":"Application reference","acct.status":"Status","acct.name":"Name","acct.email":"Email","acct.mobile":"Mobile number","acct.language":"Language","acct.last_saved":"Last saved","acct.signin":"Sign in","acct.signout":"Sign out","acct.signed_in_as":"Signed in as {name}",
+ "ui.loading":"Loading…","ui.empty.notifications":"No updates yet. We will post here when something changes.","ui.empty.history":"Nothing in your history yet.","ui.error":"Something went wrong. Please try again.","ui.retry":"Try again","ui.offline":"You are offline. Your changes are kept on this device and will be saved when you are back online.","ui.none":"None","ui.list_sep":", "},
+hi:{
+ "stage.details":"आपका विवरण","stage.documents":"दस्तावेज़","stage.verification":"सत्यापन","stage.training":"प्रशिक्षण","stage.exam":"परीक्षा","stage.certificate":"प्रमाणपत्र",
+ "sec.details.0":"आप कौन हैं","sec.details.1":"आपके पहचान-पत्रों के नंबर","sec.details.2":"हम आपसे कैसे संपर्क करें","sec.details.3":"बैंक खाता और सहमति",
+ "doc.PAN":"PAN कार्ड","doc.AADHAAR_FRONT":"Aadhaar, आगे का भाग","doc.AADHAAR_BACK":"Aadhaar, पीछे का भाग","doc.CLASS10":"10वीं की अंकतालिका","doc.BANK":"रद्द किया हुआ चेक या बैंक स्टेटमेंट","doc.SELFIE":"सेल्फ़ी",
+ "status.not_started.label":"शुरू नहीं हुआ","status.not_started.desc":"आपने अभी अपना आवेदन शुरू नहीं किया है।","status.not_started.next":"आगे: अपना विवरण भरें। ज़्यादातर आवेदक विवरण और दस्तावेज़ अपलोड करने में लगभग 30 मिनट लेते हैं।",
+ "status.draft.label":"ड्राफ़्ट","status.draft.desc":"आप अपना विवरण भर रहे हैं। जाँच के लिए अभी कुछ भी नहीं भेजा गया है।","status.draft.next":"आगे: अपना विवरण पूरा करें, फिर दस्तावेज़ जोड़ें।",
+ "status.in_progress.label":"जारी है","status.in_progress.desc":"आप अपने दस्तावेज़ जोड़ रहे हैं। जाँच के लिए अभी कुछ भी नहीं भेजा गया है।","status.in_progress.next":"आगे: सभी छह दस्तावेज़ जोड़ें, फिर उन्हें जाँच के लिए भेजें।",
+ "status.submitted.label":"जमा हो गया","status.submitted.desc":"हमें आपका आवेदन मिल गया है और हम जल्द ही उसकी जाँच शुरू करेंगे।","status.submitted.next":"आगे: अपने-आप होने वाली जाँच शुरू होगी।","status.submitted.eta":"इसमें आमतौर पर थोड़ा समय लगता है। आप यह पेज बंद कर सकते हैं; आपकी प्रगति सुरक्षित रहती है।",
+ "status.verifying.label":"जाँच चल रही है","status.verifying.desc":"हम आपके दस्तावेज़ों को ऑनबोर्डिंग के नियमों से मिलाकर जाँच रहे हैं।","status.verifying.next":"आगे: नतीजा आपको यहीं दिखेगा, और कुछ चाहिए होगा तो हम बताएँगे।","status.verifying.eta":"इसमें आमतौर पर थोड़ा समय लगता है। आप यह पेज बंद कर सकते हैं; आपकी प्रगति सुरक्षित रहती है।",
+ "status.action_required.label":"आपकी ओर से कार्रवाई चाहिए","status.action_required.desc":"आगे बढ़ने से पहले कुछ दस्तावेज़ों में सुधार करना होगा।","status.action_required.next":"आगे: सारे सुधार एक साथ भेजें। हम सिर्फ़ वही दोबारा जाँचेंगे जो बदला है।","status.action_required.eta":"जब तक आप सुधार नहीं भेजते, आवेदन आगे नहीं बढ़ेगा।",
+ "status.human_review.label":"समीक्षक के पास","status.human_review.desc":"हमारी टीम का एक व्यक्ति कुछ जानकारी जाँच रहा है। अभी आपको कुछ नहीं करना है।","status.human_review.next":"आगे: समीक्षक फ़ैसला करेंगे, या आपसे एक और चीज़ माँगेंगे।","status.human_review.eta":"हमारा लक्ष्य 4 कार्य-घंटों के भीतर जवाब देना है (यह हमारा सेवा-लक्ष्य है)।",
+ "status.training_pending.label":"प्रशिक्षण खुला है","status.training_pending.desc":"आपके दस्तावेज़ सत्यापित हो गए हैं। IRDAI के अनुसार ज़रूरी 15 घंटे का प्रशिक्षण पूरा करें।","status.training_pending.next":"आगे: प्रशिक्षण के मॉड्यूल पूरे करें, फिर परीक्षा दें।",
+ "status.exam_pending.label":"परीक्षा खुली है","status.exam_pending.desc":"आपका प्रशिक्षण पूरा हो गया है। अगला चरण परीक्षा है।","status.exam_pending.next":"आगे: प्रमाणपत्र पाने के लिए परीक्षा पास करें।",
+ "status.certificate_pending.label":"प्रमाणपत्र तैयार हो रहा है","status.certificate_pending.desc":"आपने परीक्षा पास कर ली है। आपका प्रमाणपत्र तैयार किया जा रहा है।","status.certificate_pending.next":"आगे: आपका प्रमाणपत्र यहीं दिखेगा।","status.certificate_pending.eta":"इसमें आमतौर पर थोड़ा समय लगता है।",
+ "status.certified.label":"प्रमाणित","status.certified.desc":"आप प्रमाणित POSP हैं। आपका प्रमाणपत्र तैयार है।","status.certified.next":"अब कुछ करना बाकी नहीं है। आप अपना प्रमाणपत्र कभी भी देख सकते हैं।",
+ "status.rejected.label":"मंज़ूर नहीं हुआ","status.rejected.desc":"हम इस आवेदन को मंज़ूर नहीं कर सके। कारण सरल भाषा में लिखे गए हैं।","status.rejected.next":"आगे: कारण पढ़ें। अगर आप सहमत नहीं हैं, तो किसी व्यक्ति से दोबारा जाँच करने को कह सकते हैं।",
+ "next.start":"अपना आवेदन शुरू करें","next.start.desc":"ज़्यादातर आवेदक विवरण और दस्तावेज़ अपलोड करने में लगभग 30 मिनट लेते हैं। आपकी प्रगति साथ-साथ सहेजी जाती है।",
+ "next.continue":"अपना आवेदन जारी रखें",
+ "next.continue.details.desc":"आप {of} में से पेज {page} पर हैं: {section}।","next.continue.documents.desc":"आपने {of} में से {n} दस्तावेज़ जोड़े हैं। अगला: {doc}।",
+ "next.continue.verification.desc":"आपका आवेदन हमारे पास है।","next.continue.training.desc":"अगला: {of} में से मॉड्यूल {module}।","next.continue.exam.desc":"परीक्षा तैयार है।","next.continue.certificate.desc":"आपका प्रमाणपत्र तैयार है।",
+ "next.recheck":"अपने सुधार दोबारा जाँच के लिए भेजें","next.recheck.desc":"आपके सारे सुधार आ गए हैं। हम सिर्फ़ वही दस्तावेज़ जाँचेंगे जो आपने बदले हैं।","next.fix.one":"1 दस्तावेज़ ठीक करें","next.fix.many":"{n} दस्तावेज़ ठीक करें","next.fix.desc":"ठीक करने वाले दस्तावेज़: {docs}। इन्हें एक साथ भेजें; हम सिर्फ़ वही दोबारा जाँचेंगे जो बदला है।",
+ "next.wait.verifying":"हम आपके आवेदन की जाँच कर रहे हैं","next.wait.verifying.desc":"अभी आपको कुछ करने की ज़रूरत नहीं है।",
+ "next.wait.review":"एक समीक्षक आपका आवेदन देख रहे हैं","next.wait.review.desc":"अभी आपको कुछ नहीं करना है। कुछ बदला तो हम आपको बताएँगे।",
+ "next.training.start":"प्रशिक्षण शुरू करें","next.training.start.desc":"IRDAI के अनुसार {of} घंटे का प्रशिक्षण ज़रूरी है। आप कभी भी रुककर बाद में लौट सकते हैं।",
+ "next.training.continue":"प्रशिक्षण जारी रखें ({of} में से {hours} घंटे पूरे)","next.training.continue.desc":"{modules} में से {done} मॉड्यूल पूरे हो चुके हैं।",
+ "next.exam.take":"परीक्षा दें","next.exam.retake":"परीक्षा दोबारा दें","next.exam.desc":"अपनी गति से सवालों के जवाब दें। आपके जवाब साथ-साथ सहेजे जाते हैं।",
+ "next.exam.wait":"आप {time} से परीक्षा दोबारा दे सकते हैं","next.exam.wait.desc":"तब तक प्रशिक्षण के मॉड्यूल दोहरा लें।",
+ "next.certificate.get":"अपना प्रमाणपत्र पाएँ","next.certificate.get.desc":"आपने परीक्षा पास कर ली है।","next.certificate.view":"अपना प्रमाणपत्र देखें","next.certificate.view.desc":"आपका प्रमाणपत्र तैयार है।",
+ "next.rejected":"कारण देखें","next.rejected.desc":"कारण सरल भाषा में लिखे हैं। अगर आप सहमत नहीं हैं, तो किसी व्यक्ति से फ़ैसले की समीक्षा करने को कह सकते हैं।",
+ "resume.not_started":"पेज 1 से शुरू करें (4 में से): आप कौन हैं","resume.details":"आपका विवरण, {of} में से पेज {page}: {section}","resume.documents":"दस्तावेज़: {doc}","resume.documents.fix":"दस्तावेज़: {doc} ठीक करें","resume.documents.recheck":"दस्तावेज़: सुधार दोबारा जाँच के लिए भेजें",
+ "resume.verification.submitted":"सत्यापन: प्राप्त हुआ","resume.verification.verifying":"सत्यापन: जारी है","resume.verification.human_review":"सत्यापन: समीक्षक के पास","resume.verification.rejected":"सत्यापन: फ़ैसला",
+ "resume.training":"प्रशिक्षण: {of} में से मॉड्यूल {module} ({hoursOf} में से {hours} घंटे)","resume.exam":"परीक्षा","resume.certificate.issued":"प्रमाणपत्र: तैयार","resume.certificate":"प्रमाणपत्र",
+ "save.saving":"सहेजा जा रहा है…","save.saved":"सहेजा गया","save.failed":"सहेजना विफल रहा","save.offline":"ऑफ़लाइन बदलाव सहेजने के लिए प्रतीक्षा में हैं","save.last":"आख़िरी बार सहेजा गया: {time}","save.retry":"दोबारा कोशिश करें","save.idle":"अभी तक सहेजा नहीं गया",
+ "nt.application_created":"आवेदन बन गया","nt.progress_saved":"प्रगति सहेज ली गई","nt.documents_received":"दस्तावेज़ मिल गए","nt.processing_completed":"प्रोसेसिंग पूरी हुई","nt.document_accepted":"दस्तावेज़ स्वीकार हुआ",
+ "nt.needs_correction":"एक दस्तावेज़ में सुधार चाहिए","nt.verification_started":"सत्यापन शुरू हुआ","nt.human_review_started":"एक समीक्षक ने आपका आवेदन देखना शुरू किया है","nt.more_info_requested":"और जानकारी माँगी गई है",
+ "nt.training_unlocked":"प्रशिक्षण खुल गया","nt.training_milestone":"प्रशिक्षण का एक पड़ाव पूरा हुआ","nt.exam_unlocked":"परीक्षा खुल गई","nt.exam_result":"परीक्षा का नतीजा आ गया","nt.certificate_issued":"प्रमाणपत्र जारी हुआ","nt.status_changed":"आपके आवेदन की स्थिति बदली है",
+ "tl.application_created":"आपने अपना आवेदन शुरू किया","tl.details_started":"आपने अपना विवरण भरना शुरू किया","tl.progress_saved":"प्रगति सहेज ली गई","tl.documents_received":"हमें आपके दस्तावेज़ मिल गए","tl.document_accepted":"दस्तावेज़ स्वीकार हुआ: {doc}",
+ "tl.needs_correction":"दस्तावेज़ में सुधार चाहिए: {doc}","tl.processing_completed":"प्रोसेसिंग पूरी हुई","tl.verification_started":"सत्यापन शुरू हुआ","tl.verification_completed":"सत्यापन का एक चरण पूरा हुआ","tl.human_review_started":"एक समीक्षक ने आपका आवेदन देखना शुरू किया",
+ "tl.more_info_requested":"हमने और जानकारी माँगी","tl.fixes_received":"हमें आपके सुधार मिल गए","tl.dispute_raised":"आपने फ़ैसले की समीक्षा के लिए किसी व्यक्ति से कहा","tl.training_unlocked":"प्रशिक्षण खुल गया","tl.training_milestone":"प्रशिक्षण का एक पड़ाव पूरा हुआ",
+ "tl.training_complete":"प्रशिक्षण पूरा हुआ","tl.exam_unlocked":"परीक्षा खुल गई","tl.exam_started":"आपने परीक्षा शुरू की","tl.exam_result":"परीक्षा जमा की गई","tl.certificate_issued":"प्रमाणपत्र जारी हुआ","tl.status_changed":"स्थिति बदली","tl.progress_resumed":"आप लौटकर आए और आगे बढ़े","tl.progress_deleted":"आपने अपनी सहेजी हुई प्रगति मिटा दी",
+ "actor.you":"आप","actor.policynest":"PolicyNest","actor.reviewer":"समीक्षक",
+ "acct.title":"आपका खाता","acct.reference":"आवेदन संदर्भ","acct.status":"स्थिति","acct.name":"नाम","acct.email":"ईमेल","acct.mobile":"मोबाइल नंबर","acct.language":"भाषा","acct.last_saved":"आख़िरी बार सहेजा गया","acct.signin":"साइन इन करें","acct.signout":"साइन आउट करें","acct.signed_in_as":"{name} के रूप में साइन इन",
+ "ui.loading":"लोड हो रहा है…","ui.empty.notifications":"अभी कोई अपडेट नहीं है। कुछ बदलने पर हम यहीं बताएँगे।","ui.empty.history":"आपके इतिहास में अभी कुछ नहीं है।","ui.error":"कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।","ui.retry":"फिर से कोशिश करें","ui.offline":"आप ऑफ़लाइन हैं। आपके बदलाव इस डिवाइस पर रखे गए हैं और ऑनलाइन होते ही सहेज लिए जाएँगे।","ui.none":"कोई नहीं","ui.list_sep":", "}
+};
+/* Parameter hygiene: a value that looks like a PAN, a 12-digit number or a 9 to 18 digit account number is never printed. */
+function M_scrub(v){
+ if(v==null) return "";
+ var s=String(v);
+ s=s.replace(/\b[A-Za-z]{5}\d{4}[A-Za-z]\b/g,"[hidden]");
+ s=s.replace(/\d{9,18}/g,"[hidden]");
+ s=s.replace(/\b\d{4}[ -]\d{4}[ -]\d{4}[ -]\d{1,6}\b/g,"[hidden]");
+ s=s.replace(/\b\d{4}[ -]\d{4}[ -]\d{4}\b/g,"[hidden]");
+ return s;
+}
+/** t(key, params, lang): whole-sentence strings with named {placeholders}. Falls back to English, then to the key.
+ *  A param named xKey is translated and used as {x}; xKeys (array) becomes a list used as {x}. */
+function t(key,params,lang){
+ var L=I18N[lang]?lang:"en",tbl=I18N[L],en=I18N.en;
+ var s=M_has(tbl,key)?tbl[key]:M_has(en,key)?en[key]:key;
+ var p={},src=params||{};
+ Object.keys(src).forEach(function(n){
+  var v=src[n];
+  if(/Keys$/.test(n)&&Array.isArray(v)){ p[n.slice(0,-4)]=v.map(function(k){var r=t(k,null,L); return r===k?M_scrub(k):r}).join(t("ui.list_sep",null,L)); }
+  else if(/Key$/.test(n)&&typeof v==="string"){ var r=t(v,null,L); p[n.slice(0,-3)]=(r===v)?M_scrub(v):r; }
+  else if(!M_has(p,n)) p[n]=M_scrub(v);
+ });
+ return s.replace(/\{([A-Za-z0-9_]+)\}/g,function(_,n){ return M_has(p,n)?p[n]:""; });
+}
+/* MODEL:END */
+
+/* ===== Shell and dashboard strings (lane P3+P4). Kept outside the MODEL region so the model's own tests are unaffected; merged into I18N here.
+   Hindi strings were written by Claude, not a native speaker: a native Hindi speaker should review them before production. ===== */
+var I18N_UI={
+en:{
+ "role.applicant":"POSP Applicant","role.reviewer":"Reviewer","role.ops":"Operations and compliance","role.admin":"Administrator","role.all":"Demo: all views",
+ "ver.email.yes":"Email verified","ver.email.no":"Email not verified","ver.mobile.yes":"Mobile verified","ver.mobile.no":"Mobile not verified",
+ "ref.label":"Application reference","ref.copy":"Copy","ref.copied":"Copied","ref.copied.sr":"Reference copied","ref.copy.aria":"Copy application reference","ref.local":"not yet registered","ref.local.long":"This reference is saved only on this device until you sign in.",
+ "lang.label":"Language","lang.en":"English","lang.hi":"Hindi",
+ "menu.account":"Account menu","menu.profile":"Profile","menu.notifications":"Notifications","menu.history":"Application history","menu.signin":"Sign in or create account","menu.signout":"Sign out","menu.preferred":"Preferred language: {lang}",
+ "nav.label":"Main navigation","nav.home":"Home","nav.application":"Application","nav.documents":"Documents","nav.training":"Training","nav.exam":"Exam","nav.certificate":"Certificate","nav.help":"Help","nav.review":"Review console","nav.evaluation":"Evaluation","nav.audit":"Audit trail","nav.staff":"Staff tools","nav.more":"Account, privacy and sync",
+ "ui.guest":"Guest","ui.there":"there","ui.hello":"Hello, {name}","ui.congrats":"Congratulations, {name}","ui.today":"Today","ui.view":"View","ui.dismiss":"Dismiss","ui.new":"New",
+ "save.device":"Saved on this device, {time}","save.account":"Saved to your account, {time}","save.none":"Not saved yet","save.nodevice":"Not saved. Turn on saving on this device, or sign in.",
+ "dash.where":"Where you are now","dash.action.yes":"Action needed from you","dash.action.no":"Nothing needed from you right now","dash.next":"What happens next","dash.eta":"When to expect a result","dash.eta.none":"We will show an estimated decision time after your application is submitted.",
+ "dash.cta.label":"Your next step","dash.go":"Go to this step","av.role":"Role","dash.stepof":"Step {n} of {of}","dash.pageof":"Page {n} of {of}","dash.moduleof":"Module {n} of {of}","dash.wait":"We will update this page when something changes.","dash.wait.link":"See verification progress",
+ "dash.journey":"Your journey","dash.journey.done":"Done","dash.journey.now":"You are here","dash.journey.todo":"Coming up","dash.form":"Details form: {done} of {of} pages complete","dash.journey.docs":"Documents verified: {n} of 6",
+ "dash.docs":"Your documents","dash.docs.headline":"{n} of 6 verified","dash.docs.verified":"Verified","dash.docs.processing":"Being read","dash.docs.action":"Action required","dash.docs.missing":"Not added yet","dash.docs.note":"This counts your documents only. Your details form is shown separately in the journey above.","dash.docs.open":"Open documents",
+ "dash.updates":"Recent updates","dash.viewall":"View all","dash.updates.empty":"No updates yet. We will post here when something changes.","dash.updates.signin":"Sign in to see updates about your application.","dash.updates.error":"We could not load your updates right now.","dash.updates.loading":"Loading your updates…","dash.updates.retry":"Try again",
+ "dash.saved":"Last saved","dash.signin.title":"Sign in to save your progress across devices","dash.signin.body":"Until you sign in, your application reference is saved only on this device.","dash.signin.btn":"Sign in or create account",
+ "dd.checks":"How your documents are checked","dd.compliance":"View compliance details","dd.journey":"View full journey","dd.map":"View the checks, document by document","dd.history":"View application history",
+ "dd.checks.none":"Checks have not started. They will begin after you submit your documents.","dd.checks.counts":"{passed} of {total} checks passed so far.","dd.compliance.none":"Compliance checks appear here as your application moves forward.",
+ "dd.training.locked":"Training opens after your documents are verified.","dd.training.line":"{hours} of {of} hours of training done ({done} of {modules} modules).","dd.exam.line":"Exam: {state}","dd.cert.line":"Certificate: {state}",
+ "ex.locked":"not open yet","ex.available":"open","ex.in_progress":"in progress","ex.passed":"passed","ex.failed":"not passed yet","cs.locked":"not open yet","cs.pending":"being prepared","cs.issued":"ready",
+ "dd.counters":"{touches} reviews by a person and {followups} follow-up requests so far.","dd.agent":"Your agent card","dd.agent.code":"POSP code: {code}","dd.agent.nocode":"POSP code: issued after you pass the exam",
+ "trust.title":"Good to know","trust.1.h":"What you need","trust.2.h":"How document checks work","trust.3.h":"How we protect your information","trust.4.h":"How saving and resuming works","trust.5.h":"What happens after submission",
+ "trust.1.b1":"Six documents: {docs}. You also fill in a short details form (four pages).","trust.1.b2":"Most applicants complete details and document upload in about 30 minutes. You can stop and come back.",
+ "trust.2.b1":"Each document is read on your device with text recognition (OCR). The text is compared with the details you typed and with the onboarding rules (rulebook v3.2).",
+ "trust.2.b2":"In this version, four checks are simulated and no government, bank or registry service is called: the PAN holder check, the bank penny-drop check, the face match and the IRDAI registry lookup. The results of those four are fixed placeholders, not real checks.",
+ "trust.2.b3":"A wrong or unclear document is refused with the reason, so you can fix it once. Judgement calls go to a person on our team. The system never decides those alone.",
+ "trust.3.b1":"Photos of your documents and the text read from them stay on this device. They are not uploaded and not saved.",
+ "trust.3.b2":"Aadhaar is kept as the last four digits only.",
+ "trust.3.b3":"When you sign in, our server keeps your details (name, date of birth, contact details, state, city, education and bank IFSC) and your progress, with only the last four digits of PAN and bank account. Full PAN, full Aadhaar and full bank account numbers are never stored on the server.",
+ "trust.3.b4":"The server copy is not backed up. Only you and the reviewers assigned to your application can see it.",
+ "trust.3.b5":"Questions you ask the Copilot send your first name and your progress, never your ID numbers or images.",
+ "trust.4.b1":"Signed in: your progress is saved to your account as you go, and the top bar shows the last saved time. You continue from the same place on any device.",
+ "trust.4.b2":"Not signed in: nothing is sent to our server. If you choose to save on this device, progress is kept here for 30 days (14 days once we have asked for fixes). Document photos are not kept, only the result of each check.",
+ "trust.4.b3":"You can delete saved progress at any time.",
+ "trust.5.b1":"The automatic checks run when you submit. If something needs fixing, you get one message that lists every fix, and only the documents you change are checked again.",
+ "trust.5.b2":"Anything that needs judgement goes to a reviewer. Our service target is a reply within 4 working hours.",
+ "trust.5.b3":"After the checks pass: 15 hours of training, the exam, then your certificate.",
+ "nv.title":"Notifications","nv.sub":"Updates about your application.","nv.markall":"Mark all as read","nv.unread":"{n} unread","nv.signin":"Sign in to see your notifications.","nv.read":"Read",
+ "hv.title":"Application history","hv.sub":"What has happened on your application, newest first.","hv.empty":"Nothing in your history yet.",
+ "av.title":"Account and profile","av.sub":"Your identity, contact details and preferences.","av.notsigned":"You are not signed in. Your progress is saved only on this device, and only if you chose that.","av.verified":"Verified","av.notverified":"Not verified","av.na":"Not provided","av.edit.soon":"Editing your profile is coming soon.",
+ "help.title":"Help","help.sub":"How this works, what we do with your information, and where to ask.","help.copilot":"Ask the Onboarding Copilot","help.copilot.b":"The Copilot knows which step you are on and can explain what each field and document needs. It cannot approve or reject you.",
+ "un.title":"You do not have access to {name}","un.body":"This area is for {roles}. You are signed in as: {role}.","un.body.out":"This area is for {roles}. Sign in with a staff account to open it.","un.home":"Go to your home","un.signin":"Sign in",
+ "route.note":"You are on {current}. {requested} opens after that step.","route.note.done":"{requested} is already complete. You are on {current}.",
+ "state.loading":"Loading…","state.error":"We could not load this right now.","state.retry":"Try again",
+ "demo.chip":"Viewing as {role}. Demo only.","env.prod":"Documents are read on your device","env.demo":"Demo environment · on-device OCR","foot.prod":"Four of the checks are simulated in this version. See How document checks work.","foot.demo":"Demo environment. Checks are simulated."
+},
+hi:{
+ "role.applicant":"POSP आवेदक","role.reviewer":"समीक्षक","role.ops":"संचालन और अनुपालन","role.admin":"व्यवस्थापक","role.all":"डेमो: सभी दृश्य",
+ "ver.email.yes":"ईमेल सत्यापित","ver.email.no":"ईमेल सत्यापित नहीं","ver.mobile.yes":"मोबाइल सत्यापित","ver.mobile.no":"मोबाइल सत्यापित नहीं",
+ "ref.label":"आवेदन संदर्भ","ref.copy":"कॉपी करें","ref.copied":"कॉपी हो गया","ref.copied.sr":"संदर्भ कॉपी हो गया","ref.copy.aria":"आवेदन संदर्भ कॉपी करें","ref.local":"अभी पंजीकृत नहीं","ref.local.long":"साइन इन करने तक यह संदर्भ सिर्फ़ इसी डिवाइस पर सहेजा है।",
+ "lang.label":"भाषा","lang.en":"अंग्रेज़ी","lang.hi":"हिंदी",
+ "menu.account":"खाता मेनू","menu.profile":"प्रोफ़ाइल","menu.notifications":"सूचनाएँ","menu.history":"आवेदन का इतिहास","menu.signin":"साइन इन करें या खाता बनाएँ","menu.signout":"साइन आउट करें","menu.preferred":"पसंदीदा भाषा: {lang}",
+ "nav.label":"मुख्य नेविगेशन","nav.home":"होम","nav.application":"आवेदन","nav.documents":"दस्तावेज़","nav.training":"प्रशिक्षण","nav.exam":"परीक्षा","nav.certificate":"प्रमाणपत्र","nav.help":"सहायता","nav.review":"समीक्षा कंसोल","nav.evaluation":"मूल्यांकन","nav.audit":"ऑडिट ट्रेल","nav.staff":"स्टाफ़ के उपकरण","nav.more":"खाता, गोपनीयता और सिंक",
+ "ui.guest":"अतिथि","ui.there":"जी","ui.hello":"नमस्ते, {name}","ui.congrats":"बधाई हो, {name}","ui.today":"आज","ui.view":"देखें","ui.dismiss":"बंद करें","ui.new":"नया",
+ "save.device":"इस डिवाइस पर सहेजा गया, {time}","save.account":"आपके खाते में सहेजा गया, {time}","save.none":"अभी तक सहेजा नहीं गया","save.nodevice":"सहेजा नहीं गया। इस डिवाइस पर सहेजना चालू करें, या साइन इन करें।",
+ "dash.where":"आप अभी कहाँ हैं","dash.action.yes":"आपकी ओर से कार्रवाई चाहिए","dash.action.no":"अभी आपको कुछ नहीं करना है","dash.next":"आगे क्या होगा","dash.eta":"नतीजा कब तक मिलेगा","dash.eta.none":"आवेदन जमा होने के बाद हम फ़ैसले का अनुमानित समय दिखाएँगे।",
+ "dash.cta.label":"आपका अगला कदम","dash.go":"इस चरण पर जाएँ","av.role":"भूमिका","dash.stepof":"{of} में से चरण {n}","dash.pageof":"{of} में से पेज {n}","dash.moduleof":"{of} में से मॉड्यूल {n}","dash.wait":"कुछ बदलने पर हम यह पेज अपडेट करेंगे।","dash.wait.link":"सत्यापन की प्रगति देखें",
+ "dash.journey":"आपकी यात्रा","dash.journey.done":"पूरा","dash.journey.now":"आप यहाँ हैं","dash.journey.todo":"आगे आने वाला","dash.form":"विवरण फ़ॉर्म: {of} में से {done} पेज पूरे","dash.journey.docs":"सत्यापित दस्तावेज़: 6 में से {n}",
+ "dash.docs":"आपके दस्तावेज़","dash.docs.headline":"6 में से {n} सत्यापित","dash.docs.verified":"सत्यापित","dash.docs.processing":"पढ़ा जा रहा है","dash.docs.action":"कार्रवाई चाहिए","dash.docs.missing":"अभी जोड़ा नहीं","dash.docs.note":"यह सिर्फ़ आपके दस्तावेज़ गिनता है। विवरण फ़ॉर्म की प्रगति ऊपर यात्रा में अलग दिखती है।","dash.docs.open":"दस्तावेज़ खोलें",
+ "dash.updates":"हाल के अपडेट","dash.viewall":"सभी देखें","dash.updates.empty":"अभी कोई अपडेट नहीं है। कुछ बदलने पर हम यहीं बताएँगे।","dash.updates.signin":"अपने आवेदन के अपडेट देखने के लिए साइन इन करें।","dash.updates.error":"अभी आपके अपडेट लोड नहीं हो सके।","dash.updates.loading":"आपके अपडेट लोड हो रहे हैं…","dash.updates.retry":"फिर से कोशिश करें",
+ "dash.saved":"आख़िरी बार सहेजा गया","dash.signin.title":"सभी डिवाइस पर प्रगति सहेजने के लिए साइन इन करें","dash.signin.body":"साइन इन करने तक आपका आवेदन संदर्भ सिर्फ़ इसी डिवाइस पर सहेजा है।","dash.signin.btn":"साइन इन करें या खाता बनाएँ",
+ "dd.checks":"आपके दस्तावेज़ों की जाँच कैसे होती है","dd.compliance":"अनुपालन का ब्योरा देखें","dd.journey":"पूरी यात्रा देखें","dd.map":"दस्तावेज़ के हिसाब से जाँचें देखें","dd.history":"आवेदन का इतिहास देखें",
+ "dd.checks.none":"जाँच अभी शुरू नहीं हुई है। दस्तावेज़ जमा करने के बाद यह शुरू होगी।","dd.checks.counts":"अब तक {total} में से {passed} जाँच पास हुईं।","dd.compliance.none":"आपका आवेदन आगे बढ़ने पर अनुपालन की जाँचें यहाँ दिखेंगी।",
+ "dd.training.locked":"दस्तावेज़ सत्यापित होने के बाद प्रशिक्षण खुलेगा।","dd.training.line":"{of} में से {hours} घंटे का प्रशिक्षण पूरा ({modules} में से {done} मॉड्यूल)।","dd.exam.line":"परीक्षा: {state}","dd.cert.line":"प्रमाणपत्र: {state}",
+ "ex.locked":"अभी खुली नहीं","ex.available":"खुली है","ex.in_progress":"जारी है","ex.passed":"पास","ex.failed":"अभी पास नहीं हुई","cs.locked":"अभी खुला नहीं","cs.pending":"तैयार हो रहा है","cs.issued":"तैयार है",
+ "dd.counters":"अब तक किसी व्यक्ति ने {touches} बार समीक्षा की और {followups} बार सुधार माँगे गए।","dd.agent":"आपका एजेंट कार्ड","dd.agent.code":"POSP कोड: {code}","dd.agent.nocode":"POSP कोड: परीक्षा पास करने के बाद जारी होगा",
+ "trust.title":"जानने लायक बातें","trust.1.h":"आपको क्या चाहिए","trust.2.h":"दस्तावेज़ों की जाँच कैसे होती है","trust.3.h":"हम आपकी जानकारी की सुरक्षा कैसे करते हैं","trust.4.h":"सहेजना और दोबारा शुरू करना कैसे काम करता है","trust.5.h":"जमा करने के बाद क्या होता है",
+ "trust.1.b1":"छह दस्तावेज़: {docs}। इसके साथ एक छोटा विवरण फ़ॉर्म (चार पेज) भरना होता है।","trust.1.b2":"ज़्यादातर आवेदक विवरण और दस्तावेज़ अपलोड करने में लगभग 30 मिनट लेते हैं। आप रुककर बाद में लौट सकते हैं।",
+ "trust.2.b1":"हर दस्तावेज़ आपके डिवाइस पर टेक्स्ट पहचान (OCR) से पढ़ा जाता है। पढ़े गए टेक्स्ट को आपके भरे विवरण और ऑनबोर्डिंग के नियमों (रूलबुक v3.2) से मिलाया जाता है।",
+ "trust.2.b2":"इस संस्करण में चार जाँचें नक़ली (सिमुलेटेड) हैं और किसी सरकारी, बैंक या रजिस्ट्री सेवा को नहीं बुलाया जाता: PAN धारक की जाँच, बैंक पेनी-ड्रॉप जाँच, चेहरा मिलान और IRDAI रजिस्ट्री खोज। इन चारों के नतीजे तय किए हुए नमूने हैं, असली जाँच नहीं।",
+ "trust.2.b3":"ग़लत या अस्पष्ट दस्तावेज़ कारण के साथ लौटा दिया जाता है, ताकि आप एक बार में सुधार कर सकें। जिन बातों में विवेक चाहिए, वे हमारी टीम के किसी व्यक्ति के पास जाती हैं। सिस्टम उन्हें अकेले तय नहीं करता।",
+ "trust.3.b1":"आपके दस्तावेज़ों की तस्वीरें और उनसे पढ़ा गया टेक्स्ट इसी डिवाइस पर रहता है। वे अपलोड नहीं होते और सहेजे भी नहीं जाते।","trust.3.b2":"Aadhaar सिर्फ़ आख़िरी चार अंकों के रूप में रखा जाता है।",
+ "trust.3.b3":"साइन इन करने पर हमारा सर्वर आपका विवरण (नाम, जन्म तिथि, संपर्क विवरण, राज्य, शहर, शिक्षा और बैंक IFSC) और आपकी प्रगति रखता है, PAN और बैंक खाते के सिर्फ़ आख़िरी चार अंकों के साथ। पूरा PAN, पूरा Aadhaar और पूरा बैंक खाता नंबर सर्वर पर कभी नहीं रखा जाता।",
+ "trust.3.b4":"सर्वर की प्रति का बैकअप नहीं लिया जाता। इसे सिर्फ़ आप और आपके आवेदन के लिए तय समीक्षक देख सकते हैं।","trust.3.b5":"Copilot से सवाल पूछने पर आपका पहला नाम और आपकी प्रगति भेजी जाती है, आपके पहचान-पत्रों के नंबर या तस्वीरें कभी नहीं।",
+ "trust.4.b1":"साइन इन होने पर आपकी प्रगति साथ-साथ आपके खाते में सहेजी जाती है, और ऊपर की पट्टी में आख़िरी बार सहेजने का समय दिखता है। आप किसी भी डिवाइस पर उसी जगह से आगे बढ़ सकते हैं।",
+ "trust.4.b2":"साइन इन नहीं होने पर हमारे सर्वर को कुछ नहीं भेजा जाता। अगर आप इस डिवाइस पर सहेजना चुनते हैं, तो प्रगति यहाँ 30 दिन रखी जाती है (सुधार माँगे जाने के बाद 14 दिन)। दस्तावेज़ों की तस्वीरें नहीं रखी जातीं, सिर्फ़ हर जाँच का नतीजा रखा जाता है।",
+ "trust.4.b3":"आप सहेजी हुई प्रगति कभी भी मिटा सकते हैं।",
+ "trust.5.b1":"आपके जमा करते ही अपने-आप होने वाली जाँचें चलती हैं। कुछ ठीक करना हो तो आपको एक संदेश मिलता है जिसमें हर सुधार लिखा होता है, और सिर्फ़ वही दस्तावेज़ दोबारा जाँचे जाते हैं जो आप बदलते हैं।",
+ "trust.5.b2":"जिन बातों में विवेक चाहिए, वे समीक्षक के पास जाती हैं। हमारा सेवा लक्ष्य 4 कार्य-घंटों के भीतर जवाब देना है।","trust.5.b3":"जाँचें पास होने के बाद: 15 घंटे का प्रशिक्षण, परीक्षा, फिर आपका प्रमाणपत्र।",
+ "nv.title":"सूचनाएँ","nv.sub":"आपके आवेदन के अपडेट।","nv.markall":"सभी को पढ़ा हुआ मानें","nv.unread":"{n} अपठित","nv.signin":"अपनी सूचनाएँ देखने के लिए साइन इन करें।","nv.read":"पढ़ा हुआ",
+ "hv.title":"आवेदन का इतिहास","hv.sub":"आपके आवेदन पर क्या-क्या हुआ, सबसे नया पहले।","hv.empty":"आपके इतिहास में अभी कुछ नहीं है।",
+ "av.title":"खाता और प्रोफ़ाइल","av.sub":"आपकी पहचान, संपर्क विवरण और पसंद।","av.notsigned":"आप साइन इन नहीं हैं। आपकी प्रगति सिर्फ़ इसी डिवाइस पर सहेजी जाती है, और केवल तब जब आपने ऐसा चुना हो।","av.verified":"सत्यापित","av.notverified":"सत्यापित नहीं","av.na":"दिया नहीं गया","av.edit.soon":"प्रोफ़ाइल बदलने की सुविधा जल्द आ रही है।",
+ "help.title":"सहायता","help.sub":"यह कैसे काम करता है, हम आपकी जानकारी का क्या करते हैं, और सवाल कहाँ पूछें।","help.copilot":"ऑनबोर्डिंग Copilot से पूछें","help.copilot.b":"Copilot जानता है कि आप किस चरण पर हैं और हर फ़ील्ड व दस्तावेज़ के बारे में समझा सकता है। वह आपको मंज़ूर या अस्वीकार नहीं कर सकता।",
+ "un.title":"आपको {name} खोलने की अनुमति नहीं है","un.body":"यह क्षेत्र {roles} के लिए है। आप इस रूप में साइन इन हैं: {role}।","un.body.out":"यह क्षेत्र {roles} के लिए है। इसे खोलने के लिए स्टाफ़ खाते से साइन इन करें।","un.home":"अपने होम पर जाएँ","un.signin":"साइन इन करें",
+ "route.note":"आप {current} पर हैं। {requested} उस चरण के बाद खुलेगा।","route.note.done":"{requested} पहले ही पूरा हो चुका है। आप {current} पर हैं।",
+ "state.loading":"लोड हो रहा है…","state.error":"अभी यह लोड नहीं हो सका।","state.retry":"फिर से कोशिश करें",
+ "demo.chip":"{role} के रूप में देख रहे हैं। सिर्फ़ डेमो।","env.prod":"दस्तावेज़ आपके डिवाइस पर पढ़े जाते हैं","env.demo":"डेमो वातावरण · डिवाइस पर OCR","foot.prod":"इस संस्करण में चार जाँचें नक़ली हैं। “दस्तावेज़ों की जाँच कैसे होती है” देखें।","foot.demo":"डेमो वातावरण। जाँचें नक़ली हैं।"
+}};
+Object.keys(I18N_UI.en).forEach(function(k){I18N.en[k]=I18N_UI.en[k]});
+Object.keys(I18N_UI.hi).forEach(function(k){I18N.hi[k]=I18N_UI.hi[k]});
+
+
 
 /* F-10: explanation-only adapter. The decision and pinned engine remain unchanged. */
 function safeRejectReasons(checks,x,typedDob){
@@ -1052,30 +1673,297 @@ function docSummaryX(k,x){
 /* ---------- Workflow canvas ---------- */
 /* EVAL:START */var EVAL={"now":{"run_at":"2026-11-14T19:58:47.068Z","engine":"policy-engine 3.4.0 · rulebook v3.2 · OCR-read cross-checks · simulated external services","engine_sha256":"c206388747e8381e0ce21f7677cfb83594b51db9f6581b6aca3f1d1ed9824350","n":600,"accuracy":1,"engine_ms_per_application":0.04275183333333336,"confusion_rows_truth_cols_pred":{"APPROVE":{"APPROVE":364,"NEEDS_MORE_INFO":0,"REJECT":0},"NEEDS_MORE_INFO":{"APPROVE":0,"NEEDS_MORE_INFO":176,"REJECT":0},"REJECT":{"APPROVE":0,"NEEDS_MORE_INFO":0,"REJECT":60}},"REJECT":{"precision":1,"recall":1,"tp":60,"predicted":60,"actual":60},"NEEDS_MORE_INFO":{"precision":1,"recall":1,"tp":176,"predicted":176,"actual":176},"APPROVE":{"precision":1,"recall":1,"tp":364,"predicted":364,"actual":364},"reject_recall_incl_routed_to_human":1,"straight_through_rate":0.9816666666666667,"routed_to_human":11,"wrongful_approvals":0,"follow_up":{"applications":176,"messages_per_application":1,"mean_items":1.3068181818181819},"by_gender":{"M":{"n":423,"accuracy":1},"F":{"n":177,"accuracy":1}},"by_state":{"Maharashtra":{"n":79,"accuracy":1},"Uttar Pradesh":{"n":75,"accuracy":1},"Madhya Pradesh":{"n":56,"accuracy":1},"Gujarat":{"n":52,"accuracy":1},"Rajasthan":{"n":47,"accuracy":1},"Tamil Nadu":{"n":41,"accuracy":1},"Bihar":{"n":40,"accuracy":1},"Karnataka":{"n":39,"accuracy":1},"Odisha":{"n":34,"accuracy":1},"Haryana":{"n":31,"accuracy":1},"Delhi":{"n":30,"accuracy":1},"West Bengal":{"n":28,"accuracy":1},"Punjab":{"n":27,"accuracy":1},"Telangana":{"n":21,"accuracy":1}},"by_name_pattern":{"EXACT":{"n":436,"accuracy":1},"SPELLING":{"n":36,"accuracy":1},"SWAP":{"n":36,"accuracy":1},"MIDDLE_MISSING":{"n":29,"accuracy":1},"INITIAL":{"n":28,"accuracy":1},"MIDDLE_ADDED":{"n":23,"accuracy":1},"DIFFERENT":{"n":12,"accuracy":1}}},"extra":{"reasons":{"EDU_NOT_ELIGIBLE":[21,21],"POOR_QUALITY":[110,110],"FACE_LOW":[22,22],"UNDERAGE":[6,6],"NAME_SPELLING":[37,34],"NAME_MISMATCH_HARD":[12,12],"DOB_MISMATCH":[29,27],"PAN_FORMAT_INVALID":[7,7],"BANK_NAME_MISMATCH":[31,28],"ALREADY_REGISTERED":[14,14],"PAN_NOT_INDIVIDUAL":[2,2]},"nmi_full":[170,176],"reviewer_rollup_acc":0.87,"human_routed_truth":{"REJECT":11}},"first":{"engine":"policy-engine 3.3.0 (first run, before rule refinements)","accuracy":0.98,"REJECT":{"precision":0.8889,"recall":0.9333,"tp":56,"predicted":63,"actual":60},"NEEDS_MORE_INFO":{"precision":0.9882,"recall":0.9545,"tp":168,"predicted":170,"actual":176},"APPROVE":{"precision":0.9918,"recall":1.0,"tp":364,"predicted":367,"actual":364},"wrongful_approvals":3,"errors":12,"changes":["§4.1: a document with OCR confidence below 0.75 is treated as a quality problem and its values are not used (fixed 8 cases where noisy text from a glare or blurry photo looked like a different person or a wrong date)","§4.2: when the typed PAN equals the characters printed on the card, the O/0 and I/1 noise correction is not applied (fixed 2 invalid-format PANs that were being 'corrected' into valid ones)","§2 Step 0: fixed eligibility rules are applied to the typed details when the document cannot settle them: declared education below Class 10, typed PAN format and holder type, typed DOB under 18 (fixed 2 rejections)"]},"sim":{"certified":1732,"returned_share_of_certified":0.2564,"today":{"median":8.41,"p25":6.57,"p90":13.01},"engine":{"median":7.4,"p25":5.62,"p90":11.47},"engine_plus_training_link":{"median":6.11,"p25":4.55,"p90":10.34},"hist_bins_days":["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15"],"hist_today":[0,0,12,45,108,154,228,224,206,188,161,129,103,59,39,76],"hist_engine":[0,4,31,100,175,234,248,211,193,172,143,80,56,35,18,32],"review_zone_median_hours_today":23.8,"review_zone_median_hours_engine":0.17,"silence":{"returned_apps":774,"silent_today":211,"rate_today":0.2726,"target_rate":0.1,"repliers_certify_rate":0.7886,"extra_agents_if_target":106,"certified_today":1732},"reviewer_minutes":{"today_mean_per_application":20.7,"routed_share":0.0183,"estimate_per_application":0.38}},"pmap":[{"step":"2 Upload documents","actor":"Applicant","apps_entering":3000,"apps_lost":258,"lost_pct_of_entering":8.6,"median_hours":17.9,"p90_hours":46.3},{"step":"3 Wait for a reviewer","actor":"Queue: nobody acts; an ops reviewer picks the file up","apps_entering":2742,"apps_lost":0,"lost_pct_of_entering":0.0,"median_hours":17.3,"p90_hours":38.2},{"step":"4 First review","actor":"Ops reviewer (22 reviewers, OPS-01..22)","apps_entering":2742,"apps_lost":314,"lost_pct_of_entering":11.5,"median_hours":0.2,"p90_hours":0.4},{"step":"4a Applicant fixes returned documents","actor":"Applicant (after a reviewer returns the file)","apps_entering":774,"apps_lost":211,"lost_pct_of_entering":27.3,"median_hours":39.0,"p90_hours":88.6},{"step":"4b Wait for re-check","actor":"Queue: nobody acts; an ops reviewer resumes the file","apps_entering":582,"apps_lost":0,"lost_pct_of_entering":0.0,"median_hours":14.6,"p90_hours":33.6},{"step":"4c Re-check after fix","actor":"Ops reviewer","apps_entering":582,"apps_lost":0,"lost_pct_of_entering":0.0,"median_hours":0.2,"p90_hours":0.3},{"step":"5 Start training","actor":"Applicant (the log shows no system reminder)","apps_entering":2217,"apps_lost":482,"lost_pct_of_entering":21.7,"median_hours":23.3,"p90_hours":60.6},{"step":"6 Training (15 h)","actor":"Applicant on the training platform","apps_entering":1735,"apps_lost":0,"lost_pct_of_entering":0.0,"median_hours":69.5,"p90_hours":146.3},{"step":"7 Exam","actor":"Applicant (retakes included)","apps_entering":1735,"apps_lost":0,"lost_pct_of_entering":0.0,"median_hours":19.8,"p90_hours":65.5},{"step":"8 Certificate","actor":"System","apps_entering":1735,"apps_lost":0,"lost_pct_of_entering":0.0,"median_hours":10.7,"p90_hours":28.9}],"pmap_meta":{"period":"Jan–Sep 2026","source":"stage1/tables/process_map_steps.csv"}};/* EVAL:END */
 var VIEW="dash";
-var NAV=[["dash","Dashboard",'<rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>'],["apply","Application",ICONS[1]],["ops","Review console",ICONS[2]],["eval","Evaluation",'<path d="M2.5 13.5h11M4 11V7.5M7 11V4.5M10 11V6M13 11V3"/>'],["audit","Audit trail",'<path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.4 4h.4M2.4 8h.4M2.4 12h.4"/>']];
+/* ===== Applicant shell and calm dashboard (lane P3+P4) =====
+   Everything here reads the MODEL region (statusOf, nextAction, resumePosition, progressModel, can, t). No status or next-action rule is repeated in the UI. */
+var LANG=(function(){ var v=null; try{ v=localStorage.getItem("pn-lang") }catch(e){} return v==="hi"?"hi":"en"; })();
+function T(k,p){ return t(k,p,LANG); }
+function TE(k,p){ return esc(T(k,p)); }
+function setHtml(el,h){ if(el&&el.__h!==h){ el.__h=h; el.innerHTML=h; } }
+function svgi(n){ return '<svg viewBox="0 0 16 16" aria-hidden="true">'+(ICON_PATHS[n]||ICON_PATHS.circle)+'</svg>'; }
+var APPREF=null,LOCALSAVE=0,ROUTE_STAGE=null,LASTHASH="";
+var VIEWS=["dash","apply","ops","audit","eval","notif","hist","acct","help"];
+var VIEW_ACT={dash:"view.dashboard",apply:"view.application",ops:"view.review",eval:"view.evaluation",audit:"view.audit",notif:"view.notifications",hist:"view.history",acct:"view.account"};
+var VIEW_NAME={dash:"nav.home",apply:"nav.application",ops:"nav.review",audit:"nav.audit",eval:"nav.evaluation",notif:"menu.notifications",hist:"menu.history",acct:"menu.profile",help:"nav.help"};
+var HASH={dash:"dashboard",apply:"apply",ops:"review",audit:"audit",eval:"evaluation",notif:"notifications",hist:"history",acct:"account",help:"help"};
+var HASH_STAGE={documents:1,training:3,exam:4,certificate:5};
+var GRID_ICON='<rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>';
+var HELP_ICON='<circle cx="8" cy="8" r="5.5"/><path d="M6.4 6.4a1.7 1.7 0 1 1 2.4 1.5c-.5.3-.8.6-.8 1.2M8 11.4v.1"/>';
+var NAV=[
+ {k:"nav.home",v:"dash",h:"dashboard",i:GRID_ICON},
+ {k:"nav.application",v:"apply",h:"apply",i:ICONS[1]},
+ {k:"nav.documents",v:"apply",h:"documents",stage:"documents",i:ICON_PATHS.upload},
+ {k:"nav.training",v:"apply",h:"training",stage:"training",i:ICON_PATHS.book},
+ {k:"nav.exam",v:"apply",h:"exam",stage:"exam",i:ICON_PATHS.pen},
+ {k:"nav.certificate",v:"apply",h:"certificate",stage:"certificate",i:ICON_PATHS.award},
+ {k:"nav.help",v:"help",h:"help",i:HELP_ICON},
+ {k:"nav.review",v:"ops",h:"review",i:ICONS[2],staff:1},
+ {k:"nav.evaluation",v:"eval",h:"evaluation",i:'<path d="M2.5 13.5h11M4 11V7.5M7 11V4.5M10 11V6M13 11V3"/>',staff:1},
+ {k:"nav.audit",v:"audit",h:"audit",i:'<path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.4 4h.4M2.4 8h.4M2.4 12h.4"/>',staff:1}];
 function ico(p){return '<svg viewBox="0 0 16 16" aria-hidden="true">'+p+'</svg>'}
 function stepState(i){return S.status==="CERTIFIED"||i<S.step?"done":i===S.step?"now":"next"}
-/* One progress measure for applicant screens. journeyFrac gives each of the six steps a share from 0 to 1 (done steps 1, future steps 0,
-   the current step its own partial). pctDone is the mean of those shares; the gauge, header bar and journey bars all read these two. */
+/* One progress measure for the application header bar. journeyFrac gives each of the six steps a share from 0 to 1 (done steps 1, future steps 0,
+   the current step its own partial). The full-journey bars read it; the dashboard itself shows separate measures from progressModel (no single percentage). */
 function journeyFrac(){
   var cert=S.status==="CERTIFIED",sub=S.reached.SUBMITTED,hrs=0;
   S.mods.forEach(function(m,i){if(m)hrs+=MODULES[i][1]});
   var part=[S.begun?Math.min(1,S.dpage/4):0,accepted()/6,S.reached.KYC_APPROVED?1:sub&&S.rechecking?0.9:sub&&S.checks.length?Math.min(0.9,S.shown/S.checks.length):0,hrs/15,S.reached.EXAM_PASSED?1:S.reached.EXAM_IN_PROGRESS?0.5:0,cert?1:0];
   return part.map(function(f,i){ if(cert||i<S.step) return 1; if(i>S.step) return 0; return Math.max(0,Math.min(1,f)); });
 }
-function pctDone(){ if(S.status==="CERTIFIED") return 100; return Math.round(journeyFrac().reduce(function(a,b){return a+b},0)/6*100); }
 function accepted(){return DOCS.filter(function(d){return S.docs[d.k]&&S.docs[d.k].status==="ok"}).length}
+/* ---- identity helpers ---- */
+function effRole(){ return ROLE; }
+function roleLabelFor(r){ return T("role."+(r||"applicant")); }
+function dispName(){ if(ACCOUNT&&ACCOUNT.display_name) return String(ACCOUNT.display_name); var n=norm(S.f.name||""); return n; }
+function initials(){ var n=dispName(); return n.split(" ").filter(Boolean).map(function(x){return x.charAt(0).toUpperCase()}).slice(0,2).join("")||"PN"; }
+function greetName(){ var n=ACCOUNT&&ACCOUNT.display_name?String(ACCOUNT.display_name).split(" ")[0]:((S.events.length>0||S.f.name)?fname():""); if(!n||n==="there") n=T("ui.there"); return n; }
+function refText(){ return APPREF||S.appId; }
+function verif(){ return {e:!!(ACCOUNT&&ACCOUNT.email_verified),m:!!(ACCOUNT&&ACCOUNT.mobile_verified)}; }
+function vchip(ok,k){ return '<span class="vchip '+(ok?"ok":"no")+'">'+svgi(ok?"check":"alert")+'<span>'+TE(k+(ok?".yes":".no"))+'</span></span>'; }
+function stBadge(key){ var st=APP_STATUS[key]; return '<span class="stbadge tone-'+st.tone+'">'+svgi(st.icon)+'<span>'+TE(st.labelKey)+'</span></span>'; }
+function saveInfo(){
+  var s=S.save||S.saveState,state=s&&s.state,tm=s&&s.t,txt,ic;
+  if(!state){ if(LOCALSAVE){ state="saved"; tm=LOCALSAVE; txt=T("save.device",{time:M_fmtClock(LOCALSAVE,LANG)}); } else state="idle"; }
+  if(!txt){
+    if(state==="saved") txt=tm?(ACCOUNT?T("save.account",{time:M_fmtClock(tm,LANG)}):T("save.last",{time:M_fmtClock(tm,LANG)})):T("save.saved");
+    else if(state==="idle") txt=ACCOUNT?T("save.none"):(S.saveOK?T("save.none"):T("save.nodevice"));
+    else txt=T("save."+state);
+  }
+  ic=state==="saved"?"check":state==="saving"?"clock":state==="idle"?"circle":"alert";
+  return {state:state,text:txt,icon:ic};
+}
+/* ---- top bar, navigation and account menu ---- */
+function shellChrome(){
+  var key=statusOf(S),name=dispName()||T("ui.guest"),v=verif(),r=effRole();
+  var rl=r==="all"?"applicant":r;
+  setHtml($("tb-who"),'<b>'+esc(name)+'</b><span class="small muted">'+TE("role."+rl)+'</span>');
+  setHtml($("tb-ver"),vchip(v.e,"ver.email")+vchip(v.m,"ver.mobile"));
+  setHtml($("tb-ref"),'<span class="small muted">'+TE("ref.label")+'</span> <b class="mono" id="tb-refv">'+esc(refText())+'</b>'+(APPREF?'':' <span class="small muted">('+TE("ref.local")+')</span>')+' <button class="btn sm" type="button" data-act="copy-ref" aria-label="'+TE("ref.copy.aria")+'">'+TE("ref.copy")+'</button>');
+  setHtml($("tb-status"),stBadge(key));
+  var sv=saveInfo(); setHtml($("savestate"),'<span class="sv '+sv.state+'">'+svgi(sv.icon)+'<span>'+esc(sv.text)+'</span></span>');
+  setHtml($("tb-lang"),'<button type="button" data-ulang="en" lang="en" aria-label="English" aria-pressed="'+(LANG==="en")+'">EN</button><button type="button" data-ulang="hi" lang="hi" aria-label="हिंदी" aria-pressed="'+(LANG==="hi")+'">हिंदी</button>');
+  $("tb-lang").setAttribute("aria-label",T("lang.label"));
+  setHtml($("avatar"),esc(initials()));
+  setHtml($("acct-btn"),'<span class="avatar" aria-hidden="true"><span>'+esc(initials())+'</span></span><span class="amn">'+esc(name)+'</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>');
+  $("acct-btn").setAttribute("aria-label",T("menu.account")+": "+name);
+  var em=ACCOUNT&&ACCOUNT.email?esc(ACCOUNT.email):"";
+  setHtml($("am-head"),'<b>'+esc(name)+'</b><span class="small muted">'+TE("role."+rl)+'</span>'+
+    (ACCOUNT?'<span class="small">'+em+' '+vchip(v.e,"ver.email")+'</span><span class="small">'+(ACCOUNT.mobile_masked?esc(ACCOUNT.mobile_masked)+' ':'')+vchip(v.m,"ver.mobile")+'</span>':'<span class="small muted">'+TE("dash.signin.body")+'</span>')+
+    '<span class="small muted">'+TE("menu.preferred",{lang:T("lang."+LANG)})+'</span>');
+  var un=NOTIFS.unread>0?' <span class="chip o">'+NOTIFS.unread+'</span>':'';
+  setHtml($("acct-menu"),'<button role="menuitem" type="button" data-view="acct">'+TE("menu.profile")+'</button><button role="menuitem" type="button" data-view="notif">'+TE("menu.notifications")+un+'</button>'+
+    (canSee("hist")?'<button role="menuitem" type="button" data-view="hist">'+TE("menu.history")+'</button>':'')+
+    '<button role="menuitem" type="button" data-act="menu-auth">'+TE(ACCOUNT?"menu.signout":"menu.signin")+'</button>');
+  var ph=$("sb-ph"),sf=S.docs.SELFIE; if(ph) setHtml(ph,sf&&sf.url?'<img src="'+sf.url+'" alt="">':esc(initials()));
+  if($("sb-name")) $("sb-name").textContent=name; if($("sb-id")) $("sb-id").textContent=refText();
+  var en=$("envchip"); if(en){ setHtml(en,'<i></i>'+TE(DEMO_BUILD?"env.demo":"env.prod")); }
+  var ns=$("navx-sum"); if(ns) setHtml(ns,TE("nav.more"));
+  var rb=$("role-box"); if(rb) rb.hidden=!DEMO_BUILD;
+  var rc=$("rolechip"); if(rc){ rc.hidden=!DEMO_BUILD; rc.textContent=DEMO_BUILD?T("demo.chip",{role:roleLabelFor(r==="all"?"all":r)}):""; }
+  var s=$("role-sel"); if(s&&s.value!==ROLE) s.value=ROLE;
+}
+function navHtml(){
+  var out="",lastStaff=false;
+  NAV.forEach(function(n){
+    if(!canSee(n.v)) return;
+    if(n.staff&&!lastStaff){ lastStaff=true; out+='<span class="mgrp" role="presentation">'+TE("nav.staff")+'</span>'; }
+    var cur=VIEW===n.v&&(n.v!=="apply"||(n.stage||null)===ROUTE_STAGE);
+    out+='<a href="#'+n.h+'"'+(cur?' aria-current="page"':'')+'>'+ico(n.i)+'<span>'+TE(n.k)+'</span></a>';
+  });
+  return out;
+}
 function flow(){
-  var cert=S.status==="CERTIFIED",p=pctDone();
-  $("progt").textContent=cert?"Onboarding complete":"Onboarding progress · Step "+(S.step+1)+" of 6 · "+STEPS[S.step];
-  $("pfill").style.width=p+"%"; $("ppct").textContent=p+"%";
-  $("flowmeta").innerHTML='<span class="mono muted">'+S.appId+'</span> &nbsp;'+pill(cert?"ok":"info",S.status);
-  var ini=norm(S.f.name||"").split(" ").filter(Boolean).map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN",sf=S.docs.SELFIE;
-  if($("sb-ph")) $("sb-ph").innerHTML=sf&&sf.url?'<img src="'+sf.url+'" alt="">':esc(ini);
-  if($("sb-name")) $("sb-name").textContent=S.f.name||"New applicant"; if($("sb-id")) $("sb-id").textContent=S.appId;
-  var av=$("avatar"); if(av) av.textContent=norm(S.f.name||"").split(" ").filter(Boolean).map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN";
-  $("menu").innerHTML=NAV.filter(function(n){return canSee(n[0])}).map(function(n){return '<a href="#'+HASH[n[0]]+'"'+(VIEW===n[0]?' aria-current="page"':'')+'>'+ico(n[2])+n[1]+'</a>'}).join("");
-  roleChrome();
+  setHtml($("menu"),navHtml()); $("menu").setAttribute("aria-label",T("nav.label"));
+  shellChrome();
+  if($("foot-note")) setHtml($("foot-note"),TE(DEMO_BUILD?"foot.demo":"foot.prod"));
+}
+function applyLang(){
+  document.documentElement.lang=LANG;
+  ["view-apply","view-ops","view-audit","view-eval","cp","cp-fab","focusbar","fs-banner","modal"].forEach(function(id){ var el=$(id); if(!el) return; if(LANG==="hi") el.setAttribute("lang","en"); else el.removeAttribute("lang"); });
+}
+function setLang(l,remote){
+  if(l!=="hi") l="en"; if(l===LANG&&remote!==true) return;
+  LANG=l; try{ localStorage.setItem("pn-lang",l) }catch(e){}
+  applyLang();
+  if(ACCOUNT&&remote!==false) accountRequest("/api/me",{language:l},undefined,"PATCH").then(function(d){ if(d&&d.user&&ACCOUNT) ACCOUNT.language=d.user.language; }).catch(function(){ announce(T("ui.error")); });
+  render(); announce(l==="hi"?"भाषा हिंदी में बदली गई":"Language changed to English");
+}
+function copyRef(btn){
+  var txt=refText();
+  function done(){ announce(T("ref.copied.sr")); if(btn){ btn.textContent=T("ref.copied"); setTimeout(function(){ btn.textContent=T("ref.copy"); },2000); } }
+  function fallback(){ try{ var ta=document.createElement("textarea"); ta.value=txt; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); var ok=document.execCommand("copy"); ta.remove(); if(ok) done(); else announce(T("ui.error")); }catch(e){ announce(T("ui.error")); } }
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,fallback); return; } }catch(e){}
+  fallback();
+}
+function menuItems(){ return Array.prototype.slice.call($("acct-menu").querySelectorAll('[role="menuitem"]')); }
+function openMenu(which){ $("acct-pop").hidden=false; $("acct-btn").setAttribute("aria-expanded","true"); var it=menuItems(); var el=which==="last"?it[it.length-1]:it[0]; if(el) el.focus(); }
+function closeMenu(ret){ var p=$("acct-pop"); if(!p||p.hidden) return; p.hidden=true; $("acct-btn").setAttribute("aria-expanded","false"); if(ret) $("acct-btn").focus(); }
+$("acct-btn").addEventListener("click",function(){ if($("acct-pop").hidden) openMenu("first"); else closeMenu(true); });
+$("acct-btn").addEventListener("keydown",function(e){ if(e.key==="ArrowDown"){ e.preventDefault(); openMenu("first"); } else if(e.key==="ArrowUp"){ e.preventDefault(); openMenu("last"); } });
+$("acct-pop").addEventListener("keydown",function(e){
+  var it=menuItems(),i=it.indexOf(document.activeElement);
+  if(e.key==="Escape"){ e.preventDefault(); closeMenu(true); }
+  else if(e.key==="ArrowDown"){ e.preventDefault(); if(it.length) it[(i+1)%it.length].focus(); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); if(it.length) it[(i-1+it.length)%it.length].focus(); }
+  else if(e.key==="Home"){ e.preventDefault(); if(it[0]) it[0].focus(); }
+  else if(e.key==="End"){ e.preventDefault(); if(it.length) it[it.length-1].focus(); }
+  else if(e.key==="Tab"){ closeMenu(false); }
+});
+document.addEventListener("click",function(e){
+  var tgt=e.target; if(!tgt||!tgt.closest) return;
+  if(tgt.closest('#acct-menu [role="menuitem"]')){ closeMenu(false); if(tgt.closest("[data-view]")) setTimeout(function(){ focusHead(VIEW); },0); }
+  else if(!tgt.closest("#acct-pop")&&!tgt.closest("#acct-btn")) closeMenu(false);
+});
+/* ---- routing ---- */
+function parseHash(h){
+  var v=null,stage=null;
+  Object.keys(HASH).forEach(function(k){ if(HASH[k]===h) v=k; });
+  if(!v&&h==="home") v="dash";
+  if(!v&&M_has(HASH_STAGE,h)){ v="apply"; stage=h; }
+  return {v:v,stage:stage};
+}
+function fromHash(){ return parseHash(location.hash.slice(1)).v; }
+function routeNote(){
+  if(!ROUTE_STAGE||!S.begun) return "";
+  var req=HASH_STAGE[ROUTE_STAGE]; if(req===S.step) return "";
+  if(ROUTE_STAGE==="documents"&&statusOf(S)==="action_required") return "";
+  var cur=T("stage."+STAGES[S.step].k),reqN=T("stage."+ROUTE_STAGE);
+  return '<div class="note" role="status"><span>'+esc(req<S.step?T("route.note.done",{requested:reqN,current:cur}):T("route.note",{requested:reqN,current:cur}))+'</span></div>';
+}
+/* ---- notifications (server) ---- */
+var NOTIFS={state:"idle",items:[],unread:0};
+function notifLoad(force){
+  if(!ACCOUNT){ NOTIFS={state:"signedout",items:[],unread:0}; return; }
+  if(NOTIFS.state==="loading") return;
+  if(NOTIFS.state==="ok"&&!force) return;
+  if(NOTIFS.state!=="ok") NOTIFS.state="loading";
+  accountRequest("/api/notifications?limit=20").then(function(d){ NOTIFS={state:"ok",items:(d&&d.items)||[],unread:(d&&d.unread)||0}; })
+   .catch(function(){ if(NOTIFS.state!=="ok") NOTIFS.state="error"; })
+   .then(function(){ if(VIEW==="dash"||VIEW==="notif") render(); else shellChrome(); });
+}
+function ntText(n){
+  var k="nt."+(n.type||""); if(!M_has(I18N.en,k)) k="nt."+(n.key||""); if(!M_has(I18N.en,k)) k="nt.status_changed";
+  return T(k);
+}
+function notifRow(n){
+  var unread=!n.read;
+  return '<li class="nrow'+(unread?" unread":"")+'"><span class="nic">'+svgi("clock")+'</span><div><b>'+esc(ntText(n))+'</b><small class="muted">'+esc(M_fmtClock((n.created_at||0)*1000,LANG))+(n.reference?" · "+esc(n.reference):"")+'</small></div>'+(unread?'<span class="chip o">'+TE("ui.new")+'</span>':'')+'</li>';
+}
+function notifBody(limit){
+  if(!ACCOUNT) return '<p class="small muted">'+TE(limit?"dash.updates.signin":"nv.signin")+'</p>'+(limit?'':'<button class="btn" type="button" data-act="open-signin">'+TE("un.signin")+'</button>');
+  if(NOTIFS.state==="idle"||NOTIFS.state==="loading") return '<p class="small muted" role="status">'+TE("dash.updates.loading")+'</p>';
+  if(NOTIFS.state==="error") return '<p class="small muted">'+TE("dash.updates.error")+'</p><button class="btn sm" type="button" data-act="notif-retry">'+TE("dash.updates.retry")+'</button>';
+  if(!NOTIFS.items.length) return '<p class="small muted">'+TE("dash.updates.empty")+'</p>';
+  return '<ul class="nlist">'+NOTIFS.items.slice(0,limit||50).map(notifRow).join("")+'</ul>';
+}
+/* ---- the dashboard ---- */
+function destLine(rp){
+  var s=T("dash.stepof",{n:rp.step+1,of:6})+" · "+T("stage."+rp.stage),d="";
+  if(rp.doc) d=T("doc."+rp.doc);
+  else if(rp.stage==="details"&&rp.page) d=T("dash.pageof",{n:rp.page,of:rp.of||4})+": "+T(rp.section);
+  else if(rp.stage==="training"&&rp.page&&rp.milestone&&/^module/.test(rp.milestone)) d=T("dash.moduleof",{n:rp.page,of:rp.of});
+  return s+(d?" · "+d:"");
+}
+function docRow(k,pm){
+  var d=S.docs[k],st="missing";
+  if(d&&d.status==="reading") st="processing";
+  else if(d&&d.status==="ok") st=pm.documents.actionKeys.indexOf(k)>=0?"action":"verified";
+  var ic=st==="verified"?"check":st==="action"?"alert":st==="processing"?"clock":"circle";
+  return '<li class="drow '+st+'">'+svgi(ic)+'<span class="dn">'+TE("doc."+k)+'</span><span class="ds">'+TE("dash.docs."+st)+'</span></li>';
+}
+function checksMapHtml(){
+  var done=S.checks.length&&S.shown>=S.checks.length&&!S.rechecking;
+  if(!done) return '<p class="small muted">'+TE("dd.checks.none")+'</p>';
+  var pm=progressModel(S),c=pm.compliance;
+  var rows=GROUPS.map(function(G){var gc=S.checks.filter(function(x){return x.doc===G.g});
+    var dots=gc.length?gc.map(function(x){var k=resCls(x.res);return '<span class="d '+k+'" title="'+esc(x.label+": "+x.res)+'">'+(k==="PASS"?"✓":k==="FIX"?"!":k==="HUMAN"?"?":k==="REJECT"?"×":k==="INFO"?"i":"")+'</span>'}).join(""):Array(4).join('<span class="d"></span>');
+    return '<span class="lb">'+esc(G.g.replace(" marksheet",""))+'</span><div class="dots">'+dots+'</div>'}).join("");
+  return (c?'<p class="small">'+TE("dd.checks.counts",{passed:c.passed,total:c.total})+'</p>':'')+'<div class="dmap" lang="en">'+rows+'</div><div class="legend2" lang="en"><span><i style="background:var(--ok)"></i>Passed</span><span><i style="background:var(--info)"></i>Noted</span><span><i style="background:var(--bad)"></i>To fix</span><span><i style="background:var(--lav)"></i>With a person</span><span><i style="border:1.5px dashed var(--dot)"></i>Not run yet</span></div>';
+}
+function trustHtml(ids){
+  var docs=DOCS.map(function(d){return T("doc."+d.k)}).join(T("ui.list_sep"));
+  var secs={"1":["trust.1.b1","trust.1.b2"],"2":["trust.2.b1","trust.2.b2","trust.2.b3"],"3":["trust.3.b1","trust.3.b2","trust.3.b3","trust.3.b4","trust.3.b5"],"4":["trust.4.b1","trust.4.b2","trust.4.b3"],"5":["trust.5.b1","trust.5.b2","trust.5.b3"]};
+  return ids.map(function(i){ return '<details class="dd"><summary>'+TE("trust."+i+".h")+'</summary><div class="ddb">'+secs[i].map(function(k){return '<p>'+TE(k,{docs:docs})+'</p>'}).join("")+'</div></details>'; }).join("");
+}
+function fullJourneyHtml(key,pm){
+  var frac=journeyFrac(),cert=key==="certified";
+  var bars='<div class="hbars">'+STAGES.map(function(sd,i){var f=Math.max(0,Math.min(1,frac[i])),now=i===S.step&&!cert;
+    return '<div class="b">'+(now?'<span class="tip">'+Math.round(f*100)+'%</span>':'')+'<i style="height:100%;overflow:hidden;display:flex;align-items:flex-end'+(now?';border-color:var(--brand)':'')+'"><em style="display:block;width:100%;height:'+Math.round(f*100)+'%;border-radius:999px;background:'+(now?"var(--brand)":"var(--night)")+'"></em></i><span>'+TE(sd.nameKey)+'</span></div>'}).join("")+'</div>';
+  var trainingOpen=["training_pending","exam_pending","certificate_pending","certified"].indexOf(key)>=0;
+  var lines='<p>'+(trainingOpen?TE("dd.training.line",{hours:pm.training.hours,of:pm.training.of,done:pm.training.done,modules:pm.training.modules}):TE("dd.training.locked"))+'</p>'+
+    '<p>'+TE("dd.exam.line",{state:T("ex."+pm.exam.state)})+'</p><p>'+TE("dd.cert.line",{state:T("cs."+pm.certificate.state)})+'</p>'+
+    '<p class="small muted">'+TE("dd.counters",{touches:S.touches||0,followups:S.followups||0})+'</p>';
+  var agent='<div class="agentline"><b>'+TE("dd.agent")+'</b> <span class="small">'+esc(dispName()||T("ui.guest"))+(S.f.city||S.f.state?" · "+esc((S.f.city||"")+(S.f.city&&S.f.state?", ":"")+(S.f.state||"")):"")+'</span><span class="mono small">'+(S.posp?TE("dd.agent.code",{code:S.posp}):TE("dd.agent.nocode"))+'</span></div>';
+  return bars+lines+agent;
+}
+function renderDash(){
+  var key=statusOf(S),st=APP_STATUS[key],pm=progressModel(S),na=nextAction(S),rp=resumePosition(S),cert=key==="certified";
+  var pre=key==="not_started"||key==="draft"||key==="in_progress";
+  /* hello and reference */
+  var h='<div class="dash"><div class="dhello"><div><h1>'+esc(T(cert?"ui.congrats":"ui.hello",{name:greetName()}))+'</h1></div></div>';
+  /* status and the one next action */
+  var eta=st.timelineKey!=="none"?T(st.timelineKey):(pre?T("dash.eta.none"):"");
+  h+='<div class="dtop"><section class="box dstatus" aria-labelledby="ds-h"><p class="small lbl" id="ds-h">'+TE("dash.where")+'</p><div>'+stBadge(key)+'</div><p class="big">'+TE(st.descKey)+'</p>'+
+    '<p class="actline '+(st.needsAction?"yes":"no")+'">'+svgi(st.needsAction?"alert":"check")+'<span>'+TE(st.needsAction?"dash.action.yes":"dash.action.no")+'</span></p>'+
+    '<p class="small">'+TE(st.nextEventKey)+'</p>'+(eta?'<p class="small muted">'+esc(eta)+'</p>':'')+'</section>';
+  h+='<section class="box hot dnext" aria-labelledby="nx-h"><p class="small lbl">'+TE("dash.cta.label")+'</p><h2 id="nx-h">'+TE(na.labelKey,na.params)+'</h2><p class="dest">'+esc(destLine(rp))+'</p><p class="small">'+TE(na.descKey,na.descParams)+'</p>'+
+    (na.cta?'<button class="btn pri" type="button" data-act="cta-go">'+TE("dash.go")+' <span aria-hidden="true">→</span></button>':'<p class="small">'+TE("dash.wait")+'</p>'+(S.begun?'<button class="btn sm" type="button" data-act="cta-go">'+TE("dash.wait.link")+'</button>':''))+'</section></div>';
+  /* the signed-out state */
+  if(!ACCOUNT) h+='<div class="signin-strip"><div><b>'+TE("dash.signin.title")+'</b><p class="small muted">'+TE("dash.signin.body")+'</p></div><button class="btn" type="button" data-act="open-signin">'+TE("dash.signin.btn")+'</button></div>';
+  /* compact journey */
+  h+='<section class="box" aria-labelledby="jn-h"><h2 id="jn-h">'+TE("dash.journey")+'</h2><ol class="jny">'+STAGES.map(function(sd,i){
+    var s=i<pm.journey.stagesDone?"done":i===pm.journey.step?"now":"todo";
+    return '<li class="'+s+'"'+(s==="now"?' aria-current="step"':'')+'><span class="jc" aria-hidden="true">'+(s==="done"?"✓":(i+1))+'</span><span class="jl">'+TE(sd.nameKey)+'</span><span class="js">'+TE("dash.journey."+s)+'</span></li>';}).join("")+'</ol>'+
+    '<p class="small muted">'+TE("dash.form",{done:pm.form.pagesDone,of:pm.form.of})+'</p></section>';
+  /* documents and updates */
+  h+='<div class="dgrid2"><section class="box" aria-labelledby="dc-h"><div class="bh"><h2 id="dc-h">'+TE("dash.docs")+'</h2><span class="chip '+(pm.documents.verified===6?"":"n")+'">'+TE("dash.docs.headline",{n:pm.documents.verified})+'</span></div>'+
+    '<div class="seg6" aria-hidden="true">'+M_DOC_KEYS.map(function(k){var d=S.docs[k];return '<i class="'+(d&&d.status==="ok"?(pm.documents.actionKeys.indexOf(k)>=0?"bad":"on"):d&&d.status==="reading"?"run":"")+'"></i>'}).join("")+'</div>'+
+    '<ul class="dsum">'+M_DOC_KEYS.map(function(k){return docRow(k,pm)}).join("")+'</ul><p class="small muted">'+TE("dash.docs.note")+'</p></section>'+
+    '<section class="box" aria-labelledby="up-h"><div class="bh"><h2 id="up-h">'+TE("dash.updates")+'</h2>'+(ACCOUNT?'<button class="btn sm" type="button" data-view="notif">'+TE("dash.viewall")+'</button>':'')+'</div><div aria-live="polite">'+notifBody(3)+'</div></section></div>';
+  var sv=saveInfo();
+  h+='<p class="savedline small muted">'+svgi(sv.icon)+' <span>'+TE("dash.saved")+': '+esc(sv.text)+'</span></p>';
+  /* progressive disclosure */
+  var cl=checklist(),cn=cl.filter(function(x){return x[1]}).length,ct=cl.filter(function(x){return x[1]!==null}).length;
+  h+='<div class="dds"><details class="dd"><summary>'+TE("dd.checks")+'</summary><div class="ddb"><p>'+TE("trust.2.b1")+'</p><p>'+TE("trust.2.b2")+'</p><h3>'+TE("dd.map")+'</h3>'+checksMapHtml()+'</div></details>'+
+    '<details class="dd"><summary>'+TE("dd.compliance")+'</summary><div class="ddb">'+(S.checks.length||S.begun?'<p class="small">'+cn+' / '+ct+'</p><ul class="cl" lang="en">'+cl.map(function(x){return '<li><span class="bx'+(x[1]?" on":"")+'" aria-hidden="true">'+(x[1]?"✓":"")+'</span>'+esc(x[0])+(x[1]?' (done)':'')+'</li>'}).join("")+'</ul>':'<p class="small muted">'+TE("dd.compliance.none")+'</p>')+'</div></details>'+
+    '<details class="dd"><summary>'+TE("dd.journey")+'</summary><div class="ddb">'+fullJourneyHtml(key,pm)+'</div></details>'+
+    '<a class="ddlink" href="#history">'+TE("dd.history")+' <span aria-hidden="true">→</span></a></div>';
+  h+='<section class="box" aria-labelledby="gk-h"><h2 id="gk-h">'+TE("trust.title")+'</h2><div class="dds">'+trustHtml(["1","3","4","5"])+'</div></section></div>';
+  setHtml($("view-dash"),h);
+}
+/* ---- notifications, history, account and help views (placeholders with real states; the next lane fills them out) ---- */
+function renderNotif(){
+  var h='<div class="panel narrow"><div class="head"><h1>'+TE("nv.title")+'</h1><p>'+TE("nv.sub")+'</p></div>'+
+    (ACCOUNT&&NOTIFS.state==="ok"&&NOTIFS.unread?'<div class="actions"><span class="small muted">'+TE("nv.unread",{n:NOTIFS.unread})+'</span><button class="btn sm" type="button" data-act="notif-readall">'+TE("nv.markall")+'</button></div>':'')+
+    '<div aria-live="polite">'+notifBody(0)+'</div></div>';
+  setHtml($("view-notif"),h);
+}
+var HIST={state:"idle",items:[]};
+function histLoad(){
+  if(!ACCOUNT||HIST.state==="loading") return;
+  HIST.state="loading";
+  accountRequest("/api/applications/me/timeline").then(function(d){ HIST={state:"ok",items:(d&&d.items)||[]}; }).catch(function(){ HIST={state:"error",items:[]}; }).then(function(){ if(VIEW==="hist") render(); });
+}
+function renderHist(){
+  var items=applicantTimeline(ACCOUNT&&HIST.state==="ok"&&HIST.items.length?HIST.items:S.events).slice().reverse(),body;
+  if(ACCOUNT&&HIST.state==="loading"&&!items.length) body='<p class="small muted" role="status">'+TE("state.loading")+'</p>';
+  else if(ACCOUNT&&HIST.state==="error"&&!items.length) body='<p class="small muted">'+TE("state.error")+'</p><button class="btn sm" type="button" data-act="hist-retry">'+TE("state.retry")+'</button>';
+  else if(!items.length) body='<p class="small muted">'+TE("hv.empty")+'</p>';
+  else body='<ol class="tlist">'+items.map(function(e){return '<li><span class="nic">'+svgi("clock")+'</span><div><b>'+esc(T(e.key,e.params))+'</b><small class="muted">'+esc(T("actor."+e.actor))+(e.t?" · "+esc(M_fmtClock(e.t,LANG)):"")+'</small></div></li>'}).join("")+'</ol>';
+  setHtml($("view-hist"),'<div class="panel narrow"><div class="head"><h1>'+TE("hv.title")+'</h1><p>'+TE("hv.sub")+'</p></div>'+body+'</div>');
+}
+function renderAcct(){
+  var v=verif(),r=effRole()==="all"?"applicant":effRole(),na=T("av.na");
+  function row(k,val,ok){ return '<div class="arow"><dt>'+TE(k)+'</dt><dd>'+val+(ok===undefined?'':' '+vchip(ok,k==="acct.email"?"ver.email":"ver.mobile"))+'</dd></div>'; }
+  var h='<div class="panel narrow"><div class="head"><h1>'+TE("av.title")+'</h1><p>'+TE("av.sub")+'</p></div>'+(ACCOUNT?'':'<div class="note" role="status"><span>'+TE("av.notsigned")+'</span><button class="btn sm" type="button" data-act="open-signin">'+TE("un.signin")+'</button></div>')+
+    '<dl class="adl">'+row("acct.name",esc(dispName()||na))+row("acct.email",esc(ACCOUNT&&ACCOUNT.email?ACCOUNT.email:na),v.e)+row("acct.mobile",esc(ACCOUNT&&ACCOUNT.mobile_masked?ACCOUNT.mobile_masked:na),v.m)+
+    row("acct.language",TE("lang."+LANG))+row("ref.label",'<span class="mono">'+esc(refText())+'</span>'+(APPREF?'':' <span class="small muted">('+TE("ref.local")+')</span>'))+row("acct.status",stBadge(statusOf(S)))+row("acct.last_saved",esc(saveInfo().text))+'<div class="arow"><dt>'+TE("av.role")+'</dt><dd>'+TE("role."+r)+'</dd></div></dl>'+
+    '<p class="small muted">'+TE("av.edit.soon")+'</p></div>';
+  setHtml($("view-acct"),h);
+}
+function renderHelp(){
+  setHtml($("view-help"),'<div class="panel narrow"><div class="head"><h1>'+TE("help.title")+'</h1><p>'+TE("help.sub")+'</p></div>'+
+    '<section class="box" aria-labelledby="hc-h"><h2 id="hc-h">'+TE("help.copilot")+'</h2><p class="small">'+TE("help.copilot.b")+'</p><button class="btn pri" type="button" data-act="cp-open">'+TE("help.copilot")+'</button></section>'+
+    '<div class="dds">'+trustHtml(["1","2","3","4","5"])+'</div></div>');
 }
 function stepper(){
   return '<div class="stepper" aria-label="Application steps">'+STEPS.map(function(s,i){var st=stepState(i);return '<div class="sp '+st+'"'+(st==="now"?' aria-current="step"':'')+'><span class="sc">'+(st==="done"?"✓":i+1)+'</span><span class="sl">'+s+'</span></div>'}).join("")+'</div>';
@@ -1106,58 +1994,6 @@ function gaugeSvg(p){
   return '<svg viewBox="0 0 240 132" role="img" aria-label="'+p+' percent complete"><path d="M24 118a96 96 0 0 1 192 0" fill="none" stroke="var(--sunken)" stroke-width="26" stroke-linecap="round"/>'+
    (p>0?'<path d="M24 118a96 96 0 0 1 192 0" fill="none" stroke="var(--brand)" stroke-width="26" stroke-linecap="round" pathLength="100" stroke-dasharray="'+p+' 100"/>':'')+
    '<g transform="translate('+nx.toFixed(1)+' '+ny.toFixed(1)+') rotate('+(-deg+90).toFixed(1)+')"><path d="M0 -13L9 10L0 5L-9 10Z" fill="var(--ink)"/></g></svg>';
-}
-function nextInfo(){
-  var cert=S.status==="CERTIFIED",D=S.decision;
-  if(cert) return ["All done","Your POSP code is active. You can start selling.","View certificate"];
-  if(S.step===0) return ["Your details","Name, PAN, bank and education, as on your PAN card.","Start application"];
-  if(S.step===1) return ["Upload documents",(6-accepted())+" of 6 still to add. Each is read on your device.","Continue"];
-  if(S.step===2){ if(D==="NEEDS_MORE_INFO") return ["Fix and re-send",S.fu.items.length+" item"+(S.fu.items.length>1?"s":"")+" in one message. Only those are checked again.","Open fixes"];
-    if(D==="HUMAN_REVIEW") return ["With a reviewer","A person is checking a few details. We aim to reply within 4 working hours (our service target).","See status"];
-    if(D==="REJECT") return ["Not eligible","The reasons are listed in plain words. You can dispute them.","See reasons"];
-    return ["Start training","Checks complete. 15 hours across five modules.","Continue"]; }
-  if(S.step===3) return ["Training","Log the remaining modules to unlock the exam.","Continue"];
-  if(S.step===4) return ["Exam","Five questions. The demo pass mark is 50%.","Take the exam"];
-  return ["Certificate","Your POSP code is ready.","View"];
-}
-function renderDash(){
-  var cert=S.status==="CERTIFIED",sub=S.reached.SUBMITTED,done=sub&&!S.rechecking&&S.shown>=S.checks.length,hrs=0,acc=accepted(),pct=pctDone();
-  S.mods.forEach(function(m,i){if(m)hrs+=MODULES[i][1]});
-  var cs=done?S.checks:[],passed=cs.filter(function(c){return c.res==="PASS"}).length,noted=cs.filter(function(c){return c.res==="INFO"}).length,tot=cs.length;
-  var started=S.events.length>0,nx=nextInfo();
-  /* header with KPIs */
-  var head='<div class="hello"><div><p class="muted small">'+fmtDate(new Date().toISOString().slice(0,10))+' · <span class="mono">'+S.appId+'</span></p><h1>'+(cert?"Congratulations, ":"Hello, ")+esc(started?fname():"there")+'</h1></div><div class="kpis">'+
-    '<div class="kpi"><span>Onboarding progress</span><div class="row"><b class="num">'+pct+'%</b><span class="chip '+(cert?"":"n")+'">step '+Math.min(S.step+1,6)+'/6</span></div></div>'+
-    '<div class="kpi"><span>Checks passed</span><div class="row"><b class="num">'+(tot?passed+"/"+tot:"—")+'</b>'+(tot?'<span class="chip '+(passed===tot?"":"w")+'">'+Math.round(passed/tot*100)+'%</span>':'')+(tot&&noted?'<span class="small muted">'+noted+' noted, not counted as passed</span>':'')+'</div></div>'+
-    '<div class="kpi"><span>Time to decision (this demo, on this device)</span><div class="row"><b class="num">'+(done?ttdText():"—")+'</b></div></div></div></div>';
-  /* gauge */
-  var gauge='<div class="box s4"><div class="bh"><div><h2>Onboarding progress</h2><p class="small muted">'+(cert?"Complete":"Step "+(S.step+1)+" · "+STEPS[S.step])+'</p></div><button class="cbtn" type="button" data-act="go-apply" aria-label="Open application">'+ARROW+'</button></div><div class="gauge">'+gaugeSvg(pct)+'</div><div style="text-align:center"><b class="num" style="font-size:2.6rem">'+pct+'%</b> <span class="chip '+(cert?"":"n")+'">'+(cert?"certified":(6-S.step)+" steps to go")+'</span></div></div>';
-  /* next step */
-  var nxt='<div class="box hot s3"><div class="bh"><div><p class="small muted">Next step</p><h2 style="font-size:1.5rem;font-weight:500">'+nx[0]+'</h2></div><button class="cbtn" type="button" data-act="go-apply" aria-label="'+nx[2]+'">'+ARROW+'</button></div><p class="small muted">'+nx[1]+'</p><button class="btn sm whitepill" type="button" data-act="go-apply" style="align-self:flex-start">'+nx[2]+' →</button><div style="margin-top:auto;display:flex;align-items:flex-end;gap:8px"><b class="num" style="font-size:3.4rem">'+Math.min(S.step+(cert?1:0),6)+'<span style="font-size:1.6rem;opacity:.7">/6</span></b><span class="small muted" style="padding-bottom:8px">steps<br>complete</span></div></div>';
-  /* documents */
-  var dt=DOCS.map(function(d){var st=S.docs[d.k],ok=st&&st.status==="ok",bad=st&&st.status==="rejected",rd=st&&st.status==="reading";
-    var fix=S.fu&&S.decision==="NEEDS_MORE_INFO"&&S.fu.items.some(function(i){return i.key===d.k})&&!S.changed[d.k];
-    return '<div class="dtile c-'+d.k+'"><span class="ic i-'+d.k+'">'+DSHORT[d.k][1]+'</span>'+(ok&&!fix&&docClean(d.k)?'<span class="badge" aria-hidden="true" style="background:var(--ok)">✓</span>':bad||fix||ok?'<span class="badge" aria-hidden="true" style="background:var(--bad)">!</span>':rd?'<span class="badge" aria-hidden="true" style="background:var(--brand)">…</span>':'')+'<div style="min-width:0"><b>'+DSHORT[d.k][0]+'</b><small>'+(d.k==="AADHAAR_FRONT"?"front · ":d.k==="AADHAAR_BACK"?"back · ":"")+(fix?"fix requested":ok?(docClean(d.k)?(st.ocr&&st.ocr.spec?"specimen":"read"):docFixLabel(d.k)):bad?"not accepted":rd?"reading":"to upload")+'</small></div></div>'}).join("");
-  var docs='<div class="box s5"><div class="bh"><div><h2>Documents</h2><p class="small muted">'+DOCS.filter(function(d){return docClean(d.k)}).length+' of 6 verified</p></div><button class="cbtn" type="button" data-act="go-apply" aria-label="Open documents">'+ARROW+'</button></div><div class="seg6">'+DOCS.map(function(d){var st=S.docs[d.k];return '<i class="'+(st&&st.status==="ok"?"on":st&&st.status==="rejected"?"bad":st?"run":"")+'"></i>'}).join("")+'</div><div class="dtiles">'+dt+'</div></div>';
-  /* journey bars */
-  var frac=journeyFrac();
-  var bars='<div class="box s6"><div class="bh"><div><h2>Your journey</h2><p class="small muted">Six steps, filled as you go</p></div><span class="chip '+(cert?"":"o")+'">'+(cert?"complete":STEPS[S.step])+'</span></div><div class="hbars">'+STEPS.map(function(n,i){var f=Math.max(0,Math.min(1,frac[i])),now=i===S.step&&!cert;
-    return '<div class="b">'+(now?'<span class="tip">'+Math.round(f*100)+'%</span>':'')+'<i style="height:100%;overflow:hidden;display:flex;align-items:flex-end'+(now?';border-color:var(--brand)':'')+'"><em style="display:block;width:100%;height:'+Math.round(f*100)+'%;border-radius:999px;background:'+(now?"var(--brand)":"var(--night)")+'"></em></i><span>'+["Details","Documents","Verification","Training","Exam","Certificate"][i]+'</span></div>'}).join("")+'</div></div>';
-  /* dot map of checks */
-  var rows=GROUPS.map(function(G){var gc=S.checks.filter(function(c){return c.doc===G.g});
-    var dots=done&&gc.length?gc.map(function(c){var k=resCls(c.res);return '<span class="d '+k+'" title="'+esc(c.label+": "+c.res)+'">'+(k==="PASS"?"✓":k==="FIX"?"!":k==="HUMAN"?"?":k==="REJECT"?"×":k==="INFO"?"i":"")+'</span>'}).join(""):Array(4).join('<span class="d"></span>');
-    return '<span class="lb">'+G.g.replace(" marksheet","")+'</span><div class="dots">'+dots+'</div>'}).join("");
-  var pop='<div class="popc"><span class="small" style="opacity:.7">'+(done?"Round "+S.round:"Before you submit")+'</span><b style="font-family:var(--display);font-size:1.15rem;font-weight:500">'+(done?(S.decision==="APPROVE"?"Every check cleared":S.decision==="NEEDS_MORE_INFO"?"A few fixes to make":S.decision==="REJECT"?"Eligibility rules not met":"With a reviewer"):"Checks run on submit")+'</b><span class="chip" style="align-self:flex-start">'+(done?ttdText()+" · this demo, on this device":"after you submit")+'</span><span class="small" style="opacity:.75">Each check cites the rulebook rule it used.</span></div>';
-  var dmap='<div class="box s6"><div class="bh"><div><h2>Checks map</h2><p class="small muted">Every check the engine runs, by document</p></div>'+(canSee("ops")?'<button class="cbtn" type="button" data-act="go-review" aria-label="Open review console">'+ARROW+'</button>':'')+'</div><div style="display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px;align-items:center" class="dmw"><div class="dmap">'+rows+'</div>'+pop+'</div><div class="legend2"><span><i style="background:var(--ok)"></i>Passed</span><span><i style="background:var(--info)"></i>Noted</span><span><i style="background:var(--bad)"></i>To fix</span><span><i style="background:var(--lav)"></i>With a person</span><span><i style="border:1.5px dashed var(--dot)"></i>Not run yet</span></div></div>';
-  /* compliance, training, agent */
-  var cl=checklist(),cn=cl.filter(function(x){return x[1]}).length,ctot=cl.filter(function(x){return x[1]!==null}).length;
-  var comp='<div class="box lime s4"><div class="bh"><div><h2>Compliance</h2><p class="small muted">'+cn+' of '+ctot+' complete</p></div><b class="num" style="font-size:2rem">'+Math.round(cn/ctot*100)+'%</b></div><ul class="clist">'+cl.map(function(x){return '<li><span class="ck'+(x[1]?" on":"")+'">'+(x[1]?"✓":"")+'</span>'+x[0]+'</li>'}).join("")+'</ul></div>';
-  var trn='<div class="box s4"><div class="bh"><div><h2>Training</h2><p class="small muted">IRDAI requires 15 hours</p></div><span class="chip '+(hrs>=15?"":"n")+'">'+(hrs>=15?"done":Math.round(hrs/15*100)+"%")+'</span></div><div><b class="num" style="font-size:3rem">'+hrs+'.0</b><span class="muted"> / 15 h</span></div><div class="prog"><i style="width:'+(hrs/15*100)+'%"></i></div><div class="mods2">'+MODULES.map(function(m,i){return '<span class="'+(S.mods[i]?"on":"")+'">'+["Basics","Motor","Health","Life","Regulation"][i]+'</span>'}).join("")+'</div><div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center"><span class="small muted">Exam</span><b>'+(S.exam.score!==null?S.exam.score+"%":"not taken")+'</b></div></div>';
-  var mins=Math.max(1,Math.round((Date.now()-S.started)/60000));
-  var agent='<div class="box ink s4"><div class="bh"><div><p class="small muted">'+(cert?"Certified agent":"Your agent card")+'</p><h2 style="font-size:1.3rem;font-weight:500">'+esc(S.f.name||"New applicant")+'</h2><p class="small muted">'+esc((S.f.city||"City")+", "+(S.f.state||"State"))+'</p></div><span class="avatar" style="width:52px;height:52px"><span style="color:var(--ink)">'+esc(norm(S.f.name||"").split(" ").filter(Boolean).map(function(t){return t.charAt(0)}).slice(0,2).join("")||"PN")+'</span></span></div>'+
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:auto"><div><b class="num" style="font-size:1.6rem">'+S.touches+'</b><p class="small muted">human touches</p></div><div><b class="num" style="font-size:1.6rem">'+S.followups+'</b><p class="small muted">follow-ups</p></div><div><b class="num" style="font-size:1.6rem">'+mins+'m</b><p class="small muted">so far</p></div></div>'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(127,127,127,.3);padding-top:10px"><span class="small muted">POSP code</span><b class="mono">'+(S.posp||"after the exam")+'</b></div></div>';
-  $("view-dash").innerHTML=head+'<div class="bento">'+gauge+nxt+docs+bars+dmap+comp+trn+agent+'</div>';
 }
 /* FR-57: the running engine hash, computed in this browser from the inline script's own text (ENGINE:START to ENGINE:END). */
 var ENG_STATE="pending";
@@ -1312,7 +2148,7 @@ function stepDetails(){
   '<form id="f-form" class="grid" novalidate>'+P.f.map(fieldHtml).join("")+'</form>'+
   '<div class="actions">'+(S.dpage>0?'<button class="btn" type="button" data-act="details-back">Back</button>':'')+'<button class="btn pri" type="button" data-act="details-next">'+(last?"Continue to documents":"Next")+'</button></div>'+
   (S.saveOK?'<p class="small muted">Saved on this device as you type.</p>':'')+'</div>'+
-  '<aside class="side stick"><h2>Keep these ready</h2><ul class="need">'+DOCS.map(function(d){return '<li><span class="nic"><svg viewBox="0 0 16 16" aria-hidden="true">'+ICONS[d.k==="SELFIE"?0:1]+'</svg></span>'+d.label+'</li>'}).join("")+'</ul><div class="obs"><b>Stuck?</b><span>Ask the Copilot. It knows which page you are on and what each field needs.</span></div><p class="foot">Demo environment. Checks are simulated.</p></aside></div>';
+  '<aside class="side stick"><h2>Keep these ready</h2><ul class="need">'+DOCS.map(function(d){return '<li><span class="nic"><svg viewBox="0 0 16 16" aria-hidden="true">'+ICONS[d.k==="SELFIE"?0:1]+'</svg></span>'+d.label+'</li>'}).join("")+'</ul><div class="obs"><b>Stuck?</b><span>Ask the Copilot. It knows which page you are on and what each field needs.</span></div><p class="foot">'+t(DEMO_BUILD?"foot.demo":"foot.prod",null,"en")+'</p></aside></div>';
 }
 function fileKind(st){ if(!st.file) return "Specimen"; var m=/\.([a-z0-9]+)$/i.exec(st.name||""); return m?m[1].toUpperCase():"File"; }
 function thumb(k,code){var st=k&&S.docs[k];return '<div class="thumb">'+(st&&st.url?'<img src="'+st.url+'" alt="">':esc(code).replace("\n","<br>"))+'</div>'}
@@ -1630,9 +2466,13 @@ function render(){
   flow();
   if(!canSee(VIEW)) renderBlocked(VIEW);
   else if(VIEW==="dash") renderDash();
-  else if(VIEW==="apply") $("view-apply").innerHTML=(!S.begun?stepIntro():S.step<2&&!S.focus?stepResume():stepper()+[stepDetails,stepDocs,stepVerify,stepTraining,stepExam,stepCert][S.step]());
+  else if(VIEW==="apply") $("view-apply").innerHTML=routeNote()+(!S.begun?stepIntro():S.step<2&&!S.focus?stepResume():stepper()+[stepDetails,stepDocs,stepVerify,stepTraining,stepExam,stepCert][S.step]());
   else if(VIEW==="ops") renderOps();
   else if(VIEW==="eval") renderEval();
+  else if(VIEW==="notif") renderNotif();
+  else if(VIEW==="hist") renderHist();
+  else if(VIEW==="acct") renderAcct();
+  else if(VIEW==="help") renderHelp();
   else renderAudit();
   if(SPK!==null){ var spkLive=false; document.querySelectorAll("button.speak").forEach(function(b){ if(b.getAttribute("data-speak")===SPK) spkLive=true; }); if(!spkLive) stopSpeech(); }
   focusUI(); persist(); stepChanged();
@@ -1920,6 +2760,7 @@ document.addEventListener("click",function(e){
   if(t.getAttribute("data-audf")){ AUDF=t.getAttribute("data-audf"); return render(); }
   if(t.hasAttribute("data-copy")) return copyText(t.getAttribute("data-copy"),t);
   if(t.hasAttribute("data-speak")) return toggleSpeak(t.getAttribute("data-speak"),t.getAttribute("data-speak-lang"));
+  if(t.getAttribute("data-ulang")) return setLang(t.getAttribute("data-ulang"));
   if(t.getAttribute("data-lang")){ stopSpeech(); S.lang=t.getAttribute("data-lang"); return render(); }
   if(t.getAttribute("data-spec")) return addDoc(t.getAttribute("data-spec"),null);
   if(t.getAttribute("data-dk")!==null){ S.dk=Number(t.getAttribute("data-dk")); render(); var cd=document.querySelector("#view-apply .cards"); if(cd&&cd.scrollIntoView) try{cd.scrollIntoView({block:"nearest"})}catch(_){} return; }
@@ -1970,6 +2811,16 @@ document.addEventListener("click",function(e){
   else if(a==="role-set"){ setRole(t.getAttribute("data-role"),VIEW) }
   else if(a==="go-ops"){ show("audit"); }
   else if(a==="go-apply"){ show("apply"); }
+  else if(a==="go-home"){ show(canSee("dash")?"dash":roleOf().first); focusHead(VIEW); }
+  else if(a==="cta-go"){ var rp0=resumePosition(S),na0=nextAction(S);
+    if(S.begun&&S.step===1&&rp0.doc){ var di=M_DOC_KEYS.indexOf(rp0.doc); if(di>=0) S.dk=di; }
+    var h0=(na0.route||"#apply").slice(1); show("apply",M_has(HASH_STAGE,h0)?h0:undefined); focusHead("apply"); }
+  else if(a==="copy-ref"){ copyRef(t); }
+  else if(a==="open-signin"){ accountDialog.showModal(); $("account-email").focus(); }
+  else if(a==="menu-auth"){ closeMenu(false); $("account-open").click(); }
+  else if(a==="notif-retry"){ NOTIFS.state="idle"; notifLoad(true); render(); }
+  else if(a==="hist-retry"){ HIST.state="idle"; histLoad(); render(); }
+  else if(a==="notif-readall"){ accountRequest("/api/notifications/read",{all:true}).then(function(){ NOTIFS.items.forEach(function(n){n.read=true}); NOTIFS.unread=0; render(); }).catch(function(){ announce(T("ui.error")); }); }
   else if(a==="go-review"){ show("ops"); }
   else if(a==="reset"){ if(timer) clearInterval(timer); forgetSaved(true); fresh(); show("apply"); go(0); }
   else if(a==="print-cert"){ window.print(); }
@@ -2251,7 +3102,7 @@ function persist(force){
   if(!S.saveOK||S.status==="IN_REVIEW"||S.rechecking) return;
   var now=Date.now(); if(!force&&now-lastSave<400) return; lastSave=now;
   /* Internal events (fraud desk, reviewer notes) are never saved; the in-memory copy keeps them for the Audit view. */
-  try{ localStorage.setItem(SAVEKEY,JSON.stringify({v:1,savedAt:now,S:savedCopy()},function(k,v){ if(k==="url"||k==="thumb"||k==="text"||k==="rnote") return undefined; if((k==="note"||k==="rec")&&this&&"ask" in this&&"opened" in this) return undefined; if(k==="events"&&Array.isArray(v)) return v.filter(function(e){return e.audience!=="internal"}); return v })) }catch(e){}
+  try{ LOCALSAVE=now; localStorage.setItem(SAVEKEY,JSON.stringify({v:1,savedAt:now,S:savedCopy()},function(k,v){ if(k==="url"||k==="thumb"||k==="text"||k==="rnote") return undefined; if((k==="note"||k==="rec")&&this&&"ask" in this&&"opened" in this) return undefined; if(k==="events"&&Array.isArray(v)) return v.filter(function(e){return e.audience!=="internal"}); return v })) }catch(e){}
 }
 /* What goes to the device: a copy of S without another person's name, name tiers, the AI's recommendation or
    internal codes (GR-4). Names read from a document behind a different-person or human-only finding are dropped;
@@ -2378,20 +3229,24 @@ document.addEventListener("submit",function(e){ if(e.target&&e.target.id==="cp-f
 /* Proactive help: 90 seconds with no activity on a details or documents page */
 function idleReset(){ clearTimeout(CP.idleT); CP.idleT=setTimeout(function(){ if(watching()) cpNudge("idle-"+S.step+"-"+S.dpage+"-"+accepted(),"Need a hand? "+nextStepText()); },90000); }
 ["click","keydown","input","pointerdown"].forEach(function(ev){ document.addEventListener(ev,idleReset,true) });
-/* ---------- Demo role switch (15 Nov). A View-as choice for demos. NOT authentication: anyone can switch. ROLE is not part of S and is never saved with the application. ---------- */
+/* ---------- Roles. In the production build the role comes only from the signed-in server account (the server enforces data access; the client hides what a role cannot use).
+   The demo build adds a "View as" switch for demonstrations. It is NOT authentication and is never present in production. ROLE is not part of S and is never saved with the application. ---------- */
 var ROLES=[
-  {k:"applicant",label:"Applicant",views:["dash","apply"],first:"dash"},
-  {k:"reviewer",label:"Reviewer",views:["ops","audit"],first:"ops"},
-  {k:"ops",label:"Ops and compliance",views:["eval","audit","ops"],first:"eval"},
-  {k:"all",label:"All views (demo)",views:["dash","apply","ops","audit","eval"],first:"dash"}
+  {k:"applicant",label:"Applicant",first:"dash"},
+  {k:"reviewer",label:"Reviewer",first:"ops"},
+  {k:"ops",label:"Ops and compliance",first:"eval"},
+  {k:"admin",label:"Administrator",first:"ops"},
+  {k:"all",label:"All views (demo)",first:"dash"}
 ];
-var ROLE=(function(){ var v=null; try{ v=localStorage.getItem("pn-role") }catch(e){} if(v&&roleOf(v)) return v; return DEMO?"all":"applicant" })();
+var ROLE=(function(){ if(!DEMO_BUILD) return "applicant"; var v=null; try{ v=localStorage.getItem("pn-role") }catch(e){} if(v&&roleOf(v)) return v; return DEMO?"all":"applicant" })();
 function roleOf(k){ var key=(k===undefined)?ROLE:k; for(var i=0;i<ROLES.length;i++) if(ROLES[i].k===key) return ROLES[i]; return null }
-function canSee(v){ var r=roleOf(); return !!r&&r.views.indexOf(v)>=0 }
-function rolesFor(v){ return ROLES.filter(function(r){return r.k!=="all"&&r.views.indexOf(v)>=0}) }
-function rvRoleNote(){ var r=roleOf(); return " · demo role: "+(r?r.label:"not set") }
-function roleChrome(){ var c=$("rolechip"); if(c) c.textContent="Viewing as "+roleOf().label.replace(/ \(demo\)$/,"")+" · demo"; var s=$("role-sel"); if(s&&s.value!==ROLE) s.value=ROLE }
+function canSee(v){ if(v==="help") return true; if(DEMO_BUILD&&ROLE==="all") return true; return can(ROLE,VIEW_ACT[v]); }
+function rolesFor(v){ return ROLES.filter(function(r){return r.k!=="all"&&can(r.k,VIEW_ACT[v])}) }
+function rvRoleNote(){ var r=roleOf(); return (DEMO_BUILD?" · demo role: ":" · role: ")+(r?r.label:"not set") }
+/* Production: the role follows the server account (applicant when signed out). */
+function syncRole(){ if(DEMO_BUILD) return; var r=ACCOUNT&&roleOf(ACCOUNT.role)&&ACCOUNT.role!=="all"?ACCOUNT.role:"applicant"; ROLE=r; }
 function setRole(k,goto){
+  if(!DEMO_BUILD) return;
   var r=roleOf(k); if(!r) return;
   ROLE=k; try{ localStorage.setItem("pn-role",k) }catch(e){}
   announce("Viewing as "+r.label);
@@ -2401,24 +3256,33 @@ function setRole(k,goto){
 }
 /* Moves focus to a view's first heading (tabindex -1, so it can take focus without entering the tab order). */
 function focusHead(v){ var el=$("view-"+v); var h=el&&el.querySelector("h1"); if(h){ h.setAttribute("tabindex","-1"); try{ h.focus({preventScroll:true}) }catch(e){} } }
-/* A hidden view opened by URL: a notice in its place, with a way out (no dead ends). */
+/* A view the role cannot open (for example a staff view reached by URL): an accessible notice in its place, with a way out (no dead ends). The server enforces data access separately. */
 function renderBlocked(v){
-  var need=rolesFor(v), tgt=need[0]||ROLES[3];
-  var list=need.map(function(r){return r.label}).join(" or ");
-  var names={dash:"Dashboard",apply:"Application",ops:"Review console",audit:"Audit trail",eval:"Evaluation"};
-  $("view-"+v).innerHTML='<div class="panel narrow"><div class="head"><h1>'+esc(names[v]||"This view")+' is not open to this role</h1><p>This view is for '+esc(list)+'. You are viewing as '+esc(roleOf().label)+'.</p></div><div class="actions"><button class="btn pri" type="button" data-act="role-set" data-role="'+tgt.k+'">Switch to '+esc(tgt.label)+'</button><button class="btn" type="button" data-act="role-set" data-role="all">All views (demo)</button></div></div>';
+  var need=rolesFor(v),list=need.map(function(r){return T("role."+r.k)}).join(T("ui.list_sep")),nm=T(VIEW_NAME[v]||"nav.home");
+  var rl=ROLE==="all"?"all":ROLE;
+  var body=ACCOUNT||DEMO_BUILD?T("un.body",{roles:list,role:T("role."+rl)}):T("un.body.out",{roles:list});
+  var acts='<button class="btn pri" type="button" data-act="go-home">'+TE("un.home")+'</button>'+(!ACCOUNT?'<button class="btn" type="button" data-act="open-signin">'+TE("un.signin")+'</button>':'')+
+    (DEMO_BUILD&&need[0]?'<button class="btn" type="button" data-act="role-set" data-role="'+need[0].k+'">Switch to '+esc(need[0].label)+' (demo)</button><button class="btn" type="button" data-act="role-set" data-role="all">All views (demo)</button>':'');
+  var bel=$("view-"+v); bel.__h=null; bel.innerHTML=('<div class="panel narrow" role="alert"><div class="head"><h1>'+esc(T("un.title",{name:nm}))+'</h1><p>'+esc(body)+'</p></div><div class="actions">'+acts+'</div></div>');
 }
 var RSEL=$("role-sel"); if(RSEL) RSEL.addEventListener("change",function(){ setRole(this.value) });
-var HASH={dash:"dashboard",apply:"apply",ops:"review",audit:"audit",eval:"evaluation"};
-function show(v){
+function show(v,h){
   stopSpeech();
-  VIEW=v; ["dash","apply","ops","audit","eval"].forEach(function(k){$("view-"+k).hidden=k!==v});
+  VIEW=v; ROUTE_STAGE=(v==="apply"&&h&&M_has(HASH_STAGE,h))?h:null;
+  VIEWS.forEach(function(k){var el=$("view-"+k); if(el) el.hidden=k!==v});
+  closeMenu(false);
+  if(ACCOUNT&&(v==="dash"||v==="notif")) notifLoad(true);
+  if(ACCOUNT&&v==="hist") histLoad();
   render();
-  try{ if(location.hash!=="#"+HASH[v]) location.hash=HASH[v]; window.scrollTo(0,0) }catch(e){}
-  if(!canSee(v)){ focusHead(v); var bl=rolesFor(v).map(function(r){return r.label}).join(" or "); announce("This view is for "+bl+". You are viewing as "+roleOf().label+".") }
+  var hh=h||HASH[v]; LASTHASH=hh;
+  try{ if(location.hash!=="#"+hh) location.hash=hh; window.scrollTo(0,0) }catch(e){}
+  if(!canSee(v)){ focusHead(v); announce(T("un.title",{name:T(VIEW_NAME[v]||"nav.home")})) }
 }
-function fromHash(){var h=location.hash.slice(1),v=null;Object.keys(HASH).forEach(function(k){if(HASH[k]===h)v=k});return v}
-window.addEventListener("hashchange",function(){var v=fromHash(); if(v&&v!==VIEW) show(v)});
+window.addEventListener("hashchange",function(){
+  var h=location.hash.slice(1); if(h===LASTHASH) return;
+  var p=parseHash(h); if(!p.v) return;
+  show(p.v,p.stage||undefined); focusHead(p.v);
+});
 /* Account sessions use server-set HttpOnly cookies. Demo progress remains available without an account. */
 var ACCOUNT=null,accountDialog=document.createElement('dialog');
 accountDialog.setAttribute('aria-labelledby','account-heading');
@@ -2429,13 +3293,22 @@ resetDialog.innerHTML='<form class="mbox" id="reset-form"><h2 id="reset-heading"
 document.body.appendChild(resetDialog);var resetToken='';
 $('reset-close').onclick=function(){resetToken='';$('reset-password').value='';resetDialog.close()};
 $('reset-form').onsubmit=function(e){e.preventDefault();var b=e.submitter;b.disabled=true;accountRequest('/api/auth/reset',{reset_token:resetToken,password:$('reset-password').value},false).then(function(){resetToken='';$('reset-password').value='';$('reset-result').textContent='Password changed. Sign in with your new password.'}).catch(function(){$('reset-result').textContent='The reset link is invalid or expired. Request a new link or contact your administrator.'}).finally(function(){b.disabled=false})};
-function accountChrome(){ $('account-open').textContent=ACCOUNT?'Sign out · '+ACCOUNT.display_name:'Sign in / create account'; }
-function enterAccount(user){
-  ACCOUNT=user;SAVEKEY='pn-onboarding-user-'+user.id;lastSynced='';$('account-sync').checked=false;
-  stopSpeech();if(timer)clearInterval(timer);fresh();restore();CP.log=[];cpDraw();accountChrome();show('apply');
+function accountChrome(){ $('account-open').textContent=ACCOUNT?'Sign out · '+ACCOUNT.display_name:'Sign in / create account'; syncRole(); if(ACCOUNT&&(ACCOUNT.language==='hi'||ACCOUNT.language==='en')&&ACCOUNT.language!==LANG) setLang(ACCOUNT.language,false); }
+/* Server profile and application reference (GET /api/me, GET or POST /api/applications/me). Never blocks the UI; failures leave the local values in place. */
+function loadIdentity(){
+  if(!ACCOUNT) return; var uid=ACCOUNT.id;
+  accountRequest('/api/me').then(function(d){ if(d&&d.user&&ACCOUNT&&ACCOUNT.id===uid){ ACCOUNT=Object.assign(ACCOUNT,d.user); accountChrome(); render(); } }).catch(function(){});
+  if(ACCOUNT.role!=='applicant') return;
+  function got(d){ if(ACCOUNT&&ACCOUNT.id===uid&&d&&d.application&&d.application.reference){ APPREF=d.application.reference; render(); } }
+  accountRequest('/api/applications/me').then(got).catch(function(){ accountRequest('/api/applications/me',{}).then(got).catch(function(){}); });
 }
-function accountRequest(path,body,retry){
-  return fetch(COPILOT_URL+path,{method:body===undefined?'GET':'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){
+function enterAccount(user,keep){
+  ACCOUNT=user;SAVEKEY='pn-onboarding-user-'+user.id;lastSynced='';$('account-sync').checked=false;APPREF=null;NOTIFS={state:'idle',items:[],unread:0};HIST={state:'idle',items:[]};
+  stopSpeech();if(timer)clearInterval(timer);fresh();restore();CP.log=[];cpDraw();accountChrome();loadIdentity();
+  if(keep)show(canSee(VIEW)?VIEW:roleOf().first,ROUTE_STAGE||undefined);else show(canSee('apply')?'apply':roleOf().first);
+}
+function accountRequest(path,body,retry,method){
+  return fetch(COPILOT_URL+path,{method:method||(body===undefined?'GET':'POST'),credentials:'include',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){
     if(r.status===401&&retry!==false&&path!=='/api/auth/refresh'){
       if(!accountRefreshing)accountRefreshing=accountRequest('/api/auth/refresh',{},false).finally(function(){accountRefreshing=null});
       return accountRefreshing.then(function(){return accountRequest(path,body,false)});
@@ -2445,7 +3318,7 @@ function accountRequest(path,body,retry){
 }
 var accountRefreshing=null;
 $('account-open').addEventListener('click',function(){
-  if(ACCOUNT){accountRequest('/api/auth/logout',{},false).then(function(){ACCOUNT=null;$('account-sync').checked=false;SAVEKEY='pn-onboarding-v1';if(timer)clearInterval(timer);fresh();CP.log=[];cpDraw();accountChrome();workspaceDialog.close();show('apply')}).catch(function(){announce('Could not sign out. Please try again.')});return;}
+  if(ACCOUNT){accountRequest('/api/auth/logout',{},false).then(function(){ACCOUNT=null;APPREF=null;NOTIFS={state:'signedout',items:[],unread:0};HIST={state:'idle',items:[]};$('account-sync').checked=false;SAVEKEY='pn-onboarding-v1';if(timer)clearInterval(timer);fresh();CP.log=[];cpDraw();accountChrome();workspaceDialog.close();show(canSee('apply')?'apply':roleOf().first)}).catch(function(){announce('Could not sign out. Please try again.')});return;}
   accountDialog.showModal();$('account-email').focus();
 });
 $('account-close').addEventListener('click',function(){accountDialog.close()});
@@ -2456,7 +3329,7 @@ $('account-form').addEventListener('submit',function(e){
     if(data.user){enterAccount(data.user);productEvent(action==='register'?'registration':'login');$('account-password').value='';accountDialog.close();announce('Signed in successfully.')}else msg.textContent=data.message||'Request received.';
   }).catch(function(err){msg.textContent=err.message==='Failed to fetch'?'Account service is unavailable. Your demo work is still available.':err.message.replace(/_/g,' ')}).finally(function(){buttons.forEach(function(b){b.disabled=false})});
 });
-accountRequest('/api/auth/me',undefined,true).then(function(data){enterAccount(data.user)}).catch(function(){ACCOUNT=null;accountChrome()});
+accountRequest('/api/auth/me',undefined,true).then(function(data){enterAccount(data.user,true)}).catch(function(){ACCOUNT=null;NOTIFS={state:'signedout',items:[],unread:0};accountChrome();render()});
 var lastSynced='',syncBusy=null;
 function progressSnapshot(){
   var context=copilotContext();
@@ -2566,7 +3439,7 @@ $('appeal-form').addEventListener('submit',function(e){e.preventDefault();var bu
   accountRequest('/api/appeals',{explanation:$('appeal-concern').value}).then(function(result){productEvent('appeal_submitted');$('appeal-result').textContent='Appeal submitted. Reference '+result.reference+'. Status: '+result.status;cpPush('a','Your appeal was submitted to the human review process. Reference '+result.reference+'. It is awaiting reviewer assignment.');}).catch(function(){ $('appeal-result').textContent='The appeal could not be submitted. Please check your session and try again.';}).finally(function(){button.disabled=false});
 });
 var RESTORED=restore();
-applyTheme(); VIEW=fromHash()||"dash"; if(!fromHash()&&!canSee(VIEW)) VIEW=roleOf().first; if(RESTORED&&VIEW==="dash"&&canSee("apply")) VIEW="apply"; show(VIEW); kbLoad(); idleReset();
+applyTheme(); applyLang(); try{ if(window.matchMedia("(max-width:900px)").matches) $("navx").open=false }catch(e){} var BOOTH=parseHash(location.hash.slice(1)); VIEW=BOOTH.v||"dash"; if(!BOOTH.v&&!canSee(VIEW)) VIEW=roleOf().first; if(RESTORED&&!BOOTH.v&&VIEW==="dash"&&canSee("apply")) VIEW="apply"; show(VIEW,BOOTH.stage||undefined); kbLoad(); idleReset();
 if(DROPPED) cheer("your earlier saved progress expired.","Saved applications are kept for 30 days (14 days once a follow-up is open). Please start again.","heart");
 if(location.hash.indexOf('#reset=')===0){resetToken=decodeURIComponent(location.hash.slice(7));history.replaceState(null,'',location.pathname+location.search+'#apply');resetDialog.showModal();$('reset-password').focus()}
 })();
