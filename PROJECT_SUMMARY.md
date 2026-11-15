@@ -30,7 +30,7 @@ All data is synthetic.
   - REJECT recall 100.0%; no wrongful approvals; 98.2% straight-through.
   - All in-sample, because the rules were refined on the same 600 cases. Only a held-out set can confirm them.
 - **Checked live:** the live engine hash equals the evaluated one (`c2063887…`), and all ten brief scenarios T1–T10 pass on the live site (`tools/t1_t10.py`).
-- **Built, not yet live:** a demo role switch ("View as" Applicant, Reviewer, Ops and compliance, or All views). It is labelled "not a login" and was audited and checked in the browser (`2365af4`). It goes live at the next deploy.
+- **Live:** a demo role switch ("View as" Applicant, Reviewer, Ops and compliance, or All views), labelled "not a login" (`2365af4`, deployed 15 Nov; checked live).
 - **Left:** mostly work that needs people: usability tests, held-out labels, the AI key and the deck. See section 7.
 
 ## 2. Architecture
@@ -78,7 +78,7 @@ The design decisions are recorded as ADRs in [`docs/adr/`](docs/adr/):
 | 15 Nov 13:10–13:49 | Audit fixes; **Opus master audit** (1 blocker, 3 major, 10 minor); corrections; docs | `b581609` … `e0f3e2b` |
 | 15 Nov 14:09 | **Deployed** with the user's OK; live check passed | `0995f81` |
 | 15 Nov 15:13–16:25 | **Feature triage** of an external implementation log → 13 features built in 5 audited lanes → **deployed**, T1–T10 10/10 live | `667482c` … `d8d285f` |
-| 15 Nov | Demo role switch: built, audited and browser-checked; T1–T10 10/10 locally; awaiting deploy | `2365af4` |
+| 15 Nov | Demo role switch: built, audited, deployed with the user's OK; live hash match, T1–T10 10/10 live, roles checked live | `2365af4` |
 
 ## 4. How it was built and checked
 
@@ -179,7 +179,6 @@ The design decisions are recorded as ADRs in [`docs/adr/`](docs/adr/):
 **Waiting for something**
 
 - **Console redesign, queue screens, reviewer keys A/M/R:** wait for your reference designs. The queue data is already built.
-- **Demo role switch:** built and checked; it goes live at the next deploy (with your OK).
 
 **Optional**
 

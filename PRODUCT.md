@@ -140,7 +140,7 @@ Built, checked in the browser, and live since 15 Nov (Embarko deployment `cmwhps
 | C11 | "Rules applied" table on the Audit trail (every check with its rulebook section) | Live |
 | C12 | `tools/t1_t10.py`: Playwright runner for T1 to T10, local or live | Live (10/10 on the live site) |
 | C13 | "Good photo" hints before a slot's first upload | Live |
-| R10 | Demo role switch: "View as" Applicant, Reviewer, Ops and compliance, or All views (default Applicant; All with `?demo=1`). Each role sees only its views, and a hidden view explains itself and offers a switch. Labelled "not a login"; this is not authentication | Built locally 15 Nov (`2365af4`); not deployed |
+| R10 | Demo role switch: "View as" Applicant, Reviewer, Ops and compliance, or All views (default Applicant; All with `?demo=1`). Each role sees only its views, and a hidden view explains itself and offers a switch. Labelled "not a login"; this is not authentication | Live 15 Nov (`2365af4`, deployment `cmwhvzhjs050t13bapo81uw75`); checked live: each role lands on its first view, hidden views show the notice |
 
 ### 4.7 Stretch (future, not committed)
 

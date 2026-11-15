@@ -170,6 +170,17 @@ The doc findings F-04, F-13 and F-14 were fixed in the docs pass of 15 Nov (this
 - **Not checked:** the spoken voice itself (no audio in the test browser), and real phone cameras.
 - **Deployed** after the user's OK (deployment `cmwhpsgz202ib13bal6lwopu8`). Live check: the engine hash matches the evaluation (`c2063887…`), all new features are present in the served page, `python tools/t1_t10.py https://policynest.embarko.app` passed 10/10, and the photo check, real OCR and the type gate ran with no console errors under the site's security policy.
 
+## 3d. 15 Nov: demo role switch (built, deployed, checked live)
+
+- **What it is:** "View as" Applicant, Reviewer, Ops and compliance, or All views. The default is Applicant; `?demo=1` gives All views. Each role sees only its views, and a hidden view opened by URL shows a notice with a one-click switch. It is labelled "Demo role switch, not a login". The role lives in `pn-role` (localStorage) and never enters the saved application.
+- **How it was built:** a Haiku builder, then a Sonnet audit (one functional gap: Reviewer and Ops opening the plain URL landed on a notice; two focus and announcement gaps), then a Haiku fix. Commit `2365af4`; chip wording fix in `fee2ce0`.
+- **Deployed** after the user's OK (deployment `cmwhvzhjs050t13bapo81uw75`). Live check:
+  - the engine hash matches (`c2063887…`);
+  - `tools/t1_t10.py` passed 10/10 on the live URL;
+  - each role lands on its first view (Applicant → Dashboard, Reviewer → Review console, Ops → Evaluation);
+  - an Applicant opening `#review` gets the notice;
+  - no console errors.
+
 ## 4. What is live now
 
 | Piece | State |
