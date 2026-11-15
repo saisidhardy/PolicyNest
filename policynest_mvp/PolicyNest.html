@@ -535,6 +535,13 @@ label:has(+ input[type=file]:focus-visible){outline:3px solid var(--ink);outline
 .tone-warn{background:var(--brand-soft);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--brand)}
 .tone-ok{background:var(--ok-soft);color:var(--ok)}
 .tone-bad{background:var(--bad-soft);color:var(--bad-ink)}
+.bell{position:relative}.bell .bdg{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--brand);color:#141414;font-size:.68rem;font-weight:800;display:grid;place-items:center;padding:0 4px}
+.nacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.nrow.t-action>.nic{background:var(--brand);color:#141414}.nrow.t-success>.nic{background:var(--ok-soft);color:var(--ok)}
+.tlist li.cur>.nic{background:var(--brand);color:#141414}.curstat{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 6px}
+.syncnote{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:8px max(16px,env(safe-area-inset-left,0px))}
+.pform{display:flex;flex-direction:column;gap:8px}.pform label{font-weight:700;font-size:.88rem}.pform input,.pform select{min-height:44px}
+#savestate .btn{min-height:32px}
+@media (max-width:900px){.iconbtn,#savestate .btn,.nacts .btn,.syncnote .btn{min-height:44px}.iconbtn{min-width:44px}}
 .sv{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);font-weight:600}
 .sv.failed,.sv.offline{color:var(--bad-ink)} .sv.saved svg{color:var(--ok)}
 .langsw{display:inline-flex;background:var(--surface);border-radius:999px;padding:3px;box-shadow:var(--shadow)}
@@ -716,6 +723,7 @@ dialog.pdlg:not([open]){display:none}
     <div class="tools">
       <span class="rolechip" id="rolechip" hidden></span>
       <div class="langsw" id="tb-lang" role="group" aria-label="Language"></div>
+      <span id="bell"></span>
       <button class="iconbtn" type="button" data-act="theme" id="themebtn" aria-label="Switch to dark mode"></button>
       <div class="amwrap"><button class="amb" type="button" id="acct-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="acct-pop" aria-label="Account menu"></button>
         <div class="ampop" id="acct-pop" hidden><div class="amhead" id="am-head"></div><div role="menu" id="acct-menu" aria-labelledby="acct-btn"></div></div></div>
@@ -727,6 +735,7 @@ dialog.pdlg:not([open]){display:none}
 <div class="fsbanner" id="fs-banner" role="status" hidden><span>Full screen closed. Your sitting carries on.</span><button type="button" class="btn pri" data-act="fs-return">Return to full screen</button><button type="button" class="btn" data-act="fs-dismiss">Dismiss</button></div>
 <div class="sr-only" id="sr-status" role="status" aria-live="polite"></div>
 <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+<div class="note syncnote" id="syncnote" role="status" hidden></div>
 <main class="wrap" id="main" tabindex="-1">
   <section id="view-dash"></section>
   <section id="view-apply" hidden></section>
@@ -1906,7 +1915,7 @@ function verif(){ return {e:!!(ACCOUNT&&ACCOUNT.email_verified),m:!!(ACCOUNT&&AC
 function vchip(ok,k){ return '<span class="vchip '+(ok?"ok":"no")+'">'+svgi(ok?"check":"alert")+'<span>'+TE(k+(ok?".yes":".no"))+'</span></span>'; }
 function stBadge(key){ var st=APP_STATUS[key]; return '<span class="stbadge tone-'+st.tone+'">'+svgi(st.icon)+'<span>'+TE(st.labelKey)+'</span></span>'; }
 function saveInfo(){
-  var s=S.save||S.saveState,state=s&&s.state,tm=s&&s.t,txt,ic;
+  var s=(syncOn()&&SYNC.st)?SYNC.st:(S.save||S.saveState),state=s&&s.state,tm=s&&s.t,txt,ic;
   if(!state){ if(LOCALSAVE){ state="saved"; tm=LOCALSAVE; txt=T("save.device",{time:M_fmtClock(LOCALSAVE,LANG)}); } else state="idle"; }
   if(!txt){
     if(state==="saved") txt=tm?(ACCOUNT?T("save.account",{time:M_fmtClock(tm,LANG)}):T("save.last",{time:M_fmtClock(tm,LANG)})):T("save.saved");
@@ -1924,7 +1933,8 @@ function shellChrome(){
   setHtml($("tb-ver"),vchip(v.e,"ver.email")+vchip(v.m,"ver.mobile"));
   setHtml($("tb-ref"),'<span class="small muted">'+TE("ref.label")+'</span> <b class="mono" id="tb-refv">'+esc(refText())+'</b>'+(APPREF?'':' <span class="small muted">('+TE("ref.local")+')</span>')+' <button class="btn sm" type="button" data-act="copy-ref" aria-label="'+TE("ref.copy.aria")+'">'+TE("ref.copy")+'</button>');
   setHtml($("tb-status"),stBadge(key));
-  var sv=saveInfo(); setHtml($("savestate"),'<span class="sv '+sv.state+'">'+svgi(sv.icon)+'<span>'+esc(sv.text)+'</span></span>');
+  var sv=saveInfo(); setHtml($("savestate"),'<span class="sv '+sv.state+'">'+svgi(sv.icon)+'<span>'+esc(sv.text)+'</span></span>'+(sv.state==="failed"?' <button class="btn sm" type="button" data-act="save-retry" aria-label="'+TE("save.retry.aria")+'">'+TE("save.retry")+'</button>':''));
+  setHtml($("bell"),bellHtml()); syncNoteDraw();
   setHtml($("tb-lang"),'<button type="button" data-ulang="en" lang="en" aria-label="English" aria-pressed="'+(LANG==="en")+'">EN</button><button type="button" data-ulang="hi" lang="hi" aria-label="हिंदी" aria-pressed="'+(LANG==="hi")+'">हिंदी</button>');
   $("tb-lang").setAttribute("aria-label",T("lang.label"));
   setHtml($("avatar"),esc(initials()));
@@ -2048,21 +2058,6 @@ function notifLoad(force){
    .catch(function(){ if(NOTIFS.state!=="ok") NOTIFS.state="error"; })
    .then(function(){ if(VIEW==="dash"||VIEW==="notif") render(); else shellChrome(); });
 }
-function ntText(n){
-  var k="nt."+(n.type||""); if(!M_has(I18N.en,k)) k="nt."+(n.key||""); if(!M_has(I18N.en,k)) k="nt.status_changed";
-  return T(k);
-}
-function notifRow(n){
-  var unread=!n.read;
-  return '<li class="nrow'+(unread?" unread":"")+'"><span class="nic">'+svgi("clock")+'</span><div><b>'+esc(ntText(n))+'</b><small class="muted">'+esc(M_fmtClock((n.created_at||0)*1000,LANG))+(n.reference?" · "+esc(n.reference):"")+'</small></div>'+(unread?'<span class="chip o">'+TE("ui.new")+'</span>':'')+'</li>';
-}
-function notifBody(limit){
-  if(!ACCOUNT) return '<p class="small muted">'+TE(limit?"dash.updates.signin":"nv.signin")+'</p>'+(limit?'':'<button class="btn" type="button" data-act="open-signin">'+TE("un.signin")+'</button>');
-  if(NOTIFS.state==="idle"||NOTIFS.state==="loading") return '<p class="small muted" role="status">'+TE("dash.updates.loading")+'</p>';
-  if(NOTIFS.state==="error") return '<p class="small muted">'+TE("dash.updates.error")+'</p><button class="btn sm" type="button" data-act="notif-retry">'+TE("dash.updates.retry")+'</button>';
-  if(!NOTIFS.items.length) return '<p class="small muted">'+TE("dash.updates.empty")+'</p>';
-  return '<ul class="nlist">'+NOTIFS.items.slice(0,limit||50).map(notifRow).join("")+'</ul>';
-}
 /* ---- the dashboard ---- */
 function destLine(rp){
   var s=T("dash.stepof",{n:rp.step+1,of:6})+" · "+T("stage."+rp.stage),d="";
@@ -2146,28 +2141,11 @@ function histLoad(){
   HIST.state="loading";
   accountRequest("/api/applications/me/timeline").then(function(d){ HIST={state:"ok",items:(d&&d.items)||[]}; }).catch(function(){ HIST={state:"error",items:[]}; }).then(function(){ if(VIEW==="hist") render(); });
 }
-function renderHist(){
-  var items=applicantTimeline(ACCOUNT&&HIST.state==="ok"&&HIST.items.length?HIST.items:S.events).slice().reverse(),body;
-  if(ACCOUNT&&HIST.state==="loading"&&!items.length) body='<p class="small muted" role="status">'+TE("state.loading")+'</p>';
-  else if(ACCOUNT&&HIST.state==="error"&&!items.length) body='<p class="small muted">'+TE("state.error")+'</p><button class="btn sm" type="button" data-act="hist-retry">'+TE("state.retry")+'</button>';
-  else if(!items.length) body='<p class="small muted">'+TE("hv.empty")+'</p>';
-  else body='<ol class="tlist">'+items.map(function(e){return '<li><span class="nic">'+svgi("clock")+'</span><div><b>'+esc(T(e.key,e.params))+'</b><small class="muted">'+esc(T("actor."+e.actor))+(e.t?" · "+esc(M_fmtClock(e.t,LANG)):"")+'</small></div></li>'}).join("")+'</ol>';
-  setHtml($("view-hist"),'<div class="panel narrow"><div class="head"><h1>'+TE("hv.title")+'</h1><p>'+TE("hv.sub")+'</p></div>'+body+'</div>');
-}
 function choiceHtml(k){ return '<label class="choice"><input type="checkbox" data-consent="'+k+'"'+(CONS[k]?' checked':'')+'><span><b>'+TE("pf."+(k==="sync"?"sync":"an")+".t")+'</b><span class="small muted">'+TE("pf."+(k==="sync"?"sync":"an")+".b")+'</span></span></label>'; }
 function choicesHtml(){
   if(!ACCOUNT) return "";
   return '<section class="box" aria-labelledby="pf-ch"><h2 id="pf-ch">'+TE("pf.choices.h")+'</h2><p class="small muted">'+TE("pf.choices.sub")+'</p><div class="choices">'+(ACCOUNT.role==="applicant"?choiceHtml("sync"):"")+choiceHtml("analytics")+'</div></section>'+
     '<section class="box" aria-labelledby="pf-ws"><h2 id="pf-ws">'+TE("pf.ws.h")+'</h2><p class="small">'+TE("pf.ws.b")+'</p><button class="btn" type="button" data-act="open-workspace">'+TE("pf.ws.btn")+'</button></section>';
-}
-function renderAcct(){
-  var v=verif(),r=effRole()==="all"?"applicant":effRole(),na=T("av.na");
-  function row(k,val,ok){ return '<div class="arow"><dt>'+TE(k)+'</dt><dd>'+val+(ok===undefined?'':' '+vchip(ok,k==="acct.email"?"ver.email":"ver.mobile"))+'</dd></div>'; }
-  var h='<div class="panel narrow"><div class="head"><h1>'+TE("av.title")+'</h1><p>'+TE("av.sub")+'</p></div>'+(ACCOUNT?'':'<div class="note" role="status"><span>'+TE("av.notsigned")+'</span><button class="btn sm" type="button" data-act="open-signin">'+TE("un.signin")+'</button></div>')+
-    '<dl class="adl">'+row("acct.name",esc(dispName()||na))+row("acct.email",esc(ACCOUNT&&ACCOUNT.email?ACCOUNT.email:na),v.e)+row("acct.mobile",esc(ACCOUNT&&ACCOUNT.mobile_masked?ACCOUNT.mobile_masked:na),v.m)+
-    row("acct.language",TE("lang."+LANG))+row("ref.label",'<span class="mono">'+esc(refText())+'</span>'+(APPREF?'':' <span class="small muted">('+TE("ref.local")+')</span>'))+row("acct.status",stBadge(statusOf(S)))+row("acct.last_saved",esc(saveInfo().text))+'<div class="arow"><dt>'+TE("av.role")+'</dt><dd>'+TE("role."+r)+'</dd></div></dl>'+
-    '<p class="small muted">'+TE("av.edit.soon")+'</p>'+choicesHtml()+'</div>';
-  setHtml($("view-acct"),h);
 }
 function renderHelp(){
   setHtml($("view-help"),'<div class="panel narrow"><div class="head"><h1>'+TE("help.title")+'</h1><p>'+TE("help.sub")+'</p></div>'+
@@ -2676,7 +2654,7 @@ function render(){
   if(!canSee(VIEW)) renderBlocked(VIEW);
   else if(VIEW==="welcome") renderWelcome();
   else if(VIEW==="dash") renderDash();
-  else if(VIEW==="apply") $("view-apply").innerHTML=routeNote()+(!S.begun?stepIntro():S.step<2&&!S.focus?stepResume():stepper()+[stepDetails,stepDocs,stepVerify,stepTraining,stepExam,stepCert][S.step]());
+  else if(VIEW==="apply") $("view-apply").innerHTML=routeNote()+reenterNote()+remoteDocsNote()+(!S.begun?stepIntro():S.step<2&&!S.focus?stepResume():stepper()+[stepDetails,stepDocs,stepVerify,stepTraining,stepExam,stepCert][S.step]());
   else if(VIEW==="ops") renderOps();
   else if(VIEW==="eval") renderEval();
   else if(VIEW==="notif") renderNotif();
@@ -2685,7 +2663,7 @@ function render(){
   else if(VIEW==="help") renderHelp();
   else renderAudit();
   if(SPK!==null){ var spkLive=false; document.querySelectorAll("button.speak").forEach(function(b){ if(b.getAttribute("data-speak")===SPK) spkLive=true; }); if(!spkLive) stopSpeech(); }
-  focusUI(); persist(); stepChanged();
+  focusUI(); persist(); stepChanged(); syncMark();
 }
 /* Screen readers hear each application step once, and focus moves to the step heading (FR-43) */
 var LASTST=null;
@@ -2980,6 +2958,7 @@ document.addEventListener("click",function(e){
     else cheer("module done: "+MODULES[i][0]+".",hh+" of 15 hours logged.","ok");
     return render(); }
   var a=t.getAttribute("data-act"); if(!a) return;
+  if(p5Click(t,a)) return;
   if(a==="clear"){ S.f=Object.assign({},BLANK); S.consentAt=null; S.isSample=false; S.errs={}; render(); }
   else if(a==="sample"){ S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; /* no consent time for a tick nobody made */ S.errs={}; render(); }
   else if(a==="scn-setup"){ var scn=S.scnPick||"T1"; S.f=Object.assign({},SAMPLE); S.consentAt=null; S.isSample=true; S.errs={}; S.scenario=scn; S.scenarioApplied=false; S.specv={}; render(); }
@@ -3286,6 +3265,8 @@ function modalAct(a){
   else if(a==="m-later"){ endSitting("SITTING_SAVED","Applicant chose to continue later"); leaveFocus(); render(); }
   else if(a==="m-refocus"){ if(S.sess) enterFocus(!S.sess.noFs); }
   else if(a==="m-newapp"){ newApplication(); }
+  else if(a==="m-sync-yes"){ syncAccept(); }
+  else if(a==="m-sync-no"){ syncDecline(); }
   else if(a==="m-delete"){ wipeSaved(); S.saveOK=false; log("SAVED_PROGRESS_DELETED","APPLICANT","Applicant deleted saved progress from this device"); render(); showModal("Saved progress deleted","Nothing from this application is kept on this device. Your reasons stay on this screen until you close or leave it; nothing further is saved.",[["OK","m-close",1]]); }
 }
 document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!$("cp").hidden){ cpOpen(false); } });
@@ -3331,10 +3312,10 @@ function savedCopy(){
   return o;
 }
 function restore(){
-  var raw=null; try{ raw=localStorage.getItem(SAVEKEY) }catch(e){} if(!raw) return false;
+  var raw=null; LOCALAT=0; try{ raw=localStorage.getItem(SAVEKEY) }catch(e){} if(!raw) return false;
   try{ var o=JSON.parse(raw),days=(Date.now()-o.savedAt)/864e5,lim=o.S.status==="NEEDS_MORE_INFO"?14:30;
     if(days>lim){ try{localStorage.removeItem(SAVEKEY)}catch(e){} DROPPED=true; return false; } /* state machine: INACTIVITY_TIMEOUT → DROPPED_OUT */
-    S=o.S; S.focus=false; S.sess=null; S.rechecking=false; S.restored=true; if(S.review&&!S.review.rec) S.review.rec=recText(S.review.dispute); if(S.checks&&S.ex) S.obs=observe(S.checks,S.ex); S.fb=S.fb||{};
+    LOCALAT=o.savedAt||0; S=o.S; S.focus=false; S.sess=null; S.rechecking=false; S.restored=true; if(S.review&&!S.review.rec) S.review.rec=recText(S.review.dispute); if(S.checks&&S.ex) S.obs=observe(S.checks,S.ex); S.fb=S.fb||{};
     /* Saves from before the reviewer-note fix can hold internal events, reviewer notes and reviewer wording. Strip them on load. */
     S.events=(S.events||[]).filter(function(e){return e.audience!=="internal"&&!INTERNAL_EVENTS[e.event]}).map(function(e){ if(e.event==="ROUTED_TO_REVIEWER"&&e.note) e.note=e.note.replace(/ · AI recommendation: .*? · evidence/," · evidence"); return e; });
     var scrubEv=function(s){ return typeof s==="string"?s.replace(/ · confirmed by reviewer(: .*)?$/," · confirmed by a reviewer").replace(/ · rejected by reviewer(: .*)?$/," · rejected by a reviewer").replace(/ · reviewer asked the applicant: .*$/," · reviewer asked the applicant"):s; };
@@ -3594,13 +3575,10 @@ function accountChrome(){ syncRole(); if(ACCOUNT&&(ACCOUNT.language==='hi'||ACCO
 function loadIdentity(){
   if(!ACCOUNT) return; var uid=ACCOUNT.id;
   accountRequest('/api/me').then(function(d){ if(d&&d.user&&ACCOUNT&&ACCOUNT.id===uid){ ACCOUNT=Object.assign(ACCOUNT,d.user); accountChrome(); render(); } }).catch(function(){});
-  if(ACCOUNT.role!=='applicant') return;
-  function got(d){ if(ACCOUNT&&ACCOUNT.id===uid&&d&&d.application&&d.application.reference){ APPREF=d.application.reference; render(); } }
-  accountRequest('/api/applications/me').then(got).catch(function(){ accountRequest('/api/applications/me',{}).then(got).catch(function(){}); });
 }
 function enterAccount(user,keep){
   ACCOUNT=user;SAVEKEY='pn-onboarding-user-'+user.id;lastSynced='';consLoad();APPREF=null;NOTIFS={state:'idle',items:[],unread:0};HIST={state:'idle',items:[]};
-  stopSpeech();if(timer)clearInterval(timer);fresh();restore();CP.log=[];cpDraw();accountChrome();loadIdentity();
+  stopSpeech();if(timer)clearInterval(timer);fresh();restore();CP.log=[];cpDraw();accountChrome();loadIdentity();SYNC.ready=false;SYNC.uid=null;PROF.edit=false;PROF.done=false;if(user.role==='applicant')appBoot(user.id);
   /* Signed-in people never rest on the landing page: a deep link they opened first wins, otherwise their role's home. */
   var tv=(keep&&VIEW==='welcome'&&BOOT_TARGET&&canSee(BOOT_TARGET.v))?BOOT_TARGET:null;BOOT_TARGET=null;
   if(tv)show(tv.v,tv.stage||undefined);else if(keep&&VIEW!=='welcome')show(canSee(VIEW)?VIEW:roleOf().first,ROUTE_STAGE||undefined);else show(roleOf().first);
@@ -3611,12 +3589,12 @@ function accountRequest(path,body,retry,method){
       if(!accountRefreshing)accountRefreshing=accountRequest('/api/auth/refresh',{},false).finally(function(){accountRefreshing=null});
       return accountRefreshing.then(function(){return accountRequest(path,body,false)});
     }
-    return r.json().then(function(data){if(!r.ok)throw new Error(data.error||'Request failed');return data});
+    return r.json().then(function(data){if(!r.ok){var er=new Error(data.error||'Request failed');er.status=r.status;er.data=data;throw er}return data},function(){if(!r.ok){var er=new Error('Request failed');er.status=r.status;throw er}return {}});
   });
 }
 var accountRefreshing=null;
 function signOut(){
-  accountRequest('/api/auth/logout',{},false).then(function(){ACCOUNT=null;APPREF=null;NOTIFS={state:'signedout',items:[],unread:0};HIST={state:'idle',items:[]};CONS={sync:false,analytics:false};SAVEKEY='pn-onboarding-v1';if(timer)clearInterval(timer);fresh();CP.log=[];cpDraw();accountChrome();workspaceDialog.close();show('welcome')}).catch(function(){announce(T('ui.error'))});
+  accountRequest('/api/auth/logout',{},false).then(function(){SYNC.ready=false;SYNC.uid=null;SYNC.base=null;SYNC.st=null;SYNC.evq=[];SYNC.note='';clearTimeout(SYNC.timer);clearTimeout(SYNC.retryT);syncNoteDraw();pendingClear();ACCOUNT=null;APPREF=null;NOTIFS={state:'signedout',items:[],unread:0};HIST={state:'idle',items:[]};CONS={sync:false,analytics:false};SAVEKEY='pn-onboarding-v1';if(timer)clearInterval(timer);fresh();CP.log=[];cpDraw();accountChrome();workspaceDialog.close();show('welcome')}).catch(function(){announce(T('ui.error'))});
 }
 accountRequest('/api/auth/me',undefined,true).then(function(data){enterAccount(data.user,true)}).catch(function(){ACCOUNT=null;NOTIFS={state:'signedout',items:[],unread:0};accountChrome();render()});
 var lastSynced='',syncBusy=null;
@@ -3632,6 +3610,415 @@ function syncProgress(){
   syncBusy=accountRequest('/api/applications/me',{snapshot:snapshot}).then(function(){lastSynced=signature}).finally(function(){syncBusy=null});return syncBusy;
 }
 setInterval(function(){syncProgress().catch(function(){})},5000);
+/* ===== Lane P5: continuity (account save engine, application events, notifications, history, profile) =====
+   Server data holds only what the contract allows: allow-listed details (PAN and account as last four only), progress, document statuses.
+   Never sent: photos, OCR text, a full PAN, a full Aadhaar, a full account number. */
+var I18N_P5={en:{
+ "save.conflict":"We loaded your newer progress from another device. Your recent edits were kept on top of it.",
+ "save.retry.aria":"Retry saving your progress",
+ "sync.found.t":"We found saved progress in your account",
+ "sync.found.b":"Load it here and keep saving to your account? Photos and full ID numbers are never stored in your account, so you may be asked for a few things again.",
+ "sync.found.yes":"Load my progress","sync.found.no":"Not now",
+ "sync.loaded":"We loaded your saved progress. Photos stay on the device where you added them.",
+ "sync.reenter":"For your safety we never store your full PAN or bank account number. Please enter {what} again to continue.",
+ "sync.reenter.pan":"your PAN","sync.reenter.acct":"your bank account number","sync.reenter.mobile":"your mobile number","sync.and":" and ",
+ "sync.remote.docs":"Some documents were verified on another device. Their photos stay on that device, so if you submit from here we may ask you to add them again.",
+ "sync.dismiss":"Dismiss",
+ "nv.open":"Open","nv.read":"Mark as read","nv.bell":"Notifications","nv.bell.n":"Notifications, {n} unread","nv.list.aria":"Your notifications","nv.ref":"Reference {ref}",
+ "nv.empty":"No updates yet. We will post here when something changes.",
+ "nt.application_started":"You started your application","nt.resumed":"You came back and continued","nt.saved_exit":"Your progress was saved","nt.details_saved":"Your details are saved","nt.doc_uploaded":"A document was added",
+ "nt.doc_verified":"A document was verified","nt.doc_needs_fix":"A document needs a fix","nt.doc_refused":"A document was not accepted","nt.docs_complete":"All six documents are in","nt.verification_passed":"Verification is complete",
+ "nt.verification_followup":"We need a few things from you","nt.verification_review":"A person on our team is checking your application","nt.fixes_received":"We received your fixes","nt.training_module_done":"A training module is complete",
+ "nt.training_complete":"Training is complete. The exam is open","nt.exam_passed":"You passed the exam","nt.exam_failed":"The exam result is in. You can try again later","nt.certificate_issued":"Your certificate is ready","nt.dispute_submitted":"Your request for a person to review was sent",
+ "nt.review_approved":"A reviewer approved your application","nt.review_more_info":"A reviewer needs more information","nt.review_rejected":"A reviewer has made a decision","nt.review_in_progress":"A reviewer is looking at your application","nt.appeal_update":"There is an update on your request",
+ "tl.details_saved":"You saved your details","tl.doc_uploaded":"You added a document: {doc}","tl.doc_refused":"A document was not accepted: {doc}","tl.docs_complete":"All six documents are in","tl.exam_passed":"You passed the exam","tl.exam_failed":"Exam result: not passed this time",
+ "tl.review_approved":"A reviewer approved your application","tl.review_more_info":"A reviewer asked for more information","tl.review_rejected":"A reviewer made a decision","tl.review_in_progress":"A reviewer is looking at your application","tl.appeal_update":"There is an update on your request",
+ "hv.current":"Current status","hv.now":"Latest","hv.list.aria":"Your application history, newest first",
+ "pf.edit":"Edit profile","pf.save":"Save changes","pf.cancel":"Cancel","pf.err.sum":"Please fix the following:",
+ "pf.err.name":"Enter your name (2 to 80 characters).","pf.err.mobile":"Enter a 10-digit Indian mobile number, or leave it blank.","pf.err.city":"City can be up to 60 characters.","pf.err.state":"Choose a state from the list, or leave it blank.","pf.err.net":"We could not save your profile. Check your connection and try again.","pf.err.sess":"Please sign in to edit your profile.",
+ "pf.saved":"Your profile is updated.","pf.f.name":"Name","pf.f.mobile":"Mobile number (optional)","pf.f.mobile.keep":"Leave blank to keep {masked}","pf.f.lang":"Preferred language","pf.f.city":"City (optional)","pf.f.state":"State (optional)","pf.f.state.none":"Not set",
+ "pf.noid":"Your PAN, Aadhaar and bank details are never shown on this page.","pf.email.fixed":"Your email is your sign-in and cannot be changed here.","pf.verify.soon":"Verification of email and mobile is not available yet.","pf.place":"Where you work"
+},hi:{
+ "save.conflict":"हमने किसी दूसरे डिवाइस की नई प्रगति लोड कर ली है। आपके हाल के बदलाव उसके ऊपर रखे गए हैं।",
+ "save.retry.aria":"प्रगति फिर से सहेजने की कोशिश करें",
+ "sync.found.t":"हमें आपके खाते में सहेजी हुई प्रगति मिली",
+ "sync.found.b":"इसे यहाँ लोड करें और खाते में सहेजते रहें? फ़ोटो और पूरे पहचान नंबर आपके खाते में कभी नहीं रखे जाते, इसलिए कुछ चीज़ें दोबारा माँगी जा सकती हैं।",
+ "sync.found.yes":"मेरी प्रगति लोड करें","sync.found.no":"अभी नहीं",
+ "sync.loaded":"हमने आपकी सहेजी हुई प्रगति लोड कर ली है। फ़ोटो उसी डिवाइस पर रहती हैं जहाँ आपने उन्हें जोड़ा था।",
+ "sync.reenter":"आपकी सुरक्षा के लिए हम आपका पूरा PAN या बैंक खाता नंबर कभी नहीं रखते। आगे बढ़ने के लिए कृपया {what} फिर से भरें।",
+ "sync.reenter.pan":"अपना PAN","sync.reenter.acct":"अपना बैंक खाता नंबर","sync.reenter.mobile":"अपना मोबाइल नंबर","sync.and":" और ",
+ "sync.remote.docs":"कुछ दस्तावेज़ किसी दूसरे डिवाइस पर सत्यापित हुए थे। उनकी फ़ोटो उसी डिवाइस पर रहती हैं, इसलिए यहाँ से जमा करने पर हम उन्हें दोबारा जोड़ने को कह सकते हैं।",
+ "sync.dismiss":"बंद करें",
+ "nv.open":"खोलें","nv.read":"पढ़ा हुआ चिह्नित करें","nv.bell":"सूचनाएँ","nv.bell.n":"सूचनाएँ, {n} अपठित","nv.list.aria":"आपकी सूचनाएँ","nv.ref":"संदर्भ {ref}",
+ "nv.empty":"अभी कोई अपडेट नहीं है। कुछ बदलने पर हम यहीं बताएँगे।",
+ "nt.application_started":"आपने अपना आवेदन शुरू किया","nt.resumed":"आप लौटकर आए और आगे बढ़े","nt.saved_exit":"आपकी प्रगति सहेज ली गई","nt.details_saved":"आपका विवरण सहेज लिया गया","nt.doc_uploaded":"एक दस्तावेज़ जोड़ा गया",
+ "nt.doc_verified":"एक दस्तावेज़ सत्यापित हुआ","nt.doc_needs_fix":"एक दस्तावेज़ में सुधार चाहिए","nt.doc_refused":"एक दस्तावेज़ स्वीकार नहीं हुआ","nt.docs_complete":"छहों दस्तावेज़ जमा हो गए","nt.verification_passed":"सत्यापन पूरा हुआ",
+ "nt.verification_followup":"हमें आपसे कुछ चीज़ें चाहिए","nt.verification_review":"हमारी टीम का एक व्यक्ति आपका आवेदन देख रहा है","nt.fixes_received":"हमें आपके सुधार मिल गए","nt.training_module_done":"प्रशिक्षण का एक मॉड्यूल पूरा हुआ",
+ "nt.training_complete":"प्रशिक्षण पूरा हुआ। परीक्षा खुल गई है","nt.exam_passed":"आप परीक्षा में पास हुए","nt.exam_failed":"परीक्षा का नतीजा आ गया है। आप बाद में फिर कोशिश कर सकते हैं","nt.certificate_issued":"आपका प्रमाणपत्र तैयार है","nt.dispute_submitted":"किसी व्यक्ति से समीक्षा का आपका अनुरोध भेज दिया गया",
+ "nt.review_approved":"एक समीक्षक ने आपका आवेदन मंज़ूर किया","nt.review_more_info":"एक समीक्षक को और जानकारी चाहिए","nt.review_rejected":"एक समीक्षक ने फ़ैसला ले लिया है","nt.review_in_progress":"एक समीक्षक आपका आवेदन देख रहे हैं","nt.appeal_update":"आपके अनुरोध पर एक अपडेट है",
+ "tl.details_saved":"आपने अपना विवरण सहेजा","tl.doc_uploaded":"आपने एक दस्तावेज़ जोड़ा: {doc}","tl.doc_refused":"दस्तावेज़ स्वीकार नहीं हुआ: {doc}","tl.docs_complete":"छहों दस्तावेज़ जमा हो गए","tl.exam_passed":"आप परीक्षा में पास हुए","tl.exam_failed":"परीक्षा का नतीजा: इस बार पास नहीं हुए",
+ "tl.review_approved":"एक समीक्षक ने आपका आवेदन मंज़ूर किया","tl.review_more_info":"एक समीक्षक ने और जानकारी माँगी","tl.review_rejected":"एक समीक्षक ने फ़ैसला लिया","tl.review_in_progress":"एक समीक्षक आपका आवेदन देख रहे हैं","tl.appeal_update":"आपके अनुरोध पर एक अपडेट है",
+ "hv.current":"मौजूदा स्थिति","hv.now":"नवीनतम","hv.list.aria":"आपके आवेदन का इतिहास, सबसे नया पहले",
+ "pf.edit":"प्रोफ़ाइल बदलें","pf.save":"बदलाव सहेजें","pf.cancel":"रद्द करें","pf.err.sum":"कृपया इन्हें ठीक करें:",
+ "pf.err.name":"अपना नाम भरें (2 से 80 अक्षर)।","pf.err.mobile":"10 अंकों का भारतीय मोबाइल नंबर भरें, या खाली छोड़ दें।","pf.err.city":"शहर अधिकतम 60 अक्षरों का हो सकता है।","pf.err.state":"सूची से राज्य चुनें, या खाली छोड़ दें।","pf.err.net":"हम आपकी प्रोफ़ाइल सहेज नहीं सके। कनेक्शन जाँचकर फिर कोशिश करें।","pf.err.sess":"प्रोफ़ाइल बदलने के लिए कृपया साइन इन करें।",
+ "pf.saved":"आपकी प्रोफ़ाइल अपडेट हो गई।","pf.f.name":"नाम","pf.f.mobile":"मोबाइल नंबर (वैकल्पिक)","pf.f.mobile.keep":"{masked} रखने के लिए खाली छोड़ें","pf.f.lang":"पसंदीदा भाषा","pf.f.city":"शहर (वैकल्पिक)","pf.f.state":"राज्य (वैकल्पिक)","pf.f.state.none":"चुना नहीं गया",
+ "pf.noid":"आपका PAN, आधार और बैंक विवरण इस पेज पर कभी नहीं दिखाया जाता।","pf.email.fixed":"आपका ईमेल ही आपका साइन-इन है और यहाँ बदला नहीं जा सकता।","pf.verify.soon":"ईमेल और मोबाइल का सत्यापन अभी उपलब्ध नहीं है।","pf.place":"आप जहाँ काम करते हैं"
+}};
+Object.keys(I18N_P5.en).forEach(function(k){I18N.en[k]=I18N_P5.en[k]});
+Object.keys(I18N_P5.hi).forEach(function(k){I18N.hi[k]=I18N_P5.hi[k]});
+/* Server timeline keys (contract section 4) mapped onto applicant-safe timeline entries. */
+(function(){
+ var m={application_started:["application_created","details"],resumed:["progress_resumed",null],saved_exit:["progress_saved",null],details_saved:["details_saved","details"],doc_uploaded:["doc_uploaded","documents"],
+  doc_verified:["document_accepted","documents"],doc_needs_fix:["needs_correction","documents"],doc_refused:["doc_refused","documents"],docs_complete:["docs_complete","documents"],
+  verification_passed:["verification_completed","verification"],verification_followup:["more_info_requested","documents"],verification_review:["human_review_started","verification"],fixes_received:["fixes_received","documents"],
+  training_module_done:["training_milestone","training"],training_complete:["training_complete","training"],exam_passed:["exam_passed","exam"],exam_failed:["exam_failed","exam"],certificate_issued:["certificate_issued","certificate"],
+  dispute_submitted:["dispute_raised","verification"],review_approved:["review_approved","verification"],review_more_info:["review_more_info","documents"],review_rejected:["review_rejected","verification"],
+  review_in_progress:["review_in_progress","verification"],appeal_update:["appeal_update","verification"]};
+ Object.keys(m).forEach(function(k){ if(!M_has(TIMELINE_EVENTS,k)||k==="certificate_issued"||k==="fixes_received") TIMELINE_EVENTS[k]={k:m[k][0],stage:m[k][1]}; });
+})();
+
+/* ---- save engine ---- */
+var SYNC={ready:false,uid:null,version:0,base:null,st:null,sig:"",timer:null,retryT:null,busy:null,again:false,online:(typeof navigator==="undefined"||navigator.onLine!==false),evq:[],evBusy:null,seen:{},primed:false,masked:"",tries:0,note:"",pendingApp:null,localAt:0,hydrated:false};
+var LOCALAT=0;
+var PAN_ANY=/\b[A-Za-z]{5}\d{4}[A-Za-z]\b/;
+var LAB_RE=/^[A-Za-z0-9 _\-]{1,40}$/,SLOT_RE=/^[A-Z][A-Z0-9_]{0,23}$/,CODE_RE=/^[A-Za-z][A-Za-z0-9_\-]{0,39}$/;
+function syncOn(){ return !!(ACCOUNT&&ACCOUNT.role==="applicant"&&CONS.sync&&SYNC.ready&&SYNC.uid===ACCOUNT.id); }
+function syncSet(state,err){
+  SYNC.st={state:state,t:state==="saved"?Date.now():(SYNC.st&&SYNC.st.t)||0,err:err||""};
+  shellChrome(); if(VIEW==="dash"||VIEW==="acct") render();
+  if(state==="failed") announce(T("save.failed")); else if(state==="offline") announce(T("save.offline")); else if(state==="saved") announce(T("save.saved"));
+}
+function pDetails(){
+  var f=S.f||{},o={},b=(SYNC.base&&SYNC.base.details)||{};
+  function put(k,v,max,chk){ v=String(v==null?"":v).trim(); if(!v) return; if(v.length>max) v=v.slice(0,max); if(chk&&(PAN_ANY.test(v)||/\d{4}\s?\d{4}\s?\d{4}/.test(v)||/\d{9,18}/.test(v))) return; o[k]=v; }
+  put("name",f.name,80,1); put("dob",f.dob,10,0); put("email",f.email,254,0); put("state",f.state,40,1); put("city",f.city,60,1); put("education",f.education,40,1); put("ifsc",f.ifsc,11,1);
+  var m=String(f.mobile||"").replace(/[\s\-]/g,"").replace(/^(\+91|91|0)(?=\d{10}$)/,"");
+  if(/^[6-9]\d{9}$/.test(m)) o.mobile=m; else if(SYNC.masked&&!f.mobile) o.mobile=SYNC.masked;
+  var a4=String(f.aadhaar4||"").replace(/\D/g,""); if(a4.length===4) o.aadhaar4=a4; else if(b.aadhaar4&&!f.aadhaar4) o.aadhaar4=String(b.aadhaar4);
+  var pn=String(f.pan||"").toUpperCase().replace(/[^A-Z0-9]/g,""); if(pn.length===10) o.pan_last4=pn.slice(-4); else if(b.pan_last4&&!f.pan) o.pan_last4=String(b.pan_last4);
+  var ac=String(f.acct||"").replace(/\D/g,""); if(ac.length>=9) o.acct_last4=ac.slice(-4); else if(b.acct_last4&&!f.acct) o.acct_last4=String(b.acct_last4);
+  o.language=LANG;
+  return o;
+}
+function pProgress(){
+  var rp=null,o={}; try{ rp=resumePosition(S); }catch(e){}
+  o.stage=(S.begun&&rp&&LAB_RE.test(rp.stage))?rp.stage:"Before you start";
+  o.dpage=Math.max(0,Math.min(10,S.dpage|0)); o.doc_index=Math.max(0,Math.min(10,S.dk|0));
+  if(S.begun&&rp){
+    var r={stage:rp.stage,page:Math.max(0,Math.min(20,rp.page|0))};
+    if(rp.doc&&SLOT_RE.test(rp.doc)) r.doc=rp.doc;
+    if(rp.milestone&&LAB_RE.test(rp.milestone)) r.milestone=rp.milestone;
+    if(rp.lastAction&&LAB_RE.test(rp.lastAction)) r.action=rp.lastAction;
+    if(typeof rp.t==="number"&&rp.t>0&&rp.t<4102444800000) r.t=Math.floor(rp.t);
+    o.resume=r;
+  }
+  var docs={};
+  DOCS.forEach(function(d){
+    var st=S.docs[d.k]; if(!st) return; var s,fb=S.fb&&S.fb[d.k];
+    if(st.status==="ok") s=(fb&&(fb.fix.length||fb.stop.length))?"needs_fix":"verified"; else if(st.status==="rejected") s="rejected"; else return;
+    var iss=((fb&&fb.codes)||[]).filter(function(c){return CODE_RE.test(String(c))}).slice(0,8);
+    docs[d.k]={status:s,version:Math.max(1,Math.min(100,(st.versions&&st.versions.length)||1)),issues:iss};
+  });
+  o.documents=docs;
+  o.decision=(S.decision==="APPROVE"||S.decision==="REJECT"||S.decision==="NEEDS_MORE_INFO"||S.decision==="HUMAN_REVIEW")?S.decision:null;
+  o.round=Math.max(0,Math.min(20,S.round|0));
+  o.training={modules:S.mods.map(function(m,i){return m?"m"+(i+1):null}).filter(Boolean),hours:Math.min(15,M_hours(S))};
+  var ex={}; if(typeof S.exam.score==="number"&&S.exam.score>=0&&S.exam.score<=100) ex.score=Math.round(S.exam.score);
+  if(S.reached.EXAM_PASSED) ex.passed=true; if(typeof S.exam.retakeAt==="number"&&S.exam.retakeAt>0&&S.exam.retakeAt<4102444800000) ex.retake_at=Math.floor(S.exam.retakeAt);
+  o.exam=ex;
+  if(S.status==="CERTIFIED"&&S.posp&&CODE_RE.test(String(S.posp))){ var c={code:String(S.posp)}; var ia=Date.parse(S.issued||""); if(ia>0) c.issued_at=ia; o.certificate=c; }
+  return o;
+}
+function payloadNow(){ var d=pDetails(),p=pProgress(); return {d:d,p:p,sig:JSON.stringify([d,p])}; }
+/* Milestones derived from state (idempotent across reloads and devices: the set is primed before sending starts). */
+function evState(){
+  var o={};
+  function add(key,stage,doc,sfx){ o[key+"|"+(doc||"")+"|"+(sfx||"")]={key:key,stage:stage||"",doc:doc||""}; }
+  var vn=function(st){return "v"+((st.versions&&st.versions.length)||1)};
+  if(S.begun) add("application_started","details");
+  if(S.step>=1||S.reached.SUBMITTED) add("details_saved","details");
+  DOCS.forEach(function(d){
+    var st=S.docs[d.k]; if(!st||st.remote) return;
+    if(st.status==="ok"){ add("doc_uploaded","documents",d.k,vn(st)); var fb=S.fb&&S.fb[d.k]; if(fb) add((fb.fix.length||fb.stop.length)?"doc_needs_fix":"doc_verified","documents",d.k,vn(st)); }
+    else if(st.status==="rejected") add("doc_refused","documents",d.k,vn(st));
+  });
+  if(accepted()===6) add("docs_complete","documents");
+  if(S.reached.SUBMITTED&&!S.rechecking&&S.checks&&S.checks.length&&S.shown>=S.checks.length){
+    var D=S.decision,sx="r"+(S.round||1);
+    if(D==="APPROVE") add("verification_passed","verification",null,sx); else if(D==="NEEDS_MORE_INFO") add("verification_followup","documents",null,sx); else if(D==="HUMAN_REVIEW") add("verification_review","verification",null,sx);
+  }
+  if((S.round||1)>1) add("fixes_received","documents",null,"r"+S.round);
+  if(S.disputed) add("dispute_submitted","verification");
+  S.mods.forEach(function(m,i){ if(m) add("training_module_done","training",null,"m"+i); });
+  if(S.mods.length&&S.mods.every(Boolean)) add("training_complete","training");
+  if(S.reached.EXAM_PASSED) add("exam_passed","exam");
+  else if(typeof S.exam.score==="number"&&S.exam.score<M_EXAM_PASS) add("exam_failed","exam",null,"s"+S.exam.score+"-"+(S.exam.retakeAt||0));
+  if(S.status==="CERTIFIED") add("certificate_issued","certificate");
+  return o;
+}
+function evPrime(){ var cur=evState(); Object.keys(cur).forEach(function(id){ SYNC.seen[id]=1; }); SYNC.primed=true; }
+function evDetect(){
+  if(!SYNC.primed||!syncOn()) return;
+  var cur=evState(),n=0;
+  Object.keys(cur).forEach(function(id){ if(SYNC.seen[id]) return; SYNC.seen[id]=1; SYNC.evq.push({key:cur[id].key,stage:cur[id].stage||undefined,doc:cur[id].doc||undefined,t:Date.now()+(n++)}); });
+}
+function evFlush(){
+  if(!SYNC.evq.length||!syncOn()||!SYNC.online) return Promise.resolve();
+  if(SYNC.evBusy) return SYNC.evBusy;
+  var batch=SYNC.evq.slice(0,20),again=false;
+  SYNC.evBusy=accountRequest("/api/applications/me/events",{events:batch}).then(function(){ SYNC.evq.splice(0,batch.length); again=SYNC.evq.length>0; notifLoad(true); })
+   .catch(function(e){ if(e&&(e.status===400||e.status===403||e.status===404)) SYNC.evq.splice(0,batch.length); })
+   .then(function(){ SYNC.evBusy=null; if(again) return evFlush(); });
+  return SYNC.evBusy;
+}
+function hasTyped(){ return !!(S.begun||M_hasData(S)); }
+function syncMark(){
+  if(!ACCOUNT) return;
+  evDetect();
+  if(!syncOn()||!hasTyped()) return;
+  if(SYNC.busy){ SYNC.again=true; return; }
+  var pl=payloadNow(); if(pl.sig===SYNC.sig&&!SYNC.evq.length) return;
+  clearTimeout(SYNC.timer); SYNC.timer=setTimeout(function(){ syncFlush(); },1500);
+}
+/* Unsent details are no longer copied into a second local key (it was never read back and could outlive sign-out).
+   The consented local save of S is the offline fallback. pendingPut stays a no-op; pendingClear purges any key an older build wrote. */
+function pendingPut(pl){}
+function pendingClear(){ try{ var ks=[]; for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&k.indexOf("pn-pending-")===0) ks.push(k); } ks.forEach(function(k){ localStorage.removeItem(k); }); }catch(e){} }
+function syncFlush(){
+  clearTimeout(SYNC.timer); clearTimeout(SYNC.retryT);
+  if(!syncOn()) return Promise.resolve();
+  if(SYNC.busy){ SYNC.again=true; return SYNC.busy; }
+  evDetect();
+  var pl=payloadNow();
+  if(pl.sig===SYNC.sig||!hasTyped()){ return evFlush(); }
+  if(!SYNC.online){ pendingPut(pl); syncSet("offline"); return Promise.resolve(); }
+  syncSet("saving");
+  var sent=SYNC.version;
+  SYNC.busy=accountRequest("/api/applications/me",{version:sent,details:pl.d,progress:pl.p},undefined,"PUT").then(function(r){
+    SYNC.version=r.version; SYNC.sig=pl.sig; SYNC.tries=0; SYNC.base=Object.assign({},SYNC.base||{},{details:pl.d,progress:pl.p,version:r.version,updated_at:r.updated_at});
+    pendingClear(); syncSet("saved"); return evFlush();
+  }).catch(function(e){ return syncFail(e,pl); }).then(function(){ SYNC.busy=null; if(SYNC.again){ SYNC.again=false; syncMark(); } });
+  return SYNC.busy;
+}
+function isNetErr(e){ return !!e&&!e.status&&(e.name==="TypeError"||/Failed to fetch|NetworkError|Load failed|network/i.test(String(e.message))); }
+function syncFail(e,pl){
+  if(e&&e.status===409&&e.data&&e.data.application){ return sync409(e.data.application,pl); }
+  pendingPut(pl);
+  if(isNetErr(e)){ SYNC.online=false; syncSet("offline"); clearTimeout(SYNC.retryT); SYNC.retryT=setTimeout(function(){ SYNC.online=true; syncFlush(); },15000); return; }
+  syncSet("failed",String(e&&e.message||"error"));
+}
+/* 409: another device saved first. Adopt the newer server copy, keep only the fields edited here since the last successful save, tell the applicant. */
+function sync409(app,pl){
+  SYNC.tries++;
+  if(SYNC.tries>3){ pendingPut(pl); syncSet("failed","conflict"); return; }
+  var base=(SYNC.base&&SYNC.base.details)||{},keep={};
+  Object.keys(pl.d).forEach(function(k){ if(k!=="language"&&pl.d[k]!==base[k]) keep[k]=1; });
+  var fromRemote=!SYNC.base||!SYNC.base.updated_at||app.updated_at>=SYNC.base.updated_at;
+  if(fromRemote) applyRemote(app,{merge:true,keep:keep});
+  SYNC.version=app.version; if(fromRemote){ SYNC.base=app; syncNote(T("save.conflict")); }
+  SYNC.sig=""; SYNC.again=true;
+  render();
+}
+function syncNote(msg){ SYNC.note=msg; syncNoteDraw(); if(msg) announce(msg); }
+function syncNoteDraw(){
+  var el=$("syncnote"); if(!el) return;
+  if(!SYNC.note){ el.hidden=true; el.innerHTML=""; return; }
+  el.innerHTML='<span>'+esc(SYNC.note)+'</span><button class="btn sm" type="button" data-act="sync-note-x">'+TE("sync.dismiss")+'</button>'; el.hidden=false;
+}
+window.addEventListener("online",function(){ SYNC.online=true; clearTimeout(SYNC.retryT); if(ACCOUNT){ syncFlush(); notifLoad(true); } });
+window.addEventListener("offline",function(){ SYNC.online=false; if(syncOn()&&SYNC.st&&SYNC.st.state!=="saved"){ syncSet("offline"); } });
+document.addEventListener("visibilitychange",function(){ if(document.hidden&&syncOn()) syncFlush(); });
+document.addEventListener("input",function(){ setTimeout(syncMark,0); },true);
+document.addEventListener("change",function(){ setTimeout(syncMark,0); },true);
+
+/* ---- hydrate (sign-in, new device, 409 merge) ---- */
+function stageIdx(k){ for(var i=0;i<STAGES.length;i++) if(STAGES[i].k===k) return STAGES[i].step; return -1; }
+function appHasData(app){
+  var p=(app&&app.progress)||{},d=(app&&app.details)||{};
+  return !!((p.stage&&p.stage!=="Before you start")||Object.keys(d).some(function(k){return k!=="language"&&d[k]}));
+}
+function remoteDoc(slot,v){
+  var ok=v.status==="verified"; S.docs[slot]=ok?{status:"ok",file:true,name:"Added on another device",url:null,ocr:null,remote:true,versions:[]}:
+   {status:"rejected",file:true,name:"Added on another device",url:null,ocr:null,reason:"This document needs to be added again. Photos stay on the device where they were taken.",remote:true,versions:[]};
+  S.fb[slot]={good:[],fix:[],stop:[],human:[],later:[],codes:Array.isArray(v.issues)?v.issues.slice(0,8):[]};
+}
+function applyRemote(app,o){
+  o=o||{}; var d=app.details||{},p=app.progress||{},keep=o.keep||{},merge=!!o.merge,f=S.f;
+  ["name","dob","email","state","city","education","ifsc","aadhaar4"].forEach(function(k){ if(M_has(keep,k)) return; if(d[k]!=null&&d[k]!=="") f[k]=String(d[k]); else if(!merge) f[k]=""; });
+  if(d.mobile&&String(d.mobile).indexOf("•")>=0) SYNC.masked=String(d.mobile); else if(d.mobile&&!M_has(keep,"mobile")) f.mobile=String(d.mobile);
+  var si=stageIdx(p.stage||(p.resume&&p.resume.stage)),started=si>=0&&p.stage!=="Before you start";
+  var ahead=!merge||(started&&si>S.step)||!S.begun;
+  if(started&&ahead){ S.begun=true; S.step=si; S.dpage=Math.max(0,Math.min(3,p.dpage|0)); S.dk=Math.max(0,Math.min(5,p.doc_index|0)); S.restored=true; }
+  if(started&&si>=1&&!M_has(keep,"consent")) f.consent=true;
+  var docs=p.documents||{};
+  Object.keys(docs).forEach(function(k){ if(M_DOC_KEYS.indexOf(k)<0) return; var cur=S.docs[k]; if(cur&&cur.status==="ok"&&!cur.remote) return; if(merge&&cur&&!cur.remote&&cur.status!=="ok"&&docs[k].status==="verified"){ /* keep the local retry */ } remoteDoc(k,docs[k]); });
+  if(started&&ahead){
+    var dec=p.decision||null; S.decision=dec; S.round=Math.max(1,p.round|0||1);
+    var map={APPROVE:"KYC_APPROVED",NEEDS_MORE_INFO:"NEEDS_MORE_INFO",REJECT:"REJECTED",HUMAN_REVIEW:"HUMAN_REVIEW"};
+    if(dec){ S.reached.SUBMITTED=1; setState(map[dec]); }
+    if(dec==="NEEDS_MORE_INFO"){
+      var bad=Object.keys(docs).filter(function(k){return docs[k].status!=="verified"&&M_DOC_KEYS.indexOf(k)>=0}); if(!bad.length) bad=["PAN"];
+      S.fu={items:bad.map(function(k){return {key:k,code:"REUPLOAD",en:"Please add this document again on this device so we can re-check it.",hi:"कृपया इस दस्तावेज़ को इस डिवाइस पर फिर से जोड़ें ताकि हम इसे दोबारा जाँच सकें।"}}),round:S.round};
+    }
+    if(dec==="REJECT") S.rej=[{en:"The reasons were shown on the device where you applied. They are not kept in your account.",hi:"कारण उसी डिवाइस पर दिखाए गए थे जहाँ आपने आवेदन किया था। वे आपके खाते में नहीं रखे जाते।",code:"REMOTE"}];
+    var mods=(p.training&&p.training.modules)||[];
+    mods.forEach(function(m){ var i=Number(String(m).replace(/\D/g,""))-1; if(i>=0&&i<S.mods.length) S.mods[i]=true; });
+    if(S.mods.some(Boolean)&&dec==="APPROVE") setState("TRAINING_IN_PROGRESS");
+    if(S.mods.every(Boolean)) setState("TRAINING_COMPLETED");
+    var ex=p.exam||{}; if(typeof ex.score==="number") S.exam.score=ex.score; if(typeof ex.retake_at==="number") S.exam.retakeAt=ex.retake_at;
+    if(ex.passed) setState("EXAM_PASSED");
+    if(p.certificate&&p.certificate.code){ S.posp=p.certificate.code; S.issued=p.certificate.issued_at?new Date(p.certificate.issued_at).toISOString().slice(0,10):new Date().toISOString().slice(0,10); setState("CERTIFIED"); }
+  }
+  S.remoteDocs=Object.keys(S.docs).some(function(k){return S.docs[k]&&S.docs[k].remote});
+  /* Full PAN, bank account and the mobile number are never returned in full, so they are asked for again. */
+  var need=[]; if(!f.pan) need.push("pan"); if(!f.acct) need.push("acct"); if(!f.mobile) need.push("mobile");
+  S.reenter=(started&&S.step<=1)?need:[];
+  if(started&&S.step===1&&need.length){ S.step=0; var pg=0; DPAGES.forEach(function(P,i){ if(!pg&&P.f.some(function(x){return need.indexOf(x)>=0})) pg=i; }); S.dpage=pg; }
+}
+function reenterNote(){
+  var r=S.reenter||[]; if(!r.length||!S.begun||S.step>1) return "";
+  var parts=r.map(function(k){return T("sync.reenter."+k)});
+  return '<div class="note" role="status"><span>'+esc(T("sync.reenter",{what:parts.join(T("sync.and"))}))+'</span></div>';
+}
+function remoteDocsNote(){ return (S.remoteDocs&&S.step<=2)?'<div class="note" role="status"><span>'+TE("sync.remote.docs")+'</span></div>':""; }
+function syncStart(hydrated){
+  SYNC.ready=true; SYNC.hydrated=!!hydrated;
+  SYNC.sig=hydrated?payloadNow().sig:"";
+  evPrime();
+  if(hydrated&&S.begun) SYNC.evq.push({key:"resumed",t:Date.now()});
+  SYNC.st=hydrated?{state:"saved",t:((SYNC.base&&SYNC.base.updated_at)||0)*1000,err:""}:{state:"idle",t:0,err:""};
+  render(); syncMark();
+}
+function appBoot(uid){
+  SYNC.ready=false; SYNC.uid=uid; SYNC.primed=false; SYNC.seen={}; SYNC.evq=[]; SYNC.st=null; SYNC.masked=""; SYNC.tries=0; SYNC.note=""; syncNoteDraw();
+  return accountRequest("/api/applications/me").catch(function(e){ if(e&&e.status===404) return accountRequest("/api/applications/me",{}); throw e; }).then(function(d){
+    if(!ACCOUNT||ACCOUNT.id!==uid||!d||!d.application) return;
+    notifLoad(true);
+    var app=d.application; APPREF=app.reference; SYNC.base=app; SYNC.version=app.version;
+    if(app.details&&app.details.mobile&&String(app.details.mobile).indexOf("•")>=0) SYNC.masked=String(app.details.mobile);
+    var remoteHas=appHasData(app),localHas=!!(S.begun||M_hasData(S));
+    if(!remoteHas){ if(CONS.sync) syncStart(false); else render(); return; }
+    if(!localHas){
+      if(CONS.sync){ applyRemote(app); syncNote(T("sync.loaded")); syncStart(true); }
+      else { SYNC.pendingApp=app; showModal(T("sync.found.t"),T("sync.found.b"),[[T("sync.found.yes"),"m-sync-yes",1],[T("sync.found.no"),"m-sync-no"]]); render(); }
+      return;
+    }
+    if(!CONS.sync){ render(); return; }
+    /* Fields typed here that differ from the server copy. If the server copy is clearly newer (more than 5 min, to allow for clock skew)
+       it wins and only a real difference raises the banner; otherwise this device is the newer one and its edits are kept and pushed. */
+    var loc=payloadNow().d,srv=app.details||{},diff={};
+    Object.keys(loc).forEach(function(k){ if(k==="language"||loc[k]==null||loc[k]==="") return; if(String(srv[k]==null?"":srv[k]).indexOf("•")>=0) return; if(String(loc[k])!==String(srv[k]==null?"":srv[k])) diff[k]=1; });
+    var srvNewer=app.updated_at*1000>(LOCALAT||0)+300000;
+    if(srvNewer){ applyRemote(app,{merge:true,keep:{}}); if(Object.keys(diff).length) syncNote(T("save.conflict")); syncStart(true); }
+    else { if(Object.keys(diff).length){ applyRemote(app,{merge:true,keep:diff}); syncStart(false); } else syncStart(true); }
+  }).catch(function(){ render(); });
+}
+function syncAccept(){ var app=SYNC.pendingApp; SYNC.pendingApp=null; if(!app||!ACCOUNT) return; CONS.sync=true; consSave(); applyRemote(app); syncNote(T("sync.loaded")); syncStart(true); show(roleOf().first); }
+function syncDecline(){ SYNC.pendingApp=null; }
+/* Turning sync on later (Profile, or the first sign-in choice): same boot, so nothing is overwritten before the server copy is read. */
+function syncEnable(){ if(ACCOUNT&&ACCOUNT.role==="applicant"&&!SYNC.ready) appBoot(ACCOUNT.id); else syncMark(); }
+
+/* ---- notifications ---- */
+var NT_ICON={success:"check",action:"alert",info:"clock"};
+function ntText(n){
+  var k="nt."+(n.key||""); if(!M_has(I18N.en,k)) k="nt.status_changed";
+  return T(k);
+}
+function goHash(h){ h=String(h||""); if(h==="#home") h="#dashboard"; if(!/^#[a-z]{3,20}$/.test(h)) return; location.hash=h; }
+function notifRow(n){
+  var unread=!n.read,ic=NT_ICON[n.type]||"clock",doc=(n.doc&&M_DOC_KEYS.indexOf(n.doc)>=0)?T("doc."+n.doc):"";
+  var meta=[M_fmtClock((n.created_at||0)*1000,LANG)]; if(doc) meta.unshift(doc); if(n.reference) meta.push(T("nv.ref",{ref:n.reference}));
+  var acts=(n.action?'<button class="btn sm" type="button" data-act="notif-open" data-nid="'+n.id+'" data-nhash="'+esc(n.action)+'">'+TE("nv.open")+'</button>':'')+(unread?'<button class="btn sm" type="button" data-act="notif-read" data-nid="'+n.id+'">'+TE("nv.read")+'</button>':'');
+  return '<li class="nrow'+(unread?" unread":"")+' t-'+esc(n.type||"info")+'"><span class="nic" aria-hidden="true">'+svgi(ic)+'</span><div><b>'+(unread?'<span class="sr-only">'+TE("ui.new")+': </span>':'')+esc(ntText(n))+'</b><small class="muted">'+esc(meta.join(" · "))+'</small>'+(acts?'<span class="nacts">'+acts+'</span>':'')+'</div>'+(unread?'<span class="chip o" aria-hidden="true">'+TE("ui.new")+'</span>':'')+'</li>';
+}
+function notifBody(limit){
+  if(!ACCOUNT) return '<p class="small muted">'+TE(limit?"dash.updates.signin":"nv.signin")+'</p>'+(limit?'':'<button class="btn" type="button" data-act="open-signin">'+TE("un.signin")+'</button>');
+  if(NOTIFS.state==="idle"||NOTIFS.state==="loading") return '<p class="small muted" role="status">'+TE("dash.updates.loading")+'</p>';
+  if(NOTIFS.state==="error") return '<p class="small muted">'+TE("dash.updates.error")+'</p><button class="btn sm" type="button" data-act="notif-retry">'+TE("dash.updates.retry")+'</button>';
+  if(!NOTIFS.items.length) return '<p class="small muted">'+TE("nv.empty")+'</p>';
+  return '<ul class="nlist" aria-label="'+TE("nv.list.aria")+'">'+NOTIFS.items.slice(0,limit||50).map(notifRow).join("")+'</ul>';
+}
+function notifMarkRead(ids){
+  var all=ids===true;
+  return accountRequest("/api/notifications/read",all?{all:true}:{ids:ids}).then(function(r){
+    NOTIFS.items.forEach(function(n){ if(all||ids.indexOf(n.id)>=0) n.read=true; });
+    NOTIFS.unread=r&&typeof r.unread==="number"?r.unread:NOTIFS.items.filter(function(n){return !n.read}).length; render();
+  }).catch(function(){ announce(T("ui.error")); });
+}
+function bellHtml(){
+  if(!ACCOUNT) return "";
+  var n=NOTIFS.unread||0;
+  return '<button class="iconbtn bell" type="button" data-view="notif" aria-label="'+esc(n?T("nv.bell.n",{n:n}):T("nv.bell"))+'"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 11V7a4 4 0 0 1 8 0v4l1 1.5H3zM6.5 14h3"/></svg>'+(n?'<span class="bdg" aria-hidden="true">'+(n>9?"9+":n)+'</span>':'')+'</button>';
+}
+setInterval(function(){ if(ACCOUNT&&!document.hidden&&(NOTIFS.state==="ok"||NOTIFS.state==="idle")&&SYNC.online) notifLoad(true); },60000);
+
+/* ---- history ---- */
+function renderHist(){
+  var items=applicantTimeline(ACCOUNT&&HIST.state==="ok"&&HIST.items.length?HIST.items:S.events).slice().reverse(),body;
+  if(ACCOUNT&&(HIST.state==="loading"||HIST.state==="idle")) body='<p class="small muted" role="status">'+TE("state.loading")+'</p>';
+  else if(ACCOUNT&&HIST.state==="error"&&!items.length) body='<p class="small muted">'+TE("state.error")+'</p><button class="btn sm" type="button" data-act="hist-retry">'+TE("state.retry")+'</button>';
+  else if(!items.length) body='<p class="small muted">'+TE("hv.empty")+'</p>';
+  else body='<ol class="tlist" aria-label="'+TE("hv.list.aria")+'">'+items.map(function(e,i){
+    return '<li'+(i===0?' class="cur" aria-current="true"':'')+'><span class="nic" aria-hidden="true">'+svgi(i===0?"check":"clock")+'</span><div><b>'+esc(T(e.key,e.params))+(i===0?' <span class="chip o">'+TE("hv.now")+'</span>':'')+'</b><small class="muted">'+esc(T("actor."+e.actor))+(e.t?" · "+esc(M_fmtClock(e.t,LANG)):"")+'</small></div></li>'}).join("")+'</ol>';
+  setHtml($("view-hist"),'<div class="panel narrow"><div class="head"><h1>'+TE("hv.title")+'</h1><p>'+TE("hv.sub")+'</p></div>'+
+    '<p class="curstat"><span class="small muted">'+TE("hv.current")+'</span> '+stBadge(statusOf(S))+'</p>'+(ACCOUNT?'':'<p class="small muted">'+TE("av.notsigned")+'</p>')+body+'</div>');
+}
+
+/* ---- profile ---- */
+var PROF={edit:false,errs:[],busy:false,done:false,force:false};
+function renderAcct(){
+  if(PROF.edit&&$("prof-form")&&!PROF.force) return; PROF.force=false;
+  var v=verif(),r=effRole()==="all"?"applicant":effRole(),na=T("av.na");
+  function row(k,val,ok){ return '<div class="arow"><dt>'+TE(k)+'</dt><dd>'+val+(ok===undefined?'':' '+vchip(ok,k==="acct.email"?"ver.email":"ver.mobile"))+'</dd></div>'; }
+  var h='<div class="panel narrow"><div class="head"><h1>'+TE("av.title")+'</h1><p>'+TE("av.sub")+'</p></div>'+(ACCOUNT?'':'<div class="note" role="status"><span>'+TE("av.notsigned")+'</span><button class="btn sm" type="button" data-act="open-signin">'+TE("un.signin")+'</button></div>');
+  if(PROF.done&&!PROF.edit) h+='<p class="okmsg" role="status">'+TE("pf.saved")+'</p>';
+  if(ACCOUNT&&PROF.edit){
+    var e=PROF.errs,bad=function(id){return e.some(function(x){return x[0]===id})};
+    h+='<form id="prof-form" class="box pform" novalidate><h2 id="pf-eh">'+TE("pf.edit")+'</h2>'+
+     '<div class="errsum" id="pf-errors" role="alert" tabindex="-1"'+(e.length?'':' hidden')+'>'+(e.length?TE("pf.err.sum")+'<ul>'+e.map(function(x){return '<li><a href="#'+x[0]+'" data-focus="'+x[0]+'">'+TE(x[1])+'</a></li>'}).join("")+'</ul>':'')+'</div>'+
+     '<label for="pf-name">'+TE("pf.f.name")+'</label><input id="pf-name" type="text" autocomplete="name" maxlength="80" value="'+esc(ACCOUNT.display_name||"")+'" required'+(bad("pf-name")?' aria-invalid="true" aria-describedby="pf-errors"':'')+'>'+
+     '<label for="pf-mobile">'+TE("pf.f.mobile")+'</label><input id="pf-mobile" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" value="" placeholder="'+(ACCOUNT.mobile_masked?esc(T("pf.f.mobile.keep",{masked:ACCOUNT.mobile_masked})):"")+'"'+(bad("pf-mobile")?' aria-invalid="true" aria-describedby="pf-errors"':'')+'>'+
+     '<label for="pf-lang">'+TE("pf.f.lang")+'</label><select id="pf-lang"><option value="en"'+(LANG==="en"?" selected":"")+'>'+TE("lang.en")+'</option><option value="hi"'+(LANG==="hi"?" selected":"")+'>'+TE("lang.hi")+'</option></select>'+
+     (ACCOUNT.role==="applicant"?'<p class="small muted">'+TE("pf.place")+'</p><label for="pf-city">'+TE("pf.f.city")+'</label><input id="pf-city" type="text" autocomplete="address-level2" maxlength="60" value="'+esc(S.f.city||"")+'"'+(bad("pf-city")?' aria-invalid="true" aria-describedby="pf-errors"':'')+'>'+
+      '<label for="pf-state">'+TE("pf.f.state")+'</label><select id="pf-state"><option value="">'+TE("pf.f.state.none")+'</option>'+INDIA_STATES.filter(function(s){return s!=="Orissa"}).map(function(s){return '<option'+(S.f.state===s?" selected":"")+'>'+esc(s)+'</option>'}).join("")+'</select>':'')+
+     '<p class="small muted">'+TE("pf.email.fixed")+'</p><div class="actions"><button class="btn pri" type="submit"'+(PROF.busy?' disabled':'')+'>'+TE("pf.save")+'</button><button class="btn" type="button" data-act="prof-cancel">'+TE("pf.cancel")+'</button></div></form>';
+  }
+  h+='<dl class="adl">'+row("acct.name",esc(dispName()||na))+row("acct.email",esc(ACCOUNT&&ACCOUNT.email?ACCOUNT.email:na),v.e)+row("acct.mobile",esc(ACCOUNT&&ACCOUNT.mobile_masked?ACCOUNT.mobile_masked:na),v.m)+
+    row("acct.language",TE("lang."+LANG))+(ACCOUNT&&ACCOUNT.role==="applicant"?row("pf.f.city",esc(S.f.city||na))+row("pf.f.state",esc(S.f.state||na)):"")+
+    row("ref.label",'<span class="mono">'+esc(refText())+'</span>'+(APPREF?'':' <span class="small muted">('+TE("ref.local")+')</span>'))+row("acct.status",stBadge(statusOf(S)))+row("acct.last_saved",esc(saveInfo().text))+'<div class="arow"><dt>'+TE("av.role")+'</dt><dd>'+TE("role."+r)+'</dd></div></dl>'+
+    (ACCOUNT&&!PROF.edit?'<div class="actions"><button class="btn" type="button" data-act="prof-edit">'+TE("pf.edit")+'</button></div>':'')+
+    '<p class="small muted">'+TE("pf.verify.soon")+' '+TE("pf.noid")+'</p>'+choicesHtml()+'</div>';
+  setHtml($("view-acct"),h);
+}
+function profSubmit(){
+  var name=$("pf-name").value.trim(),mob=$("pf-mobile").value.replace(/[\s\-]/g,"").replace(/^(\+91|91|0)(?=\d{10}$)/,""),lang=$("pf-lang").value==="hi"?"hi":"en",city=$("pf-city")?$("pf-city").value.trim():null,st=$("pf-state")?$("pf-state").value:null,errs=[];
+  if(name.length<2||name.length>80) errs.push(["pf-name","pf.err.name"]);
+  if(mob&&!/^[6-9]\d{9}$/.test(mob)) errs.push(["pf-mobile","pf.err.mobile"]);
+  if(city!==null&&city.length>60) errs.push(["pf-city","pf.err.city"]);
+  if(st&&INDIA_STATES.indexOf(st)<0) errs.push(["pf-state","pf.err.state"]);
+  if(errs.length){ PROF.errs=errs; PROF.force=true; renderAcct(); var eb=$("pf-errors"); if(eb) eb.focus(); return; }
+  var body={display_name:name,language:lang}; if(mob) body.mobile=mob;
+  PROF.busy=true; PROF.errs=[];
+  accountRequest("/api/me",body,undefined,"PATCH").then(function(d){
+    if(d&&d.user&&ACCOUNT) ACCOUNT=Object.assign(ACCOUNT,d.user);
+    if(city!==null){ S.f.city=city; S.f.state=st||""; }
+    PROF.edit=false; PROF.done=true; PROF.busy=false; PROF.force=true;
+    if(lang!==LANG) setLang(lang,false);
+    accountChrome(); render(); syncMark(); announce(T("pf.saved"));
+  }).catch(function(e){ PROF.busy=false; PROF.errs=[e&&e.message==="invalid_mobile"?["pf-mobile","pf.err.mobile"]:e&&e.message==="invalid_display_name"?["pf-name","pf.err.name"]:[null,e&&e.status===401?"pf.err.sess":"pf.err.net"]]; PROF.force=true; renderAcct(); var eb=$("pf-errors"); if(eb) eb.focus(); });
+}
+document.addEventListener("submit",function(e){ if(e.target&&e.target.id==="prof-form"){ e.preventDefault(); profSubmit(); } });
+document.addEventListener("click",function(e){ var a=e.target&&e.target.closest?e.target.closest("[data-focus]"):null; if(a&&a.closest&&a.closest("#pf-errors")){ e.preventDefault(); var el=$(a.getAttribute("data-focus")); if(el) el.focus(); } });
+/* Click actions for this lane. Returns true when handled. */
+function p5Click(t,a){
+  if(a==="save-retry"){ SYNC.tries=0; SYNC.online=true; syncFlush(); return true; }
+  if(a==="sync-note-x"){ syncNote(""); return true; }
+  if(a==="notif-read"){ notifMarkRead([Number(t.getAttribute("data-nid"))]); return true; }
+  if(a==="notif-open"){ var id=Number(t.getAttribute("data-nid")),h=t.getAttribute("data-nhash"); notifMarkRead([id]).then(function(){ goHash(h); }); return true; }
+  if(a==="prof-edit"){ PROF.edit=true; PROF.errs=[]; PROF.done=false; PROF.force=true; renderAcct(); var f=$("pf-name"); if(f) f.focus(); return true; }
+  if(a==="prof-cancel"){ PROF.edit=false; PROF.errs=[]; PROF.force=true; renderAcct(); return true; }
+  return false;
+}
 var workspaceDialog=document.createElement('dialog');workspaceDialog.setAttribute('aria-labelledby','workspace-heading');
 workspaceDialog.innerHTML='<div class="mbox"><h2 id="workspace-heading">Account workspace</h2><p class="small muted">Account records are separate from the synthetic demo console. Only document statuses and issue codes are synced.</p><div id="workspace-body"></div><div class="actions"><button class="btn" id="workspace-refresh" type="button">Refresh</button><button class="btn" id="workspace-close" type="button">Close</button></div></div>';
 document.body.appendChild(workspaceDialog);
@@ -3677,7 +4064,7 @@ if(window.webVitals){window.webVitals.onLCP(function(m){performanceMetric('lcp',
 document.addEventListener('change',function(e){
   var t=e.target,c=t&&t.getAttribute?t.getAttribute('data-consent'):null; if(!c||!(c in CONS)) return;
   CONS[c]=!!t.checked; consSave();
-  if(c==='sync'){ lastSynced=''; if(CONS.sync) syncProgress().catch(function(){announce(T('ui.error'))}); }
+  if(c==='sync'){ lastSynced=''; if(CONS.sync){ syncProgress().catch(function(){announce(T('ui.error'))}); syncEnable(); } }
   else if(CONS.analytics){ var navigation=performance.getEntriesByType('navigation')[0]; if(navigation) performanceMetric('load',navigation.loadEventEnd||navigation.domContentLoadedEventEnd); }
   else performanceQueue=[];
 });
