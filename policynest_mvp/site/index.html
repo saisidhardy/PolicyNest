@@ -2321,7 +2321,7 @@ function nextStepText(){
 /* ---------- Onboarding Copilot: live app state + rulebook retrieval (BM25) + Claude through a key-holding proxy ---------- */
 var COPILOT_URL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'http://localhost:8787':"https://policynest-copilot.embarko.app";
 var CP={log:[],kb:null,idf:null,llm:null,busy:false,seen:{},idleT:null};
-function cpOpen(on){ var p=$("cp"),f=$("cp-fab"); p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a","Hi "+fname()+". I can see where you are and what each document needs. "+nextStepText()); cpDraw(); setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else f.focus(); }
+function cpOpen(on,focusQuestion){ var p=$("cp"),f=$("cp-fab");clearTimeout(CP.focusT);p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a","Hi "+fname()+". I can see where you are and what each document needs. "+nextStepText()); cpDraw(); if(focusQuestion!==false)CP.focusT=setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else f.focus(); }
 function cpPush(who,text,meta){ CP.log.push({who:who,text:text,meta:meta||""}); if(CP.log.length>40) CP.log.shift(); cpDraw(); }
 function cpDraw(){ var l=$("cp-log"); if(!l) return; l.innerHTML=CP.log.map(function(m){return '<div class="cp-m '+m.who+'">'+esc(m.text)+(m.meta?'<small>'+esc(m.meta)+'</small>':'')+'</div>'}).join(""); l.scrollTop=l.scrollHeight;
   var md=$("cp-mode"); if(md) md.textContent=CP.llm?"AI + rulebook":"Rulebook answers"; }
@@ -2530,7 +2530,7 @@ function guideTarget(){
   return root.querySelector('.actions button:not([disabled]), button.btn:not([disabled])');
 }
 $('guide-next').addEventListener('click',function(){
-  show('apply');cpOpen(true);var target=guideTarget();
+  show('apply');cpOpen(true,false);var target=guideTarget();
   $('guide-status').textContent=guidanceText();
   if(target){target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});target.style.outline='3px solid var(--brand)';target.style.outlineOffset='5px';target.setAttribute('tabindex','0');target.focus({preventScroll:true});setTimeout(function(){target.style.outline='';target.style.outlineOffset=''},5000)}
 });
