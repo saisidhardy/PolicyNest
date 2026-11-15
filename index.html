@@ -551,7 +551,7 @@ var S; var timer=null;
 var DEMO=/[?&]demo=1\b/.test(location.search);
 /* A new application starts empty: no person's name, no consent (FR-01). */
 var BLANK={name:"",dob:"",mobile:"",email:"",pan:"",aadhaar4:"",state:"",city:"",acct:"",ifsc:"",education:"",consent:false};
-function fresh(){ S={step:0,appId:"PN-2026-"+String(Math.floor(10000+Math.random()*89999)),f:Object.assign({},BLANK),isSample:false,consentAt:null,demoOpen:undefined,errs:{},docs:{},ex:null,checks:[],obs:{},shown:0,decision:null,ttd:null,events:[],status:"DRAFT",reached:{DRAFT:1},mods:MODULES.map(function(){return false}),exam:{ans:{},score:null},started:Date.now(),posp:null,round:1,rounds:[],changed:{},lang:"en",followups:0,fu:null,rej:null,specv:{},rechecking:false,touches:0,review:null,disputed:false,begun:false,saveOK:false,focus:false,sess:null,sittings:0,exits:0,dpage:0,dk:0,fb:{},restored:false}; }
+function fresh(){ S={step:0,faceRun:0,faceApproved:null,appId:"PN-2026-"+String(Math.floor(10000+Math.random()*89999)),f:Object.assign({},BLANK),isSample:false,consentAt:null,demoOpen:undefined,errs:{},docs:{},ex:null,checks:[],obs:{},shown:0,decision:null,ttd:null,events:[],status:"DRAFT",reached:{DRAFT:1},mods:MODULES.map(function(){return false}),exam:{ans:{},score:null},started:Date.now(),posp:null,round:1,rounds:[],changed:{},lang:"en",followups:0,fu:null,rej:null,specv:{},rechecking:false,touches:0,review:null,disputed:false,begun:false,saveOK:false,focus:false,sess:null,sittings:0,exits:0,dpage:0,dk:0,fb:{},restored:false}; }
 fresh();
 
 function $(id){return document.getElementById(id)}
@@ -1497,7 +1497,7 @@ function finishDecision(t0){
     log("FOLLOWUP_SENT","SYSTEM","Round "+S.round+" · one consolidated message · "+items.length+" item"+(items.length>1?"s":"")+" ("+items.map(function(i){return DOC_LABEL[i.key]?DOC_LABEL[i.key][0]+": "+i.code:i.code}).join("; ")+") · WhatsApp and SMS, English and Hindi (simulated send)");
   }
   else if(S.decision==="REJECT"){ setState("REJECTED"); S.rej=rejectReasons(S.checks,S.ex); log("DECISION","SYSTEM","Decision REJECT · "+codes.filter(function(c){return S.rej.some(function(r){return r.code===c})}).join(", ")+" · "+(S.touches>0?"decided by a person":"rule-based, decided automatically")+" · applicant told in plain words"); }
-  else { setState("HUMAN_REVIEW"); openReview(false); log("ROUTED_TO_REVIEWER","SYSTEM","Decision HUMAN_REVIEW · "+codes.join(", ")+" · evidence laid out side by side in the review console"); log("ROUTED_TO_REVIEWER_DETAIL","SYSTEM","Internal: AI recommendation: "+S.review.rec); }
+  else { setState("HUMAN_REVIEW"); openReview(false); log("ROUTED_TO_REVIEWER","SYSTEM","Decision HUMAN_REVIEW · "+codes.map(function(x){return x==="FACE_MATCH_LOW_REPEAT"?"FACE_MATCH_LOW":x}).join(", ")+" · evidence laid out side by side in the review console"); log("ROUTED_TO_REVIEWER_DETAIL","SYSTEM","Internal: AI recommendation: "+S.review.rec); }
   S.rounds.push(rec);
 }
 function animate(t0){
@@ -1615,7 +1615,7 @@ var ASK={
  FACE_MATCH_BORDERLINE:function(){return {key:"SELFIE",en:"We need a clearer selfie to match with the photo on your PAN card. Please take a fresh selfie in good light, facing the camera, with nothing covering your face.",hi:"पैन कार्ड की फ़ोटो से मिलान के लिए हमें आपकी एक और साफ़ सेल्फ़ी चाहिए। कृपया अच्छी रोशनी में, कैमरे की ओर देखते हुए, चेहरा बिना ढके नई सेल्फ़ी लें।"}},
  FACE_MATCH_LOW_REPEAT:function(){return {key:"SELFIE",en:"We need a clearer selfie to match with the photo on your PAN card. Please take a fresh selfie in good light, facing the camera, with nothing covering your face.",hi:"पैन कार्ड की फ़ोटो से मिलान के लिए हमें आपकी एक और साफ़ सेल्फ़ी चाहिए। कृपया अच्छी रोशनी में, कैमरे की ओर देखते हुए, चेहरा बिना ढके नई सेल्फ़ी लें।"}},
  BOARD_UNLISTED:function(){return {key:"CLASS10",en:"We could not confirm the board on your Class 10 marksheet. Please upload your Class 10 pass certificate, or a marksheet from a state board, CBSE, CISCE or NIOS.",hi:"हम आपकी कक्षा 10 की मार्कशीट के बोर्ड की पुष्टि नहीं कर पाए। कृपया अपना कक्षा 10 उत्तीर्ण प्रमाणपत्र, या किसी राज्य बोर्ड, CBSE, CISCE या NIOS की मार्कशीट अपलोड करें।"}}};
-var REC={FACE_MATCH_LOW_REPEAT:"compare the photos; the selfie scored below 0.60 twice in a row (rulebook §4.6), referred internally to the fraud desk",NAME_MISMATCH:"REJECT (a different person's name; never auto-rejected)",SURNAME_CHANGE:"ask for a marriage certificate or gazette notification",FACE_MATCH_BORDERLINE:"compare the photos; ask for a fresh selfie if unsure",BOARD_UNLISTED:"check whether the board is recognised"};
+var REC={FACE_MATCH_LOW_REPEAT:"compare the photos; the selfie scored below 0.60 twice in a row (rulebook §4.6)",NAME_MISMATCH:"REJECT (a different person's name; never auto-rejected)",SURNAME_CHANGE:"ask for a marriage certificate or gazette notification",FACE_MATCH_BORDERLINE:"compare the photos; ask for a fresh selfie if unsure",BOARD_UNLISTED:"check whether the board is recognised"};
 /* ---------- Rulebook §4.6 and §7: two selfie failures in a row go to a person (FR-31) ----------
    Counted OUTSIDE the engine block, so the pinned engine hash and the evaluation are unchanged.
    S.faceRun is the number of consecutive selfie scores below 0.60 for this application, across rounds. */
@@ -1628,17 +1628,22 @@ function nextFaceRun(prevRun,score,selfieIsNew){
 }
 function faceRepeatRule(selfieIsNew){
   var score=S.ex&&S.ex.face; if(score==null) return;
+  var c=S.checks.filter(function(k){return k.doc==="Selfie"&&/Face match/.test(k.label)})[0];
+  if(selfieIsNew) S.faceApproved=null;
+  /* A person's approval stands while the same selfie is carried over (GR-5): no new count, no re-routing. */
+  if(!selfieIsNew&&S.faceApproved!=null&&S.faceApproved===score&&c){ c.res="PASS"; c.reviewer=true; c.ev="Score "+score.toFixed(2)+" · confirmed by a reviewer"; c.code=null; S.decision=decisionOf(S.checks); return; }
   S.faceRun=nextFaceRun(S.faceRun||0,score,selfieIsNew);
-  if(S.faceRun<2||S.decision==="REJECT") return;
-  var c=S.checks.filter(function(k){return k.doc==="Selfie"&&/Face match/.test(k.label)})[0]; if(!c) return;
-  c.res="HUMAN"; c.code="FACE_MATCH_LOW_REPEAT"; c.rule="§4.6, §7"; c.ev+=" · second selfie in a row below 0.60: a person checks it (rulebook §4.6)";
+  if(S.faceRun<2||S.decision==="REJECT"||!c) return;
+  /* Applicant-facing evidence stays neutral: no mention of a repeat failure or the §7 fraud-desk row. */
+  c.res="HUMAN"; c.code="FACE_MATCH_LOW_REPEAT"; c.rule="§4.6"; c.ev="Score "+score.toFixed(2)+" · a person compares the photos";
   S.decision="HUMAN_REVIEW";
   log("FRAUD_DESK_REFERRAL","SYSTEM","Internal: two selfie face-match failures in a row (rulebook §4.6) · referred to the fraud desk the same day (§7). Never shown to the applicant");
 }
 function openItems(){ return S.disputed&&S.decision==="HUMAN_REVIEW"&&!S.checks.some(function(c){return c.res==="HUMAN"})?S.checks.filter(function(c){return c.res==="REJECT"}):S.checks.filter(function(c){return c.res==="HUMAN"}); }
+/* The reviewer-side recommendation text is derived, never saved on the applicant's device (it is rebuilt on restore). */
+function recText(dispute){ return dispute?"re-read the rejection evidence; uphold unless a document was misread":openItems().map(function(c){return REC[c.code]||c.code}).filter(function(v,i,a){return a.indexOf(v)===i}).join("; "); }
 function openReview(dispute){
-  var it=openItems(),codes=it.map(function(c){return c.code});
-  S.review={opened:Date.now(),dispute:!!dispute,note:"",ask:{},rec:dispute?"re-read the rejection evidence; uphold unless a document was misread":codes.map(function(c){return REC[c]||c}).filter(function(v,i,a){return a.indexOf(v)===i}).join("; ")};
+  S.review={opened:Date.now(),dispute:!!dispute,note:"",ask:{},rec:recText(dispute)};
 }
 function rvTime(){var s=Math.round((Date.now()-S.review.opened)/1000);return Math.floor(s/60)+" min "+(s%60)+" s"}
 function reviewerAct(a){
@@ -1650,6 +1655,7 @@ function reviewerAct(a){
   if(a==="rv-uphold"){ log("REVIEWER_DECISION","REVIEWER","Dispute reviewed · rejection upheld · note: "+note+" · reviewer time "+tm); log("DECISION","SYSTEM","Rejection confirmed by a person; applicant told in plain words"); S.decision="REJECT"; setState("REJECTED"); S.disputed=false; S.review=null; S.rounds.push({round:S.round,decision:"REJECT",t:Date.now(),items:[],rechecked:0,carried:S.checks.length,changed:[],by:"reviewer"}); return render(); }
   S.round++;
   if(a==="rv-approve"){
+    if(it.some(function(c){return c.code==="FACE_MATCH_LOW_REPEAT"})){ S.faceRun=0; S.faceApproved=S.ex&&S.ex.face; }
     it.forEach(function(c){c.ev0=c.ev0||c.ev;c.res="PASS";c.reviewer=true;c.ev+=" · confirmed by a reviewer";if(note)c.rnote=note});
     log("REVIEWER_DECISION","REVIEWER","Round "+S.round+" · "+(R.dispute?"dispute upheld for the applicant: ":"")+"approved "+it.map(function(c){return c.code}).join(", ")+(note?" · note: "+note:"")+" · reviewer time "+tm);
   } else if(a==="rv-ask"){
@@ -1874,13 +1880,13 @@ function persist(force){
   if(!S.saveOK||S.status==="IN_REVIEW"||S.rechecking) return;
   var now=Date.now(); if(!force&&now-lastSave<400) return; lastSave=now;
   /* Internal events (fraud desk, reviewer notes) are never saved; the in-memory copy keeps them for the Audit view. */
-  try{ localStorage.setItem(SAVEKEY,JSON.stringify({v:1,savedAt:now,S:S},function(k,v){ if(k==="url"||k==="thumb"||k==="text"||k==="rnote") return undefined; if(k==="note"&&this&&"ask" in this&&"rec" in this) return undefined; if(k==="events"&&Array.isArray(v)) return v.filter(function(e){return e.audience!=="internal"}); return v })) }catch(e){}
+  try{ localStorage.setItem(SAVEKEY,JSON.stringify({v:1,savedAt:now,S:S},function(k,v){ if(k==="url"||k==="thumb"||k==="text"||k==="rnote") return undefined; if((k==="note"||k==="rec")&&this&&"ask" in this&&"opened" in this) return undefined; if(k==="events"&&Array.isArray(v)) return v.filter(function(e){return e.audience!=="internal"}); return v })) }catch(e){}
 }
 function restore(){
   var raw=null; try{ raw=localStorage.getItem(SAVEKEY) }catch(e){} if(!raw) return false;
   try{ var o=JSON.parse(raw),days=(Date.now()-o.savedAt)/864e5,lim=o.S.status==="NEEDS_MORE_INFO"?14:30;
     if(days>lim){ try{localStorage.removeItem(SAVEKEY)}catch(e){} DROPPED=true; return false; } /* state machine: INACTIVITY_TIMEOUT → DROPPED_OUT */
-    S=o.S; S.focus=false; S.sess=null; S.rechecking=false; S.restored=true;
+    S=o.S; S.focus=false; S.sess=null; S.rechecking=false; S.restored=true; if(S.review&&!S.review.rec) S.review.rec=recText(S.review.dispute);
     /* Saves from before the reviewer-note fix can hold internal events, reviewer notes and reviewer wording. Strip them on load. */
     S.events=(S.events||[]).filter(function(e){return e.audience!=="internal"&&!INTERNAL_EVENTS[e.event]}).map(function(e){ if(e.event==="ROUTED_TO_REVIEWER"&&e.note) e.note=e.note.replace(/ · AI recommendation: .*? · evidence/," · evidence"); return e; });
     var scrubEv=function(s){ return typeof s==="string"?s.replace(/ · confirmed by reviewer(: .*)?$/," · confirmed by a reviewer").replace(/ · rejected by reviewer(: .*)?$/," · rejected by a reviewer").replace(/ · reviewer asked the applicant: .*$/," · reviewer asked the applicant"):s; };
