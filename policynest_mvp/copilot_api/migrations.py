@@ -1,0 +1,349 @@
+"""Lightweight, versioned, idempotent database migration framework for PolicyNest.
+
+Applies incremental DDL/DML migrations in guaranteed transaction order.
+Maintains the `schema_migrations` table to ensure migrations are only executed once.
+Safe for upgrades and restarts.
+"""
+import sqlite3
+import time
+from pathlib import Path
+
+# Migration registry: (version, name, callable(db))
+MIGRATIONS = []
+
+def migration(version, name):
+    """Decorator to register a migration function."""
+    def decorator(fn):
+        MIGRATIONS.append((version, name, fn))
+        return fn
+    return decorator
+
+
+@migration(1, "001_initial_core_schema")
+def migrate_001_initial_core_schema(db):
+    """Ensure all baseline tables exist with expected columns."""
+    db.execute("""CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'applicant',
+        created_at INTEGER NOT NULL,
+        token_version INTEGER NOT NULL DEFAULT 0,
+        language TEXT NOT NULL DEFAULT 'en',
+        mobile TEXT,
+        analytics_consent INTEGER NOT NULL DEFAULT 0
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS application_snapshots (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id),
+        snapshot TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS refresh_tokens (
+        digest TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        family TEXT NOT NULL,
+        expires INTEGER NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0,
+        revoked INTEGER NOT NULL DEFAULT 0
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS reset_tokens (
+        digest TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        expires INTEGER NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS cases (
+        id TEXT PRIMARY KEY,
+        applicant_id INTEGER NOT NULL UNIQUE,
+        reviewer_id INTEGER,
+        status TEXT NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS appeals (
+        id TEXT PRIMARY KEY,
+        case_id TEXT NOT NULL,
+        explanation TEXT NOT NULL,
+        status TEXT NOT NULL,
+        response TEXT,
+        created INTEGER NOT NULL,
+        resolved INTEGER,
+        evidence TEXT NOT NULL DEFAULT '{}'
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS audit_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        case_id TEXT NOT NULL,
+        actor_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        occurred INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS review_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        case_id TEXT NOT NULL,
+        reviewer_id INTEGER NOT NULL,
+        note TEXT NOT NULL,
+        created INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS assignment_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        case_id TEXT NOT NULL,
+        previous_reviewer INTEGER,
+        new_reviewer INTEGER NOT NULL,
+        actor_id INTEGER NOT NULL,
+        occurred INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS applications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+        reference TEXT NOT NULL UNIQUE,
+        version INTEGER NOT NULL DEFAULT 1,
+        status TEXT NOT NULL DEFAULT 'DRAFT',
+        details TEXT NOT NULL DEFAULT '{}',
+        progress TEXT NOT NULL DEFAULT '{}',
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS timeline (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        t INTEGER NOT NULL,
+        actor TEXT NOT NULL,
+        key TEXT NOT NULL,
+        stage TEXT NOT NULL DEFAULT '',
+        doc TEXT NOT NULL DEFAULT '',
+        UNIQUE(user_id, key, stage, doc, t)
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        key TEXT NOT NULL,
+        stage TEXT NOT NULL DEFAULT '',
+        doc TEXT NOT NULL DEFAULT '',
+        action TEXT NOT NULL DEFAULT '',
+        read INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        reference TEXT NOT NULL DEFAULT ''
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS ai_daily_usage (
+        day TEXT PRIMARY KEY,
+        requests INTEGER NOT NULL
+    )""")
+    # Trigger for immutable audit logs
+    db.execute("CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_events BEGIN SELECT RAISE(ABORT,'immutable'); END")
+    db.execute("CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_events BEGIN SELECT RAISE(ABORT,'immutable'); END")
+
+
+@migration(2, "002_staff_and_abac_security_expansion")
+def migrate_002_staff_and_abac_security_expansion(db):
+    """Add staff provisioning, MFA, lockout, and session security columns."""
+    cols = {r[1] for r in db.execute('PRAGMA table_info(users)')}
+    add_cols = [
+        ('status', "TEXT NOT NULL DEFAULT 'active'"),
+        ('failed_logins', "INTEGER NOT NULL DEFAULT 0"),
+        ('locked_until', "INTEGER NOT NULL DEFAULT 0"),
+        ('must_reset_password', "INTEGER NOT NULL DEFAULT 0"),
+        ('mfa_enabled', "INTEGER NOT NULL DEFAULT 0"),
+        ('mfa_secret', "TEXT"),
+        ('mfa_recovery_codes', "TEXT"),
+        ('last_login_at', "INTEGER NOT NULL DEFAULT 0"),
+    ]
+    for col_name, ddl in add_cols:
+        if col_name not in cols:
+            db.execute(f"ALTER TABLE users ADD COLUMN {col_name} {ddl}")
+
+    # Staff profiles table
+    db.execute("""CREATE TABLE IF NOT EXISTS staff_profiles (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        department TEXT NOT NULL DEFAULT 'Operations',
+        employee_id TEXT,
+        created_by INTEGER REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'active',
+        updated_at INTEGER NOT NULL
+    )""")
+
+    # Staff invitations table
+    db.execute("""CREATE TABLE IF NOT EXISTS staff_invitations (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        role TEXT NOT NULL,
+        department TEXT NOT NULL DEFAULT 'Operations',
+        token_digest TEXT NOT NULL UNIQUE,
+        invited_by INTEGER NOT NULL REFERENCES users(id),
+        expires_at INTEGER NOT NULL,
+        accepted_at INTEGER,
+        created_at INTEGER NOT NULL
+    )""")
+
+    # Role change audit log
+    db.execute("""CREATE TABLE IF NOT EXISTS role_audit_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        actor_id INTEGER NOT NULL REFERENCES users(id),
+        target_user_id INTEGER NOT NULL REFERENCES users(id),
+        old_role TEXT NOT NULL,
+        new_role TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        occurred INTEGER NOT NULL
+    )""")
+
+    # CSRF secrets per user
+    db.execute("""CREATE TABLE IF NOT EXISTS csrf_secrets (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        secret TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+    )""")
+
+    # Indices
+    db.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_staff_invitations_email ON staff_invitations(email)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_staff_invitations_digest ON staff_invitations(token_digest)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_role_audit_target ON role_audit_events(target_user_id)")
+
+
+@migration(3, "003_domain_entities_foundation")
+def migrate_003_domain_entities_foundation(db):
+    """Normalize domain models for documents, fraud, training, and certification (Milestones 2-7 foundation)."""
+    # Document storage metadata (no raw image files in database)
+    db.execute("""CREATE TABLE IF NOT EXISTS document_records (
+        id TEXT PRIMARY KEY,
+        application_id INTEGER NOT NULL REFERENCES applications(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        slot TEXT NOT NULL,
+        doc_type TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        file_size INTEGER NOT NULL,
+        storage_path TEXT NOT NULL,
+        sha256_hash TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        quality_score REAL,
+        ocr_extracted_json TEXT,
+        rejection_reason TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+    )""")
+
+    # Verification provider results
+    db.execute("""CREATE TABLE IF NOT EXISTS verification_results (
+        id TEXT PRIMARY KEY,
+        application_id INTEGER NOT NULL REFERENCES applications(id),
+        provider TEXT NOT NULL,
+        check_type TEXT NOT NULL,
+        status TEXT NOT NULL,
+        reference_id TEXT,
+        match_score REAL,
+        response_digest TEXT NOT NULL,
+        details_json TEXT NOT NULL DEFAULT '{}',
+        created_at INTEGER NOT NULL
+    )""")
+
+    # Cross-document checks
+    db.execute("""CREATE TABLE IF NOT EXISTS cross_document_checks (
+        id TEXT PRIMARY KEY,
+        application_id INTEGER NOT NULL REFERENCES applications(id),
+        check_name TEXT NOT NULL,
+        status TEXT NOT NULL,
+        discrepancy_details TEXT,
+        created_at INTEGER NOT NULL
+    )""")
+
+    # Fraud and anomaly cases
+    db.execute("""CREATE TABLE IF NOT EXISTS fraud_cases (
+        id TEXT PRIMARY KEY,
+        application_id INTEGER NOT NULL REFERENCES applications(id),
+        applicant_id INTEGER NOT NULL REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'FLAGGED',
+        anomaly_type TEXT NOT NULL,
+        signals_json TEXT NOT NULL DEFAULT '[]',
+        notes TEXT,
+        investigator_id INTEGER REFERENCES users(id),
+        hold_placed INTEGER NOT NULL DEFAULT 1,
+        resolved_at INTEGER,
+        resolution_notes TEXT,
+        created_at INTEGER NOT NULL
+    )""")
+
+    # Training and LMS
+    db.execute("""CREATE TABLE IF NOT EXISTS training_modules (
+        id TEXT PRIMARY KEY,
+        program_version TEXT NOT NULL DEFAULT 'v1',
+        title TEXT NOT NULL,
+        duration_minutes INTEGER NOT NULL,
+        content_json TEXT NOT NULL DEFAULT '{}',
+        sequence_order INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS training_progress (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        module_id TEXT NOT NULL REFERENCES training_modules(id),
+        status TEXT NOT NULL DEFAULT 'NOT_STARTED',
+        time_spent_seconds INTEGER NOT NULL DEFAULT 0,
+        completed_at INTEGER,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        UNIQUE(user_id, module_id)
+    )""")
+
+    # Examination
+    db.execute("""CREATE TABLE IF NOT EXISTS exam_attempts (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        attempt_number INTEGER NOT NULL,
+        score INTEGER NOT NULL DEFAULT 0,
+        total_questions INTEGER NOT NULL DEFAULT 50,
+        passed INTEGER NOT NULL DEFAULT 0,
+        started_at INTEGER NOT NULL,
+        completed_at INTEGER,
+        incident_flag INTEGER NOT NULL DEFAULT 0
+    )""")
+
+    # Certification
+    db.execute("""CREATE TABLE IF NOT EXISTS certificates (
+        id TEXT PRIMARY KEY,
+        certificate_number TEXT NOT NULL UNIQUE,
+        user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+        application_id INTEGER NOT NULL REFERENCES applications(id),
+        posp_name TEXT NOT NULL,
+        pan_masked TEXT NOT NULL,
+        lines_of_business TEXT NOT NULL DEFAULT 'Life,General,Health',
+        issued_at INTEGER NOT NULL,
+        valid_until INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ACTIVE',
+        signature_digest TEXT NOT NULL,
+        revoked_at INTEGER,
+        revocation_reason TEXT
+    )""")
+
+    # Indices for performance
+    db.execute("CREATE INDEX IF NOT EXISTS idx_doc_app ON document_records(application_id, slot)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_verif_app ON verification_results(application_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_fraud_app ON fraud_cases(application_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_training_user ON training_progress(user_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cert_number ON certificates(certificate_number)")
+
+
+def run_migrations(db):
+    """Run all unapplied migrations in ascending order within a single transaction."""
+    db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (
+        version INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        applied_at INTEGER NOT NULL
+    )""")
+    applied_versions = {
+        row[0] for row in db.execute("SELECT version FROM schema_migrations").fetchall()
+    }
+
+    # Sort migrations by version number
+    sorted_migrations = sorted(MIGRATIONS, key=lambda m: m[0])
+    applied_count = 0
+
+    for version, name, migrate_fn in sorted_migrations:
+        if version not in applied_versions:
+            # Run migration inside savepoint/transaction
+            migrate_fn(db)
+            db.execute(
+                "INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)",
+                (version, name, int(time.time())),
+            )
+            applied_count += 1
+
+    return applied_count

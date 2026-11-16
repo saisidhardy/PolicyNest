@@ -41,15 +41,14 @@ import telemetry
 import recovery
 import secrets
 import threading
+import config
+import mfa
 from urllib.parse import urlsplit, parse_qs
 
 log = logging.getLogger('policynest.api')
 MODEL = llm.model()  # provider model name (never a key); /api/health reports it
 EFFORT = os.environ.get("COPILOT_EFFORT", "low")
-# Production (Embarko sets APP_NAME) allows only the live site; local runs also allow the dev server.
-# The "null" origin (a page opened from file://) is never allowed (G-24).
-_default_origins = "https://policynest.embarko.app" + ("" if os.environ.get("APP_NAME") else ",http://localhost:8000,http://127.0.0.1:8000")
-ALLOWED = {o.strip() for o in os.environ.get("COPILOT_ORIGINS", _default_origins).split(",") if o.strip() and o.strip() != "null"}
+ALLOWED = config.ALLOWED_ORIGINS
 MAX_BODY = 24_000
 RATE = (int(os.environ.get("COPILOT_RATE", "20")), 600)  # questions per 10 minutes per client
 GLOBAL_PER_MIN = int(os.environ.get("COPILOT_GLOBAL_PER_MIN", "30"))  # all clients together (fallback if the client address is unreliable)
@@ -67,7 +66,7 @@ def _cors(h, origin):
         h.send_header("Vary", "Origin")
         h.send_header("Access-Control-Allow-Credentials", "true")
         h.send_header("Access-Control-Allow-Methods", "POST, GET, PUT, PATCH, OPTIONS")
-        h.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        h.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token")
 
 
 def _client(h):
@@ -290,8 +289,9 @@ class H(BaseHTTPRequestHandler):
         return auth.authenticate(self.headers.get('Authorization') or 'Bearer ' + self._cookie('pn_access'))
 
     def _session(self, code, user, refresh):
-        self._session_cookies = (auth.issue(user,refresh), refresh)
-        return self._json(code, {'user': user})
+        csrf = auth.get_csrf_token(user)
+        self._session_cookies = (auth.issue(user, refresh), refresh, csrf)
+        return self._json(code, {'user': user, 'csrf_token': csrf})
 
     def _json(self, code, obj):
         data = json.dumps(obj, ensure_ascii=False).encode()
@@ -299,12 +299,23 @@ class H(BaseHTTPRequestHandler):
         _cors(self, self.headers.get("Origin", ""))
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header('Cache-Control', 'no-store')
-        self.send_header('X-Request-ID',getattr(self,'_request_id',''))
-        self.send_header('X-Content-Type-Options','nosniff')
+        self.send_header('X-Request-ID', getattr(self, '_request_id', ''))
+        for k, v in config.SECURITY_HEADERS.items():
+            self.send_header(k, v)
         if hasattr(self, '_session_cookies'):
-            secure = '; Secure' if os.environ.get('APP_NAME') else ''
-            for name, value, age in [('pn_access', self._session_cookies[0], auth.JWT_TTL), ('pn_refresh', self._session_cookies[1], 604800)]:
-                self.send_header('Set-Cookie', f'{name}={value}; HttpOnly; SameSite=Lax; Path=/api; Max-Age={age if value else 0}{secure}')
+            secure = '; Secure' if config.COOKIE_SECURE else ''
+            access_tok = self._session_cookies[0]
+            refresh_tok = self._session_cookies[1]
+            csrf_tok = self._session_cookies[2] if len(self._session_cookies) > 2 else ''
+            user_obj = obj.get('user', {}) if isinstance(obj, dict) else {}
+            is_staff = isinstance(user_obj, dict) and user_obj.get('role', '') not in ('', 'applicant')
+            access_ttl = auth.JWT_TTL_STAFF if is_staff else auth.JWT_TTL
+            for name, value, age in [
+                ('pn_access', access_tok, access_ttl),
+                ('pn_refresh', refresh_tok, config.REFRESH_TTL),
+                ('pn_csrf', csrf_tok, config.REFRESH_TTL),
+            ]:
+                self.send_header('Set-Cookie', f'{name}={value}; HttpOnly; SameSite={config.COOKIE_SAMESITE}; Path=/api; Max-Age={age if value else 0}{secure}')
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         try:
@@ -348,6 +359,17 @@ class H(BaseHTTPRequestHandler):
         if self.path == "/api/auth/me":
             try: return self._json(200, {"user": self._identity()})
             except ValueError as e: return self._json(401, {"error": str(e)})
+        if self.path == "/api/auth/csrf":
+            try:
+                user = self._identity()
+                return self._json(200, {"csrf_token": auth.get_csrf_token(user)})
+            except ValueError:
+                return self._json(401, {"error": "unauthenticated"})
+        if self.path == "/api/admin/staff/list":
+            try:
+                return self._json(200, {"staff": auth.list_staff(self._identity())})
+            except ValueError as e:
+                return self._json(403 if str(e) == "forbidden" else 401, {"error": str(e)})
         if self.path == "/api/applications/me":
             try:
                 user = self._identity()
@@ -438,9 +460,106 @@ class H(BaseHTTPRequestHandler):
             except ValueError as e: return self._json(400 if str(e) != "email_taken" else 409, {"error": str(e)})
         if self.path == "/api/auth/login":
             try:
-                user = auth.login(body.get("email"), body.get("password"))
+                user = auth.login(body.get("email"), body.get("password"), body.get("mfa_code"))
                 return self._session(200, user, auth.new_refresh(user))
-            except ValueError as e: return self._json(401 if str(e)=="invalid_credentials" else 503, {"error": str(e)})
+            except ValueError as e:
+                err = str(e)
+                if err == "mfa_required":
+                    return self._json(401, {"error": "mfa_required", "message": "Two-factor authentication code required"})
+                elif err == "account_locked":
+                    return self._json(423, {"error": "account_locked", "message": "Account temporarily locked due to repeated failed login attempts. Try again in 15 minutes."})
+                elif err in ("account_suspended", "account_pending_invite"):
+                    return self._json(403, {"error": err})
+                elif err == "invalid_credentials":
+                    return self._json(401, {"error": "invalid_credentials"})
+                return self._json(503, {"error": err})
+
+        if self.path == "/api/admin/staff/provision":
+            try:
+                user = self._identity()
+                created = auth.provision_staff(
+                    actor=user,
+                    email=body.get("email"),
+                    role=body.get("role"),
+                    department=body.get("department", "Operations"),
+                    employee_id=body.get("employee_id"),
+                    temp_password=body.get("temporary_password"),
+                    display_name=body.get("display_name"),
+                )
+                return self._json(201, {"staff": created})
+            except ValueError as e:
+                return self._json(403 if str(e) == "forbidden" else 400, {"error": str(e)})
+
+        if self.path == "/api/admin/staff/invite":
+            try:
+                user = self._identity()
+                inv = auth.invite_staff(
+                    actor=user,
+                    email=body.get("email"),
+                    role=body.get("role"),
+                    department=body.get("department", "Operations"),
+                )
+                return self._json(201, inv)
+            except ValueError as e:
+                return self._json(403 if str(e) == "forbidden" else 400, {"error": str(e)})
+
+        if self.path == "/api/auth/staff/accept-invite":
+            try:
+                user = auth.accept_staff_invite(
+                    invitation_token=body.get("invitation_token"),
+                    password=body.get("password"),
+                    display_name=body.get("display_name"),
+                )
+                return self._session(201, user, auth.new_refresh(user))
+            except ValueError as e:
+                return self._json(400, {"error": str(e)})
+
+        if self.path == "/api/admin/staff/role":
+            try:
+                user = self._identity()
+                updated = auth.update_staff_role(
+                    actor=user,
+                    target_user_id=body.get("user_id"),
+                    new_role=body.get("role"),
+                    reason=body.get("reason", "Role adjustment"),
+                )
+                return self._json(200, {"user": updated})
+            except ValueError as e:
+                return self._json(403 if str(e) == "forbidden" else 400, {"error": str(e)})
+
+        if self.path == "/api/admin/staff/status":
+            try:
+                user = self._identity()
+                updated = auth.set_staff_status(
+                    actor=user,
+                    target_user_id=body.get("user_id"),
+                    status=body.get("status"),
+                    reason=body.get("reason", "Status adjustment"),
+                )
+                return self._json(200, {"user": updated})
+            except ValueError as e:
+                return self._json(403 if str(e) == "forbidden" else 400, {"error": str(e)})
+
+        if self.path == "/api/auth/mfa/setup":
+            try:
+                user = self._identity()
+                return self._json(200, auth.setup_mfa(user))
+            except ValueError as e:
+                return self._json(401 if str(e) == "unauthenticated" else 400, {"error": str(e)})
+
+        if self.path == "/api/auth/mfa/verify":
+            try:
+                user = self._identity()
+                return self._json(200, auth.verify_and_enable_mfa(user, body.get("code")))
+            except ValueError as e:
+                return self._json(400, {"error": str(e)})
+
+        if self.path == "/api/auth/mfa/disable":
+            try:
+                user = self._identity()
+                return self._json(200, auth.disable_mfa(user, body.get("code")))
+            except ValueError as e:
+                return self._json(400, {"error": str(e)})
         if self.path == "/api/applications/me":
             try:
                 user = self._identity()
