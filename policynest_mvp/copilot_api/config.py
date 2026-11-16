@@ -47,9 +47,9 @@ if _origins_env:
     ALLOWED_ORIGINS = {o.strip() for o in _origins_env.split(",") if o.strip() and o.strip() != "null"}
 else:
     if IS_PRODUCTION:
-        ALLOWED_ORIGINS = {DEFAULT_PROD_ORIGIN}
+        ALLOWED_ORIGINS = {DEFAULT_PROD_ORIGIN, "https://saisidhardy.github.io"}
     else:
-        ALLOWED_ORIGINS = {DEFAULT_PROD_ORIGIN, "http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:8787", "http://127.0.0.1:8787"}
+        ALLOWED_ORIGINS = {DEFAULT_PROD_ORIGIN, "https://saisidhardy.github.io", "http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:8787", "http://127.0.0.1:8787"}
 
 # Security Headers
 SECURITY_HEADERS = {

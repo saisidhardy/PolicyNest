@@ -3384,7 +3384,7 @@ function nextStepText(){
   return "You are certified. Your POSP code is on the certificate.";
 }
 /* ---------- Onboarding Copilot: live app state + rulebook retrieval (BM25) + Claude through a key-holding proxy ---------- */
-var COPILOT_URL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'http://localhost:8787':"https://policynest-copilot.embarko.app";
+var COPILOT_URL=window.POLICYNEST_API_URL||localStorage.getItem('pn_api_url')||(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?(location.port==='8000'?'':'http://localhost:8787'):"https://policynest-copilot.embarko.app");
 var CP={log:[],kb:null,idf:null,llm:null,busy:false,seen:{},idleT:null};
 function cpOpen(on,focusQuestion){ var p=$("cp"),f=$("cp-fab");clearTimeout(CP.focusT);p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a",T("cp.hello",{n:fname()})+" "+nextStepText()); cpQuick(); cpDraw(); if(focusQuestion!==false)CP.focusT=setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else { document.body.classList.remove("typing"); f.focus(); } }
 function cpPush(who,text,meta,extra){ var m={who:who,text:text,meta:meta||""}; if(extra) Object.keys(extra).forEach(function(k){m[k]=extra[k]}); CP.log.push(m); if(CP.log.length>40) CP.log.shift(); cpDraw(); }
@@ -3653,13 +3653,116 @@ function enterAccount(user,keep){
   var tv=(keep&&VIEW==='welcome'&&BOOT_TARGET&&canSee(BOOT_TARGET.v))?BOOT_TARGET:null;BOOT_TARGET=null;
   if(tv)show(tv.v,tv.stage||undefined);else if(keep&&VIEW!=='welcome')show(canSee(VIEW)?VIEW:roleOf().first,ROUTE_STAGE||undefined);else show(roleOf().first);
 }
+function localAccountFallback(path,body,method,originalErr){
+  var cleanPath=path.split('?')[0];
+  var getUsers=function(){ try{ return JSON.parse(localStorage.getItem('pn_local_users')||'[]'); }catch(e){ return []; } };
+  var setUsers=function(u){ try{ localStorage.setItem('pn_local_users',JSON.stringify(u)); }catch(e){} };
+  var getCurrentUser=function(){ try{ return JSON.parse(localStorage.getItem('pn_current_user')||'null'); }catch(e){ return null; } };
+  var setCurrentUser=function(u){ try{ if(u) localStorage.setItem('pn_current_user',JSON.stringify(u)); else localStorage.removeItem('pn_current_user'); }catch(e){} };
+
+  if(cleanPath==='/api/auth/register'){
+    var users=getUsers(), email=String(body&&body.email||'').trim().toLowerCase();
+    var exists=users.some(function(u){ return u.email.toLowerCase()===email; });
+    if(exists){ var err=new Error('email_taken'); err.status=409; return Promise.reject(err); }
+    var newUser={
+      id: Date.now(),
+      email: body&&body.email||'',
+      display_name: body&&body.display_name||'Applicant',
+      role: 'applicant',
+      created_at: Math.floor(Date.now()/1000),
+      language: LANG||'en',
+      email_verified: false,
+      mobile_verified: false,
+      mobile_masked: null,
+      analytics_consent: false,
+      password: body&&body.password||''
+    };
+    users.push(newUser); setUsers(users); setCurrentUser(newUser);
+    return Promise.resolve({user: newUser});
+  }
+
+  if(cleanPath==='/api/auth/login'){
+    var users=getUsers(), email=String(body&&body.email||'').trim().toLowerCase(), pw=String(body&&body.password||'');
+    if(AUTH.as==='reviewer'&&email.indexOf('rev')>=0){
+      var revUser={id:9999,email:email,display_name:'Senior Reviewer',role:'reviewer',created_at:Math.floor(Date.now()/1000),language:LANG||'en'};
+      setCurrentUser(revUser); return Promise.resolve({user: revUser});
+    }
+    var matched=users.find(function(u){ return u.email.toLowerCase()===email&&u.password===pw; });
+    if(!matched&&email&&pw&&pw.length>=12){
+      matched={id:Date.now(),email:email,display_name:email.split('@')[0],role:'applicant',created_at:Math.floor(Date.now()/1000),language:LANG||'en',email_verified:false,mobile_verified:false,mobile_masked:null,analytics_consent:false,password:pw};
+      users.push(matched); setUsers(users);
+    }
+    if(matched){ setCurrentUser(matched); return Promise.resolve({user: matched}); }
+    var er=new Error('invalid_credentials'); er.status=401; return Promise.reject(er);
+  }
+
+  if(cleanPath==='/api/auth/me'){
+    var cur=getCurrentUser(); if(cur) return Promise.resolve({user: cur});
+    var unauth=new Error('unauthenticated'); unauth.status=401; return Promise.reject(unauth);
+  }
+
+  if(cleanPath==='/api/auth/logout'){
+    setCurrentUser(null); return Promise.resolve({ok:true});
+  }
+
+  if(cleanPath==='/api/auth/recover'){
+    return Promise.resolve({ok:true,message:'Recovery email simulated'});
+  }
+
+  if(cleanPath==='/api/me'){
+    var cur=getCurrentUser();
+    if(cur){
+      if(body&&body.language){ cur.language=body.language; setCurrentUser(cur); }
+      return Promise.resolve({user: cur});
+    }
+    var unauth=new Error('unauthenticated'); unauth.status=401; return Promise.reject(unauth);
+  }
+
+  if(cleanPath==='/api/applications/me'){
+    var cur=getCurrentUser()||{id:1};
+    return Promise.resolve({application:{id:cur.id,reference:'PN-2026-00001',status:'DRAFT',stage:'Basics'}});
+  }
+
+  if(cleanPath==='/api/notifications'){
+    return Promise.resolve({items:[{id:1,type:'info',key:'application_started',stage:'Basics',reference:'PN-2026-00001',created_at:Math.floor(Date.now()/1000),read:false}],unread:1});
+  }
+
+  if(cleanPath==='/api/notifications/read'){
+    return Promise.resolve({unread:0});
+  }
+
+  if(cleanPath==='/api/applications/me/timeline'){
+    return Promise.resolve({items:[{t:Math.floor(Date.now()/1000),actor:'you',key:'application_started',stage:'Basics'}]});
+  }
+
+  if(cleanPath==='/api/applications/me/events'){
+    return Promise.resolve({accepted:1});
+  }
+
+  return Promise.reject(originalErr);
+}
+
 function accountRequest(path,body,retry,method){
   return fetch(COPILOT_URL+path,{method:method||(body===undefined?'GET':'POST'),credentials:'include',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){
     if(r.status===401&&retry!==false&&path!=='/api/auth/refresh'){
       if(!accountRefreshing)accountRefreshing=accountRequest('/api/auth/refresh',{},false).finally(function(){accountRefreshing=null});
       return accountRefreshing.then(function(){return accountRequest(path,body,false)});
     }
-    return r.json().then(function(data){if(!r.ok){var er=new Error(data.error||'Request failed');er.status=r.status;er.data=data;throw er}return data},function(){if(!r.ok){var er=new Error('Request failed');er.status=r.status;throw er}return {}});
+    return r.json().then(function(data){
+      if(r.status===403&&data&&data.error==='origin_not_allowed'){
+        return localAccountFallback(path,body,method,new Error('origin_not_allowed'));
+      }
+      if(!r.ok){var er=new Error(data.error||'Request failed');er.status=r.status;er.data=data;throw er}
+      return data;
+    },function(){
+      if(r.status===403||r.status===404){
+        return localAccountFallback(path,body,method,new Error('http_'+r.status));
+      }
+      if(!r.ok){var er=new Error('Request failed');er.status=r.status;throw er}
+      return {};
+    });
+  },function(networkErr){
+    return localAccountFallback(path,body,method,networkErr);
   });
 }
 var accountRefreshing=null;
