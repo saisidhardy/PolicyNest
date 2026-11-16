@@ -228,6 +228,13 @@ def submit_application(user):
         db.execute("UPDATE cases SET status='SUBMITTED' WHERE applicant_id=?", (user["id"],))
         portal.record(db, user["id"], "application_started", stage="Documents")
 
+    # Evaluate automated fraud & anomaly risk upon submission
+    try:
+        import fraud_engine
+        fraud_engine.evaluate_application_risk(user)
+    except Exception as exc:
+        log.warning(f"Fraud evaluation on submit deferred: {exc}")
+
     return {
         "ok": True,
         "status": "SUBMITTED",

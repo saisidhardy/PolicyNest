@@ -383,6 +383,45 @@ def migrate_005_review_operations_and_appeals_expansion(db):
     db.execute("CREATE INDEX IF NOT EXISTS idx_appeals_case ON appeals(case_id, status)")
 
 
+@migration(6, "006_fraud_engine_and_aml_expansion")
+def migrate_006_fraud_engine_and_aml_expansion(db):
+    """Expand fraud cases with scoring and evidence locker, add blacklist and network velocity events."""
+    fraud_cols = {r[1] for r in db.execute('PRAGMA table_info(fraud_cases)')}
+    for col_name, ddl in [
+        ('risk_score', "INTEGER NOT NULL DEFAULT 0"),
+        ('risk_tier', "TEXT NOT NULL DEFAULT 'LOW'"),
+        ('evidence_json', "TEXT NOT NULL DEFAULT '{}'"),
+        ('updated_at', "INTEGER"),
+    ]:
+        if col_name not in fraud_cols:
+            db.execute(f"ALTER TABLE fraud_cases ADD COLUMN {col_name} {ddl}")
+
+    # Fraud Blacklist table
+    db.execute("""CREATE TABLE IF NOT EXISTS fraud_blacklist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        identifier_type TEXT NOT NULL,
+        identifier_value TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        source_case_id TEXT,
+        created_at INTEGER NOT NULL
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_fraud_blacklist ON fraud_blacklist(identifier_type, identifier_value)")
+
+    # Network / Device velocity events
+    db.execute("""CREATE TABLE IF NOT EXISTS applicant_network_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        applicant_id INTEGER NOT NULL,
+        application_id INTEGER,
+        ip_address TEXT NOT NULL,
+        user_agent TEXT,
+        event_type TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_net_events_ip ON applicant_network_events(ip_address, created_at)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_net_events_app ON applicant_network_events(applicant_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_fraud_status ON fraud_cases(status, risk_tier)")
+
+
 def run_migrations(db):
     """Run all unapplied migrations in ascending order within a single transaction."""
     db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (

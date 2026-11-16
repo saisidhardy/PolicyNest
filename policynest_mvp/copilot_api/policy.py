@@ -108,6 +108,8 @@ COMPLIANCE_ACTIONS = {
     "reports.compliance",
     "audit.read",
     "reports.read",
+    "fraud.case_read",
+    "fraud.evidence_read",
 }
 
 FRAUD_ACTIONS = {
@@ -117,6 +119,9 @@ FRAUD_ACTIONS = {
     "fraud.hold_manage",
     "fraud.escalate",
     "fraud.note_create",
+    "fraud.decide",
+    "fraud.evaluate",
+    "fraud.blacklist_manage",
     "audit.read",
 }
 

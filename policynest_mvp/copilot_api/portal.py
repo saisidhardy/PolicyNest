@@ -400,10 +400,12 @@ REVIEWER_EVENTS = {
     'review_rejected': ('reviewer', 'info', '#history'),
     'review_in_progress': ('reviewer', 'info', '#history'),
     'appeal_update': ('reviewer', 'info', '#history'),
+    'verification_unsuccessful': ('reviewer', 'info', '#history'),
+    'review_resumed': ('reviewer', 'info', '#history'),
 }
 TIMELINE_KEEP = 500
 NOTIFICATIONS_KEEP = 200
-APPLICANT_ACTORS = ('you', 'policynest', 'reviewer')
+APPLICANT_ACTORS = ('you', 'policynest', 'reviewer', 'compliance')
 
 
 def record(db, user_id, key, stage='', doc='', t=None, defs=None):
@@ -774,6 +776,102 @@ def _handle_appeals_decide(u, b, p):
     except ValueError as e:
         raise PortalError(400, str(e))
 
+def _handle_fraud_cases_list(u, b, p):
+    import fraud_ops
+    try:
+        limit = int(p.get('limit', [50])[0])
+        offset = int(p.get('offset', [0])[0])
+        status = p.get('status', [None])[0]
+        risk_tier = p.get('risk_tier', [None])[0]
+        return 200, fraud_ops.list_fraud_cases(u, status_filter=status, risk_tier=risk_tier, limit=limit, offset=offset)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_fraud_case_get(u, b, p):
+    import fraud_ops
+    case_id = p.get('id', [None])[0] or (b.get('case_id') if isinstance(b, dict) else None) or (b.get('id') if isinstance(b, dict) else None)
+    if not case_id:
+        raise PortalError(400, 'case_id_required')
+    try:
+        return 200, fraud_ops.get_fraud_dossier(u, case_id)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'case_not_found')
+
+def _handle_fraud_investigate(u, b, p):
+    import fraud_ops
+    case_id = b.get('case_id') or b.get('id')
+    if not case_id:
+        raise PortalError(400, 'case_id_required')
+    try:
+        return 200, fraud_ops.assign_investigator(u, case_id, b.get('investigator_id'))
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'case_not_found')
+
+def _handle_fraud_decide(u, b, p):
+    import fraud_ops
+    case_id = b.get('case_id') or b.get('id')
+    if not case_id:
+        raise PortalError(400, 'case_id_required')
+    try:
+        return 200, fraud_ops.decide_fraud_case(
+            u,
+            case_id=case_id,
+            decision=b.get('decision'),
+            notes=b.get('notes'),
+            blacklist_identifiers=b.get('blacklist_identifiers'),
+        )
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'case_not_found')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_fraud_evaluate(u, b, p):
+    import fraud_engine
+    target_app = (b.get('application_id') if isinstance(b, dict) else None) or (b.get('id') if isinstance(b, dict) else None) or u.get('id')
+    client_ip = (b.get('client_ip') if isinstance(b, dict) else None) or p.get('client_ip', [None])[0]
+    try:
+        return 200, fraud_engine.evaluate_application_risk(target_app, client_ip=client_ip)
+    except FileNotFoundError:
+        raise PortalError(404, 'application_not_found')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_fraud_blacklist_get(u, b, p):
+    import fraud_ops
+    try:
+        ident_type = p.get('type', [None])[0]
+        limit = int(p.get('limit', [100])[0])
+        return 200, {'blacklist': fraud_ops.list_blacklist(u, identifier_type=ident_type, limit=limit)}
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_fraud_blacklist_add(u, b, p):
+    import fraud_ops
+    try:
+        return 200, fraud_ops.add_to_blacklist(
+            u,
+            identifier_type=b.get('type'),
+            identifier_value=b.get('value'),
+            reason=b.get('reason'),
+            source_case_id=b.get('source_case_id'),
+        )
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_fraud_rules(u, b, p):
+    import fraud_engine
+    return 200, {'rules': list(fraud_engine.FRAUD_RULES.values())}
+
 
 # ---------------------------------------------------------------- route table
 ROUTES = {
@@ -812,4 +910,12 @@ ROUTES = {
     ('POST', '/api/appeals/submit'): _handle_appeals_submit,
     ('GET', '/api/appeals'): _handle_appeals_list,
     ('POST', '/api/appeals/decide'): _handle_appeals_decide,
+    ('GET', '/api/fraud/cases'): _handle_fraud_cases_list,
+    ('GET', '/api/fraud/case'): _handle_fraud_case_get,
+    ('POST', '/api/fraud/investigate'): _handle_fraud_investigate,
+    ('POST', '/api/fraud/decide'): _handle_fraud_decide,
+    ('POST', '/api/fraud/evaluate'): _handle_fraud_evaluate,
+    ('GET', '/api/fraud/blacklist'): _handle_fraud_blacklist_get,
+    ('POST', '/api/fraud/blacklist'): _handle_fraud_blacklist_add,
+    ('GET', '/api/fraud/rules'): _handle_fraud_rules,
 }

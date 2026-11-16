@@ -32,6 +32,7 @@ from providers import (
 )
 from quality import SLOT_GUIDELINES, assess_quality
 from storage import read_document_file, store_document_file
+from fraud_engine import check_blacklist, inspect_image_bytes
 
 
 def upload_document(
@@ -56,11 +57,18 @@ def upload_document(
     # 2. Run deterministic quality checks
     quality = assess_quality(meta, client_signals=client_signals, slot=slot_upper, content=file_bytes)
 
+    # 3. Check fraud blacklist and image tampering signatures
+    sig_res = inspect_image_bytes(file_bytes)
+    bl_hits = check_blacklist(file_hashes=[meta["sha256_hash"]])
+
     doc_id = f"doc_{secrets.token_hex(12)}"
     now = int(time.time())
 
-    status = "UPLOADED" if quality["passed"] else "REUPLOAD_NEEDED"
-    rejection_reason = quality["remediation_en"] if not quality["passed"] else None
+    status = "UPLOADED" if (quality["passed"] and not bl_hits) else "REUPLOAD_NEEDED"
+    if bl_hits:
+        rejection_reason = "Document verification could not be validated under current guidelines."
+    else:
+        rejection_reason = quality["remediation_en"] if not quality["passed"] else None
 
     # Default simulated OCR extraction based on slot
     details = app.get("details") or {}
@@ -73,6 +81,8 @@ def upload_document(
         "slot": slot_upper,
         "quality_score": quality["quality_score"],
         "issues": quality["issues"],
+        "editing_tool": sig_res["tool_name"],
+        "signatures": sig_res["signatures"],
     }
 
     with auth._db() as db:
