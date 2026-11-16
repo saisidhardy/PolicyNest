@@ -40,6 +40,7 @@ p{margin:0} button,input,select{font:inherit;color:inherit}
 .seg{display:flex;background:var(--sunken);border:1px solid var(--line);border-radius:999px;padding:3px}
 .seg button{border:0;background:none;padding:6px 15px;border-radius:999px;cursor:pointer;font-weight:700;font-size:.85rem;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
+.asrole{border:0;margin:0 0 10px;padding:0}.asrole legend{margin-bottom:6px}.asrole .seg button{flex:1;min-height:44px;font-size:.95rem}
 
 .wrap{padding-block:20px 56px;display:flex;flex-direction:column;gap:20px}
 .canvas{border:1px solid var(--line);border-radius:var(--r);background-color:var(--sunken);background-image:radial-gradient(var(--dot) 1px,transparent 1.4px);background-size:18px 18px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -1507,7 +1508,7 @@ en:{
  "stage.details":"Your details","stage.documents":"Documents","stage.verification":"Verification","stage.training":"Training","stage.exam":"Exam","stage.certificate":"Certificate",
  "sec.details.0":"Who you are","sec.details.1":"Your ID numbers","sec.details.2":"How we reach you","sec.details.3":"Bank account and consent",
  "doc.PAN":"PAN card","doc.AADHAAR_FRONT":"Aadhaar, front","doc.AADHAAR_BACK":"Aadhaar, back","doc.CLASS10":"Class 10 marksheet","doc.BANK":"Cancelled cheque or bank statement","doc.SELFIE":"Selfie",
- "status.not_started.label":"Not started","status.not_started.desc":"You have not started your application yet.","status.not_started.next":"Next: add your details. Most applicants complete details and document upload in about 30 minutes.",
+ "status.not_started.label":"Ready to start","status.not_started.desc":"Your application is ready. Start now to move to document verification.","status.not_started.next":"Complete your details and upload your documents",
  "status.draft.label":"Draft","status.draft.desc":"You are filling in your details. Nothing has been sent for checking yet.","status.draft.next":"Next: finish your details, then add your documents.",
  "status.in_progress.label":"In progress","status.in_progress.desc":"You are adding your documents. Nothing has been sent for checking yet.","status.in_progress.next":"Next: add all six documents, then send them for checking.",
  "status.submitted.label":"Submitted","status.submitted.desc":"We have received your application and are about to start checking it.","status.submitted.next":"Next: the automatic checks begin.","status.submitted.eta":"This usually takes a short while. You can close this page; your progress is kept.",
@@ -1519,7 +1520,7 @@ en:{
  "status.certificate_pending.label":"Certificate being issued","status.certificate_pending.desc":"You passed the exam. Your certificate is being prepared.","status.certificate_pending.next":"Next: your certificate appears here.","status.certificate_pending.eta":"This usually takes a short while.",
  "status.certified.label":"Certified","status.certified.desc":"You are a certified POSP. Your certificate is ready.","status.certified.next":"Nothing more to do. You can view your certificate at any time.",
  "status.rejected.label":"Not approved","status.rejected.desc":"We could not approve this application. The reasons are listed in plain language.","status.rejected.next":"Next: read the reasons. If you disagree, you can ask a person to look again.",
- "next.start":"Start your application","next.start.desc":"Most applicants complete details and document upload in about 30 minutes. Your progress is saved as you go.",
+ "next.start":"Start your application","next.start.desc":"You can stop at any point and pick up exactly where you left off.",
  "next.continue":"Continue your application",
  "next.continue.details.desc":"You are on page {page} of {of}: {section}.","next.continue.documents.desc":"You have added {n} of {of} documents. Next: {doc}.",
  "next.continue.verification.desc":"Your application is with us.","next.continue.training.desc":"Next: module {module} of {of}.","next.continue.exam.desc":"The exam is ready.","next.continue.certificate.desc":"Your certificate is ready.",
@@ -1550,7 +1551,7 @@ hi:{
  "stage.details":"आपका विवरण","stage.documents":"दस्तावेज़","stage.verification":"सत्यापन","stage.training":"प्रशिक्षण","stage.exam":"परीक्षा","stage.certificate":"प्रमाणपत्र",
  "sec.details.0":"आप कौन हैं","sec.details.1":"आपके पहचान-पत्रों के नंबर","sec.details.2":"हम आपसे कैसे संपर्क करें","sec.details.3":"बैंक खाता और सहमति",
  "doc.PAN":"PAN कार्ड","doc.AADHAAR_FRONT":"Aadhaar, आगे का भाग","doc.AADHAAR_BACK":"Aadhaar, पीछे का भाग","doc.CLASS10":"10वीं की अंकतालिका","doc.BANK":"रद्द किया हुआ चेक या बैंक स्टेटमेंट","doc.SELFIE":"सेल्फ़ी",
- "status.not_started.label":"शुरू नहीं हुआ","status.not_started.desc":"आपने अभी अपना आवेदन शुरू नहीं किया है।","status.not_started.next":"आगे: अपना विवरण भरें। ज़्यादातर आवेदक विवरण और दस्तावेज़ अपलोड करने में लगभग 30 मिनट लेते हैं।",
+ "status.not_started.label":"शुरू करने के लिए तैयार","status.not_started.desc":"आपका आवेदन तैयार है। दस्तावेज़ों की जाँच शुरू कराने के लिए अभी आवेदन शुरू करें।","status.not_started.next":"अपनी जानकारी भरें और दस्तावेज़ अपलोड करें",
  "status.draft.label":"ड्राफ़्ट","status.draft.desc":"आप अपना विवरण भर रहे हैं। जाँच के लिए अभी कुछ भी नहीं भेजा गया है।","status.draft.next":"आगे: अपना विवरण पूरा करें, फिर दस्तावेज़ जोड़ें।",
  "status.in_progress.label":"जारी है","status.in_progress.desc":"आप अपने दस्तावेज़ जोड़ रहे हैं। जाँच के लिए अभी कुछ भी नहीं भेजा गया है।","status.in_progress.next":"आगे: सभी छह दस्तावेज़ जोड़ें, फिर उन्हें जाँच के लिए भेजें।",
  "status.submitted.label":"जमा हो गया","status.submitted.desc":"हमें आपका आवेदन मिल गया है और हम जल्द ही उसकी जाँच शुरू करेंगे।","status.submitted.next":"आगे: अपने-आप होने वाली जाँच शुरू होगी।","status.submitted.eta":"इसमें आमतौर पर थोड़ा समय लगता है। आप यह पेज बंद कर सकते हैं; आपकी प्रगति सुरक्षित रहती है।",
@@ -1562,7 +1563,7 @@ hi:{
  "status.certificate_pending.label":"प्रमाणपत्र तैयार हो रहा है","status.certificate_pending.desc":"आपने परीक्षा पास कर ली है। आपका प्रमाणपत्र तैयार किया जा रहा है।","status.certificate_pending.next":"आगे: आपका प्रमाणपत्र यहीं दिखेगा।","status.certificate_pending.eta":"इसमें आमतौर पर थोड़ा समय लगता है।",
  "status.certified.label":"प्रमाणित","status.certified.desc":"आप प्रमाणित POSP हैं। आपका प्रमाणपत्र तैयार है।","status.certified.next":"अब कुछ करना बाकी नहीं है। आप अपना प्रमाणपत्र कभी भी देख सकते हैं।",
  "status.rejected.label":"मंज़ूर नहीं हुआ","status.rejected.desc":"हम इस आवेदन को मंज़ूर नहीं कर सके। कारण सरल भाषा में लिखे गए हैं।","status.rejected.next":"आगे: कारण पढ़ें। अगर आप सहमत नहीं हैं, तो किसी व्यक्ति से दोबारा जाँच करने को कह सकते हैं।",
- "next.start":"अपना आवेदन शुरू करें","next.start.desc":"ज़्यादातर आवेदक विवरण और दस्तावेज़ अपलोड करने में लगभग 30 मिनट लेते हैं। आपकी प्रगति साथ-साथ सहेजी जाती है।",
+ "next.start":"अपना आवेदन शुरू करें","next.start.desc":"आप कभी भी रुककर ठीक वहीं से फिर शुरू कर सकते हैं जहाँ आपने छोड़ा था।",
  "next.continue":"अपना आवेदन जारी रखें",
  "next.continue.details.desc":"आप {of} में से पेज {page} पर हैं: {section}।","next.continue.documents.desc":"आपने {of} में से {n} दस्तावेज़ जोड़े हैं। अगला: {doc}।",
  "next.continue.verification.desc":"आपका आवेदन हमारे पास है।","next.continue.training.desc":"अगला: {of} में से मॉड्यूल {module}।","next.continue.exam.desc":"परीक्षा तैयार है।","next.continue.certificate.desc":"आपका प्रमाणपत्र तैयार है।",
@@ -1628,7 +1629,7 @@ en:{
  "nav.label":"Main navigation","nav.home":"Home","nav.application":"Application","nav.documents":"Documents","nav.training":"Training","nav.exam":"Exam","nav.certificate":"Certificate","nav.help":"Help","nav.review":"Review console","nav.evaluation":"Evaluation","nav.audit":"Audit trail","nav.staff":"Staff tools","nav.more":"Help",
  "ui.guest":"Guest","ui.there":"there","ui.hello":"Hello, {name}","ui.congrats":"Congratulations, {name}","ui.today":"Today","ui.view":"View","ui.dismiss":"Dismiss","ui.new":"New",
  "save.device":"Saved on this device, {time}","save.account":"Saved to your account, {time}","save.none":"Not saved yet","save.nodevice":"Not saved. Turn on saving on this device, or sign in.",
- "dash.where":"Where you are now","dash.action.yes":"Action needed from you","dash.action.no":"Nothing needed from you right now","dash.next":"What happens next","dash.eta":"When to expect a result","dash.eta.none":"We will show an estimated decision time after your application is submitted.",
+ "dash.where":"Where you are now","dash.action.yes":"Action needed from you","dash.action.no":"Nothing needed from you right now","dash.next":"What happens next","dash.eta":"When to expect a result","dash.eta.none":"After you submit, we’ll show your estimated decision time and keep you updated at every step.",
  "dash.cta.label":"Your next step","dash.go":"Go to this step","av.role":"Role","dash.stepof":"Step {n} of {of}","dash.pageof":"Page {n} of {of}","dash.moduleof":"Module {n} of {of}","dash.wait":"We will update this page when something changes.","dash.wait.link":"See verification progress",
  "dash.journey":"Your journey","dash.journey.done":"Done","dash.journey.now":"You are here","dash.journey.todo":"Coming up","dash.form":"Details form: {done} of {of} pages complete","dash.journey.docs":"Documents verified: {n} of 6",
  "dash.docs":"Your documents","dash.docs.headline":"{n} of 6 verified","dash.docs.verified":"Verified","dash.docs.processing":"Being read","dash.docs.action":"Action required","dash.docs.missing":"Not added yet","dash.docs.note":"This counts your documents only. Your details form is shown separately in the journey above.","dash.docs.open":"Open documents",
@@ -1714,7 +1715,7 @@ en:{
  "lp.err.taken":"An account with this email already exists. Try signing in instead.",
  "lp.err.generic":"Something went wrong. Please try again.",
  "lp.recover.done":"If an account exists for that address, we have sent a link to reset the password. If you do not receive it, contact your administrator.",
- "lp.signedin":"Signed in successfully.",
+ "lp.signedin":"Signed in successfully.","lp.as":"Sign in as","lp.as.applicant":"Applicant","lp.as.reviewer":"Reviewer","lp.as.reviewer.note":"Reviewer accounts are created by an administrator.","lp.err.not_reviewer":"This account is not a reviewer account. Choose Applicant to sign in.","lp.err.not_applicant":"This is a review team account. Choose Reviewer to sign in.","lp.created":"Your account is created. Sign in with your email and password.","dash.start.support":"It takes about 30 minutes, and your progress is saved automatically. The sooner you submit your documents, the sooner we can start verification.","dash.go.start":"Start my application",
  "lp.reset.h":"Reset your password",
  "lp.reset.pw":"New password (12 to 256 characters)",
  "lp.reset.submit":"Set new password",
@@ -1741,7 +1742,7 @@ hi:{
  "nav.label":"मुख्य नेविगेशन","nav.home":"होम","nav.application":"आवेदन","nav.documents":"दस्तावेज़","nav.training":"प्रशिक्षण","nav.exam":"परीक्षा","nav.certificate":"प्रमाणपत्र","nav.help":"सहायता","nav.review":"समीक्षा कंसोल","nav.evaluation":"मूल्यांकन","nav.audit":"ऑडिट ट्रेल","nav.staff":"स्टाफ़ के उपकरण","nav.more":"सहायता",
  "ui.guest":"अतिथि","ui.there":"जी","ui.hello":"नमस्ते, {name}","ui.congrats":"बधाई हो, {name}","ui.today":"आज","ui.view":"देखें","ui.dismiss":"बंद करें","ui.new":"नया",
  "save.device":"इस डिवाइस पर सहेजा गया, {time}","save.account":"आपके खाते में सहेजा गया, {time}","save.none":"अभी तक सहेजा नहीं गया","save.nodevice":"सहेजा नहीं गया। इस डिवाइस पर सहेजना चालू करें, या साइन इन करें।",
- "dash.where":"आप अभी कहाँ हैं","dash.action.yes":"आपकी ओर से कार्रवाई चाहिए","dash.action.no":"अभी आपको कुछ नहीं करना है","dash.next":"आगे क्या होगा","dash.eta":"नतीजा कब तक मिलेगा","dash.eta.none":"आवेदन जमा होने के बाद हम फ़ैसले का अनुमानित समय दिखाएँगे।",
+ "dash.where":"आप अभी कहाँ हैं","dash.action.yes":"आपकी ओर से कार्रवाई चाहिए","dash.action.no":"अभी आपको कुछ नहीं करना है","dash.next":"आगे क्या होगा","dash.eta":"नतीजा कब तक मिलेगा","dash.eta.none":"आवेदन जमा करने के बाद हम अनुमानित निर्णय समय दिखाएँगे और हर चरण की जानकारी देते रहेंगे।",
  "dash.cta.label":"आपका अगला कदम","dash.go":"इस चरण पर जाएँ","av.role":"भूमिका","dash.stepof":"{of} में से चरण {n}","dash.pageof":"{of} में से पेज {n}","dash.moduleof":"{of} में से मॉड्यूल {n}","dash.wait":"कुछ बदलने पर हम यह पेज अपडेट करेंगे।","dash.wait.link":"सत्यापन की प्रगति देखें",
  "dash.journey":"आपकी यात्रा","dash.journey.done":"पूरा","dash.journey.now":"आप यहाँ हैं","dash.journey.todo":"आगे आने वाला","dash.form":"विवरण फ़ॉर्म: {of} में से {done} पेज पूरे","dash.journey.docs":"सत्यापित दस्तावेज़: 6 में से {n}",
  "dash.docs":"आपके दस्तावेज़","dash.docs.headline":"6 में से {n} सत्यापित","dash.docs.verified":"सत्यापित","dash.docs.processing":"पढ़ा जा रहा है","dash.docs.action":"कार्रवाई चाहिए","dash.docs.missing":"अभी जोड़ा नहीं","dash.docs.note":"यह सिर्फ़ आपके दस्तावेज़ गिनता है। विवरण फ़ॉर्म की प्रगति ऊपर यात्रा में अलग दिखती है।","dash.docs.open":"दस्तावेज़ खोलें",
@@ -1824,7 +1825,7 @@ hi:{
  "lp.err.taken":"इस ईमेल से खाता पहले से है। इसके बजाय साइन इन करें।",
  "lp.err.generic":"कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।",
  "lp.recover.done":"अगर उस पते पर खाता मौजूद है, तो हमने पासवर्ड बदलने का लिंक भेज दिया है। न मिले तो अपने व्यवस्थापक से संपर्क करें।",
- "lp.signedin":"साइन इन हो गया।",
+ "lp.signedin":"साइन इन हो गया।","lp.as":"इस रूप में साइन इन करें","lp.as.applicant":"आवेदक","lp.as.reviewer":"समीक्षक","lp.as.reviewer.note":"समीक्षक खाते व्यवस्थापक बनाते हैं।","lp.err.not_reviewer":"यह समीक्षक खाता नहीं है। साइन इन करने के लिए आवेदक चुनें।","lp.err.not_applicant":"यह समीक्षा टीम का खाता है। साइन इन करने के लिए समीक्षक चुनें।","lp.created":"आपका खाता बन गया है। अपने ईमेल और पासवर्ड से साइन इन करें।","dash.start.support":"इसमें लगभग 30 मिनट लगते हैं और आपकी प्रगति अपने आप सेव होती रहती है। आप जितनी जल्दी दस्तावेज़ जमा करेंगे, हम उतनी जल्दी जाँच शुरू कर सकेंगे।","dash.go.start":"आवेदन शुरू करें",
  "lp.reset.h":"अपना पासवर्ड बदलें",
  "lp.reset.pw":"नया पासवर्ड (12 से 256 अक्षर)",
  "lp.reset.submit":"नया पासवर्ड सेट करें",
@@ -2156,9 +2157,9 @@ function renderDash(){
   var eta=st.timelineKey!=="none"?T(st.timelineKey):(pre?T("dash.eta.none"):"");
   h+='<div class="dtop"><section class="box dstatus" aria-labelledby="ds-h"><p class="small lbl" id="ds-h">'+TE("dash.where")+'</p><div>'+stBadge(key)+'</div><p class="big">'+TE(st.descKey)+'</p>'+
     '<p class="actline '+(st.needsAction?"yes":"no")+'">'+svgi(st.needsAction?"alert":"check")+'<span>'+TE(st.needsAction?"dash.action.yes":"dash.action.no")+'</span></p>'+
-    '<p class="small">'+TE(st.nextEventKey)+'</p>'+(eta?'<p class="small muted">'+esc(eta)+'</p>':'')+'</section>';
+    '<p class="small"><b>'+TE(st.nextEventKey)+'</b></p>'+(key==="not_started"?'<p class="small">'+TE("dash.start.support")+'</p>':'')+(eta?'<p class="small muted">'+esc(eta)+'</p>':'')+'</section>';
   h+='<section class="box hot dnext" aria-labelledby="nx-h"><p class="small lbl">'+TE("dash.cta.label")+'</p><h2 id="nx-h">'+TE(na.labelKey,na.params)+'</h2><p class="dest">'+esc(destLine(rp))+'</p><p class="small">'+TE(na.descKey,na.descParams)+'</p>'+
-    (na.cta?'<button class="btn pri" type="button" data-act="cta-go">'+TE("dash.go")+' <span aria-hidden="true">→</span></button>':'<p class="small">'+TE("dash.wait")+'</p>'+(S.begun?'<button class="btn sm" type="button" data-act="cta-go">'+TE("dash.wait.link")+'</button>':''))+'</section></div>';
+    (na.cta?'<button class="btn pri" type="button" data-act="cta-go">'+TE(key==="not_started"?"dash.go.start":"dash.go")+' <span aria-hidden="true">→</span></button>':'<p class="small">'+TE("dash.wait")+'</p>'+(S.begun?'<button class="btn sm" type="button" data-act="cta-go">'+TE("dash.wait.link")+'</button>':''))+'</section></div>';
   /* compact journey */
   h+='<section class="box" aria-labelledby="jn-h"><h2 id="jn-h">'+TE("dash.journey")+'</h2><ol class="jny">'+STAGES.map(function(sd,i){
     var s=i<pm.journey.stagesDone?"done":i===pm.journey.step?"now":"todo";
@@ -3480,12 +3481,13 @@ function consSave(){ var k=consKey(); if(!k) return; try{ localStorage.setItem(k
 accountDialog.className='pdlg';
 accountDialog.setAttribute('aria-labelledby','account-heading');
 document.body.appendChild(accountDialog);
-var AUTH={mode:'login'};
+var AUTH={mode:'login',as:'applicant',notice:'',syncAfter:false};
 /* One dialog, three modes (sign in, create account, account recovery), opened only from the landing page. Fields and errors are labelled; the error summary takes focus. */
 function authDraw(keepEmail){
   var m=AUTH.mode,em=keepEmail&&$('account-email')?$('account-email').value:'';
   var h='<form class="mbox" id="account-form" novalidate><h2 id="account-heading">'+TE('lp.dlg.'+m)+'</h2><p class="small">'+TE('lp.dlg.'+m+'.sub')+'</p>'+
     '<div class="errsum" id="account-errors" role="alert" tabindex="-1" hidden></div>';
+  if(m==='login') h+='<fieldset class="asrole"><legend class="small">'+TE('lp.as')+'</legend><div class="seg">'+['applicant','reviewer'].map(function(r){ return '<button type="button" data-auth-as="'+r+'" aria-pressed="'+(AUTH.as===r)+'">'+TE('lp.as.'+r)+'</button>'; }).join('')+'</div></fieldset>';
   if(m==='register') h+='<label for="account-name">'+TE('lp.f.name')+'</label><input id="account-name" type="text" autocomplete="name" maxlength="80" required>';
   h+='<label for="account-email">'+TE('lp.f.email')+'</label><input id="account-email" type="email" autocomplete="'+(m==='register'?'email':'username')+'" maxlength="254" value="'+esc(em)+'" required>';
   if(m!=='recover') h+='<label for="account-password">'+TE(m==='register'?'lp.f.password.new':'lp.f.password')+'</label><input id="account-password" type="password" autocomplete="'+(m==='login'?'current-password':'new-password')+'" maxlength="256" required>';
@@ -3494,9 +3496,11 @@ function authDraw(keepEmail){
     '<div class="actions"><button class="btn pri" type="submit" id="account-submit">'+TE(m==='login'?'lp.signin':m==='register'?'lp.create':'lp.submit.recover')+'</button><button class="btn" type="button" id="account-close">'+TE('lp.close')+'</button></div>'+
     '<div class="actions" style="justify-content:flex-start">'+(m!=='login'?'<button class="linkbtn" type="button" data-auth-mode="login">'+TE('lp.sw.login')+'</button>':'<button class="linkbtn" type="button" data-auth-mode="register">'+TE('lp.sw.register')+'</button><button class="linkbtn" type="button" data-auth-mode="recover">'+TE('lp.sw.recover')+'</button>')+'</div></form>';
   accountDialog.innerHTML=h;
+  if(m==='login'&&AUTH.as==='reviewer'){ var rg=accountDialog.querySelector('[data-auth-mode="register"]'); if(rg){ var nt=document.createElement('span'); nt.className='small muted'; nt.textContent=T('lp.as.reviewer.note'); rg.replaceWith(nt); } }
+  if(m==='login'&&AUTH.notice){ var om=$('account-message'); if(om){ om.hidden=false; om.textContent=T(AUTH.notice); } }
 }
 function openAuth(mode){
-  AUTH.mode=(mode==='register'||mode==='recover')?mode:'login'; authDraw(false);
+  AUTH.mode=(mode==='register'||mode==='recover')?mode:'login'; AUTH.notice=''; authDraw(false);
   if(!accountDialog.open) accountDialog.showModal();
   var f=$(AUTH.mode==='register'?'account-name':'account-email'); if(f) f.focus();
 }
@@ -3511,7 +3515,8 @@ function authErrors(list){
 }
 accountDialog.addEventListener('click',function(e){
   var t=e.target; if(!t||!t.closest) return;
-  var sw=t.closest('[data-auth-mode]'); if(sw){ AUTH.mode=sw.getAttribute('data-auth-mode'); authDraw(true); var f=$(AUTH.mode==='register'?'account-name':'account-email'); if(f) f.focus(); return; }
+  var as=t.closest('[data-auth-as]'); if(as){ AUTH.as=as.getAttribute('data-auth-as')==='reviewer'?'reviewer':'applicant'; AUTH.notice=''; authDraw(true); var ab=accountDialog.querySelector('[data-auth-as="'+AUTH.as+'"]'); if(ab) ab.focus(); return; }
+  var sw=t.closest('[data-auth-mode]'); if(sw){ AUTH.notice=''; AUTH.mode=sw.getAttribute('data-auth-mode'); authDraw(true); var f=$(AUTH.mode==='register'?'account-name':'account-email'); if(f) f.focus(); return; }
   var fl=t.closest('[data-focus]'); if(fl){ e.preventDefault(); var el=$(fl.getAttribute('data-focus')); if(el) el.focus(); return; }
   if(t.closest('#account-close')) accountDialog.close();
 });
@@ -3529,7 +3534,19 @@ accountDialog.addEventListener('submit',function(e){
   var body=m==='recover'?{email:email}:m==='register'?{email:email,password:pw,display_name:name.trim()}:{email:email,password:pw};
   accountRequest('/api/auth/'+m,body,false).then(function(data){
     if(m==='recover'){ msg.textContent=T('lp.recover.done'); return; }
-    if(data.user){ enterAccount(data.user); if(m==='register'&&syncOpt){ CONS.sync=true; consSave(); } productEvent(m==='register'?'registration':'login'); accountDialog.close(); announce(T('lp.signedin')); }
+    if(data.user&&m==='register'){
+      /* A new account does not sign in by itself: end the session the server opened, then ask for the credentials on the sign-in panel. */
+      AUTH.syncAfter=syncOpt;
+      return accountRequest('/api/auth/logout',{},false).catch(function(){}).then(function(){ AUTH.mode='login'; AUTH.as='applicant'; AUTH.notice='lp.created'; authDraw(true); var pf=$('account-password'); if(pf) pf.focus(); });
+    }
+    if(data.user){
+      var staff=data.user.role!=='applicant';
+      if(staff!==(AUTH.as==='reviewer')){
+        /* The chosen sign-in type must match the account's role (the server decides the role; this only guides the person). */
+        return accountRequest('/api/auth/logout',{},false).catch(function(){}).then(function(){ msg.hidden=true; authErrors([[null,staff?'lp.err.not_applicant':'lp.err.not_reviewer']]); });
+      }
+      enterAccount(data.user); if(AUTH.syncAfter&&!staff){ CONS.sync=true; consSave(); } AUTH.syncAfter=false; AUTH.notice=''; productEvent('login'); accountDialog.close(); announce(T('lp.signedin'));
+    }
     else { msg.hidden=true; authErrors([[null,'lp.err.generic']]); }
   }).catch(function(err){
     var c=String(err&&err.message||'');

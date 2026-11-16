@@ -161,6 +161,23 @@ def register_ui(dev, name, email, sync=True):
     if sync:
         dev.page.check("#account-sync-opt")
     dev.page.click("#account-submit")
+    # Sign-up does not sign in: it ends on the sign-in panel with the email kept and a confirmation.
+    dev.page.wait_for_selector('[data-auth-as="applicant"][aria-pressed="true"]', timeout=15000)
+    msg = dev.page.inner_text("#account-message")
+    check("sign-up ends on the sign-in panel with a confirmation, not signed in",
+          "created" in msg.lower() and dev.page.input_value("#account-email") == email
+          and not dev.page.is_visible("#tb-refv"), msg)
+    # Choosing Reviewer with an applicant account is refused with a clear message.
+    dev.page.click('[data-auth-as="reviewer"]')
+    check("reviewer choice hides Create account and shows the admin note",
+          dev.page.locator('#account-form [data-auth-mode="register"]').count() == 0)
+    dev.page.fill("#account-password", PASSWORD)
+    dev.page.click("#account-submit")
+    dev.page.wait_for_selector("#account-errors:not([hidden])", timeout=15000)
+    check("an applicant account cannot sign in as reviewer", "not a reviewer" in dev.page.inner_text("#account-errors").lower())
+    dev.page.click('[data-auth-as="applicant"]')
+    dev.page.fill("#account-password", PASSWORD)
+    dev.page.click("#account-submit")
     dev.page.wait_for_selector("#tb-refv", timeout=15000)
 
 
