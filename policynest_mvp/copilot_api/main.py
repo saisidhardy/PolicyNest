@@ -50,6 +50,7 @@ MODEL = llm.model()  # provider model name (never a key); /api/health reports it
 EFFORT = os.environ.get("COPILOT_EFFORT", "low")
 ALLOWED = config.ALLOWED_ORIGINS
 MAX_BODY = 24_000
+MAX_UPLOAD_BODY = 10 * 1024 * 1024  # 10 MB for base64 documents
 RATE = (int(os.environ.get("COPILOT_RATE", "20")), 600)  # questions per 10 minutes per client
 GLOBAL_PER_MIN = int(os.environ.get("COPILOT_GLOBAL_PER_MIN", "30"))  # all clients together (fallback if the client address is unreliable)
 DAILY_CAP = int(os.environ.get("COPILOT_DAILY_CAP", "50"))  # AI answers per UTC day (G-25, user decision 14 Nov)
@@ -390,7 +391,9 @@ class H(BaseHTTPRequestHandler):
             return self._json(403, {"error": "origin_not_allowed"})
         try: n = int(self.headers.get("Content-Length") or 0)
         except ValueError: return self._json(400, {'error': 'bad_length'})
-        if n <= 0 or n > MAX_BODY:
+        path_only = urlsplit(self.path).path
+        max_limit = MAX_UPLOAD_BODY if path_only.startswith("/api/documents/") else MAX_BODY
+        if n <= 0 or n > max_limit:
             return self._json(413, {"error": "body_too_large"})
         try:
             body = json.loads(self.rfile.read(n))
@@ -658,7 +661,16 @@ class H(BaseHTTPRequestHandler):
 
     def _portal(self, method, body, params):
         """Applicant-portal routes (portal.ROUTES). Returns True when the request was handled."""
-        route = portal.ROUTES.get((method, self.path))
+        path_only = urlsplit(self.path).path
+        route = portal.ROUTES.get((method, path_only))
+        # Support dynamic document download /api/documents/<doc_id>/download
+        if not route and path_only.startswith('/api/documents/') and path_only.endswith('/download'):
+            parts = path_only.split('/')
+            if len(parts) == 5 and parts[4] == 'download':
+                route = portal.ROUTES.get((method, '/api/documents/download'))
+                params = dict(params or {})
+                params['doc_id'] = [parts[3]]
+
         if not route:
             return False
         try:
@@ -666,11 +678,22 @@ class H(BaseHTTPRequestHandler):
         except ValueError:
             self._json(401, {'error': 'unauthenticated'})
             return True
-        if method == 'POST' and self.path == '/api/applications/me/events' and _limited('portal:' + _client(self)):
+        if method == 'POST' and path_only == '/api/applications/me/events' and _limited('portal:' + _client(self)):
             self._json(429, {'error': 'rate_limited'})
             return True
         try:
-            code, out = route(user, body if isinstance(body, dict) else {}, params)
+            code, out = route(user, body if isinstance(body, dict) else {}, params or {})
+            if isinstance(out, tuple) and len(out) == 3:
+                # Raw binary stream (content_bytes, mime_type, file_name)
+                content_bytes, mime_type, file_name = out
+                self.send_response(code)
+                _cors(self, self.headers.get("Origin", ""))
+                self.send_header("Content-Type", mime_type)
+                self.send_header("Content-Length", str(len(content_bytes)))
+                self.send_header("Content-Disposition", f'inline; filename="{file_name}"')
+                self.end_headers()
+                self.wfile.write(content_bytes)
+                return True
             self._json(code, out)
         except portal.PortalError as e:
             self._json(e.status, e.payload)
@@ -682,7 +705,9 @@ class H(BaseHTTPRequestHandler):
             return self._json(403, {"error": "origin_not_allowed"})
         try: n = int(self.headers.get("Content-Length") or 0)
         except ValueError: return self._json(400, {'error': 'bad_length'})
-        if n <= 0 or n > MAX_BODY:
+        path_only = urlsplit(self.path).path
+        max_limit = MAX_UPLOAD_BODY if path_only.startswith("/api/documents/") else MAX_BODY
+        if n <= 0 or n > max_limit:
             return self._json(413, {"error": "body_too_large"})
         try: body = json.loads(self.rfile.read(n))
         except ValueError: return self._json(400, {"error": "bad_json"})

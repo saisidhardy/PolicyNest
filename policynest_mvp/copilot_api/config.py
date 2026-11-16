@@ -68,3 +68,31 @@ def get_db_path(env=None):
     if e.get("DATA_DIR"):
         return Path(os.path.join(e["DATA_DIR"], "policynest.sqlite3"))
     return Path(e.get("POLICYNEST_DB_PATH") or str(Path(__file__).resolve().parent / "policynest.sqlite3"))
+
+# Document storage configuration
+MAX_DOCUMENT_SIZE = 5 * 1024 * 1024  # 5 MB maximum
+MIN_DOCUMENT_SIZE = 1024             # 1 KB minimum
+ALLOWED_MIME_TYPES = {
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/pdf",
+}
+MANDATORY_DOCUMENT_SLOTS = (
+    "PAN",
+    "AADHAAR_FRONT",
+    "AADHAAR_BACK",
+    "CLASS10",
+    "BANK",
+    "SELFIE",
+)
+
+def get_storage_dir(env=None):
+    e = os.environ if env is None else env
+    if e.get("DATA_DIR"):
+        p = Path(os.path.join(e["DATA_DIR"], "documents"))
+    else:
+        p = Path(e.get("POLICYNEST_DOCS_DIR") or str(Path(__file__).resolve().parent / "documents_storage"))
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+

@@ -391,6 +391,8 @@ EVENTS = {
     'exam_failed': ('policynest', 'action', '#exam'),
     'certificate_issued': ('policynest', 'success', '#certificate'),
     'dispute_submitted': ('you', 'info', '#history'),
+    'verification_completed': ('policynest', 'info', '#documents'),
+    'doc_corrected': ('you', 'info', '#documents'),
 }
 REVIEWER_EVENTS = {
     'review_approved': ('reviewer', 'success', '#home'),
@@ -585,6 +587,87 @@ def _handle_delete_request(u, b, p):
     return 200, prof_module.request_account_deletion(u, b.get('reason'))
 
 
+# ---------------------------------------------------------------- milestone 3 document handlers
+def _handle_doc_upload(u, b, p):
+    import base64
+    import documents
+    slot = b.get('slot')
+    content_b64 = b.get('content_base64') or b.get('file_base64')
+    if not content_b64:
+        raise PortalError(400, 'missing_file_content')
+    try:
+        if ',' in content_b64:
+            content_b64 = content_b64.split(',', 1)[1]
+        file_bytes = base64.b64decode(content_b64)
+    except Exception:
+        raise PortalError(400, 'invalid_base64_content')
+    file_name = b.get('file_name', f"{slot}.bin")
+    client_signals = b.get('client_signals')
+    try:
+        return 200, documents.upload_document(u, slot, file_bytes, file_name, client_signals)
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_doc_list(u, b, p):
+    import documents
+    return 200, {'documents': documents.list_documents(u)}
+
+def _handle_doc_download(u, b, p):
+    import documents
+    doc_id = p.get('doc_id', [''])[0] or (b.get('doc_id') if isinstance(b, dict) else '')
+    if not doc_id:
+        raise PortalError(400, 'missing_doc_id')
+    try:
+        content, mime_type, file_name = documents.get_document_content(u, doc_id)
+        if p.get('format', [''])[0] == 'json':
+            import base64
+            return 200, {
+                'doc_id': doc_id,
+                'mime_type': mime_type,
+                'file_name': file_name,
+                'content_base64': base64.b64encode(content).decode('ascii'),
+            }
+        return 200, (content, mime_type, file_name)
+    except FileNotFoundError:
+        raise PortalError(404, 'document_not_found')
+    except PermissionError as e:
+        raise PortalError(403, str(e))
+
+def _handle_doc_verify(u, b, p):
+    import documents
+    return 200, documents.verify_application(u)
+
+def _handle_doc_cross_checks(u, b, p):
+    import documents
+    return 200, {'checks': documents.get_cross_document_checks(u)}
+
+def _handle_doc_correction(u, b, p):
+    import base64
+    import documents
+    slot = b.get('slot')
+    content_b64 = b.get('content_base64') or b.get('file_base64')
+    if not content_b64:
+        raise PortalError(400, 'missing_file_content')
+    try:
+        if ',' in content_b64:
+            content_b64 = content_b64.split(',', 1)[1]
+        file_bytes = base64.b64decode(content_b64)
+    except Exception:
+        raise PortalError(400, 'invalid_base64_content')
+    file_name = b.get('file_name', f"{slot}_corrected.bin")
+    explanation = b.get('explanation')
+    try:
+        return 200, documents.submit_document_correction(u, slot, file_bytes, file_name, explanation=explanation)
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_doc_guidelines(u, b, p):
+    import documents
+    slot = p.get('slot', [None])[0]
+    lang = p.get('lang', ['en'])[0]
+    return 200, {'guidelines': documents.get_guidelines(slot, lang)}
+
+
 # ---------------------------------------------------------------- route table
 ROUTES = {
     ('GET', '/api/me'): lambda u, b, p: (200, get_profile(u)),
@@ -606,4 +689,11 @@ ROUTES = {
     ('GET', '/api/applications/me/timeline'): lambda u, b, p: (200, timeline(u, p)),
     ('GET', '/api/notifications'): lambda u, b, p: (200, list_notifications(u, p)),
     ('POST', '/api/notifications/read'): lambda u, b, p: (200, mark_read(u, b)),
+    ('POST', '/api/documents/upload'): _handle_doc_upload,
+    ('GET', '/api/documents'): _handle_doc_list,
+    ('GET', '/api/documents/download'): _handle_doc_download,
+    ('POST', '/api/documents/verify'): _handle_doc_verify,
+    ('GET', '/api/documents/cross-checks'): _handle_doc_cross_checks,
+    ('POST', '/api/documents/correction'): _handle_doc_correction,
+    ('GET', '/api/documents/guidelines'): _handle_doc_guidelines,
 }
