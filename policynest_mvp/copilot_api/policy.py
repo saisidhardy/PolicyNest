@@ -182,6 +182,9 @@ def allows(actor, action, resource):
     if not actor or not actor.get("id") or not isinstance(resource, dict):
         return False
 
+    if actor.get("status") in ("suspended", "disabled", "SUSPENDED", "DISABLED"):
+        return False
+
     role = actor.get("role")
     owner = resource.get("applicant_id")
     assigned = resource.get("reviewer_id")

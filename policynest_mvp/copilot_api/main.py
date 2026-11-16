@@ -386,6 +386,18 @@ class H(BaseHTTPRequestHandler):
             res = certification.verify_certificate_public(cert_id)
             return self._json(200 if res.get("verified") else 404, res)
 
+        # System Capability & Verification Health Report: /api/verification
+        if self.path == "/api/verification":
+            try:
+                user = None
+                try: user = self._identity()
+                except Exception: pass
+                import verification
+                report = verification.get_system_verification_report(user)
+                return self._json(200, report)
+            except ValueError as e:
+                return self._json(403, {"error": str(e)})
+
         # Public SVG Certificate Render: /api/certificates/render/<identifier>
         if self.path.startswith("/api/certificates/render/"):
             parts = self.path.split("/")
@@ -458,6 +470,27 @@ class H(BaseHTTPRequestHandler):
                     return self._json(200, {'ok': True})
                 return self._json(200, workflows.resolve(user, body.get('reference'), body.get('status'), body.get('response')))
             except ValueError: return self._json(403, {'error': 'forbidden_or_invalid_request'})
+
+        # QA Seed & Reset endpoints (strictly non-production or authorized admin)
+        if self.path == "/api/qa/seed":
+            try:
+                user = None
+                try: user = self._identity()
+                except Exception: pass
+                import qa
+                return self._json(200, qa.seed_qa_environment(user))
+            except ValueError as e:
+                return self._json(403, {"error": str(e)})
+
+        if self.path == "/api/qa/reset":
+            try:
+                user = None
+                try: user = self._identity()
+                except Exception: pass
+                import qa
+                return self._json(200, qa.reset_qa_environment(user))
+            except ValueError as e:
+                return self._json(403, {"error": str(e)})
         if self.path.startswith("/api/auth/") and _limited(_client(self)):
             return self._json(429, {"error": "rate_limited"})
         if self.path == "/api/auth/refresh":

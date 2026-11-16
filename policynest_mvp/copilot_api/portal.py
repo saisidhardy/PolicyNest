@@ -1147,6 +1147,27 @@ def _handle_compliance_pack(u, b, p):
     except FileNotFoundError:
         raise PortalError(404, 'target_not_found')
 
+def _handle_verification(u, b, p):
+    import verification
+    try:
+        return 200, verification.get_system_verification_report(u)
+    except ValueError as e:
+        raise PortalError(403, str(e))
+
+def _handle_qa_seed(u, b, p):
+    import qa
+    try:
+        return 200, qa.seed_qa_environment(u)
+    except ValueError as e:
+        raise PortalError(403, str(e))
+
+def _handle_qa_reset(u, b, p):
+    import qa
+    try:
+        return 200, qa.reset_qa_environment(u)
+    except ValueError as e:
+        raise PortalError(403, str(e))
+
 
 # ---------------------------------------------------------------- route table
 ROUTES = {
@@ -1220,4 +1241,7 @@ ROUTES = {
     ('GET', '/api/audit/timeline'): _handle_audit_timeline,
     ('GET', '/api/compliance/audit-pack'): _handle_compliance_pack,
     ('POST', '/api/compliance/audit-pack'): _handle_compliance_pack,
+    ('GET', '/api/verification'): _handle_verification,
+    ('POST', '/api/qa/seed'): _handle_qa_seed,
+    ('POST', '/api/qa/reset'): _handle_qa_reset,
 }

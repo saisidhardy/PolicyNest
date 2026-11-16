@@ -21,4 +21,5 @@ python-runtime.zip
 *.sqlite3-shm
 __pycache__/
 *.pyc
+policynest_mvp/copilot_api/documents_storage/
 .claude/settings.local.json
