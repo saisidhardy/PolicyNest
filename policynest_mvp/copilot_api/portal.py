@@ -974,6 +974,70 @@ def _handle_training_admin_reset(u, b, p):
     except PermissionError:
         raise PortalError(403, 'forbidden')
 
+def _handle_exam_eligibility(u, b, p):
+    import examination
+    try:
+        return 200, examination.get_exam_eligibility(u)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_exam_start(u, b, p):
+    import examination
+    lang = p.get('lang', ['en'])[0] or (b.get('lang') if isinstance(b, dict) else 'en')
+    try:
+        return 200, examination.start_exam_session(u, lang=lang)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_exam_incident(u, b, p):
+    import examination
+    exam_id = b.get('exam_id') or b.get('id')
+    incident_type = b.get('incident_type', 'TAB_SWITCH')
+    if not exam_id:
+        raise PortalError(400, 'exam_id_required')
+    try:
+        return 200, examination.record_exam_incident(u, exam_id, incident_type, b.get('details'))
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'exam_not_found')
+
+def _handle_exam_submit(u, b, p):
+    import examination
+    exam_id = b.get('exam_id') or b.get('id')
+    answers = b.get('answers', {})
+    if not exam_id:
+        raise PortalError(400, 'exam_id_required')
+    try:
+        return 200, examination.submit_exam_attempt(u, exam_id, answers)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'exam_not_found')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_exam_admin_attempts(u, b, p):
+    import examination
+    target_user_id = int(p.get('user_id', [0])[0] or (b.get('user_id', 0) if isinstance(b, dict) else 0))
+    flagged = p.get('flagged', ['0'])[0] in ('1', 'true', 'True')
+    try:
+        return 200, {'attempts': examination.admin_list_attempts(u, user_id=target_user_id or None, flagged_only=flagged)}
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_exam_admin_override(u, b, p):
+    import examination
+    target_user_id = int(b.get('user_id', 0))
+    if not target_user_id:
+        raise PortalError(400, 'user_id_required')
+    try:
+        return 200, examination.admin_override_cooldown(u, target_user_id)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
 
 # ---------------------------------------------------------------- route table
 ROUTES = {
@@ -1029,4 +1093,10 @@ ROUTES = {
     ('POST', '/api/training/admin/modules'): _handle_training_admin_upsert_module,
     ('GET', '/api/training/admin/user-progress'): _handle_training_admin_user_progress,
     ('POST', '/api/training/admin/reset'): _handle_training_admin_reset,
+    ('GET', '/api/exam/eligibility'): _handle_exam_eligibility,
+    ('POST', '/api/exam/start'): _handle_exam_start,
+    ('POST', '/api/exam/incident'): _handle_exam_incident,
+    ('POST', '/api/exam/submit'): _handle_exam_submit,
+    ('GET', '/api/exam/admin/attempts'): _handle_exam_admin_attempts,
+    ('POST', '/api/exam/admin/override-cooldown'): _handle_exam_admin_override,
 }

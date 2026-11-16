@@ -487,6 +487,36 @@ def migrate_007_training_lms_and_curriculum_seed(db):
         )
 
 
+@migration(8, "008_examination_engine_and_question_bank")
+def migrate_008_examination_engine_and_question_bank(db):
+    """Expand examination tracking, add question bank table, and indices."""
+    exam_cols = {r[1] for r in db.execute('PRAGMA table_info(exam_attempts)')}
+    for col_name, ddl in [
+        ('answers_json', "TEXT NOT NULL DEFAULT '{}'"),
+        ('question_ids_json', "TEXT NOT NULL DEFAULT '[]'"),
+        ('incident_notes', "TEXT"),
+        ('duration_seconds', "INTEGER NOT NULL DEFAULT 1800"),
+    ]:
+        if col_name not in exam_cols:
+            db.execute(f"ALTER TABLE exam_attempts ADD COLUMN {col_name} {ddl}")
+
+    db.execute("""CREATE TABLE IF NOT EXISTS exam_question_bank (
+        id TEXT PRIMARY KEY,
+        category TEXT NOT NULL,
+        question_en TEXT NOT NULL,
+        question_hi TEXT,
+        options_en_json TEXT NOT NULL,
+        options_hi_json TEXT,
+        correct_index INTEGER NOT NULL,
+        explanation_en TEXT,
+        explanation_hi TEXT,
+        created_at INTEGER NOT NULL
+    )""")
+
+    db.execute("CREATE INDEX IF NOT EXISTS idx_exam_user ON exam_attempts(user_id, attempt_number)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_qbank_cat ON exam_question_bank(category)")
+
+
 def run_migrations(db):
     """Run all unapplied migrations in ascending order within a single transaction."""
     db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (
