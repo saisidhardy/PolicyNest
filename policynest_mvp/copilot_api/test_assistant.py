@@ -310,5 +310,39 @@ class AssistantHTTP(unittest.TestCase):
         self.assertNotIn(FAKE_KEY, json.dumps(h))
 
 
+class ServerStateTests(unittest.TestCase):
+    """Verification findings M1-M3 (16 Nov): stage keys, fallback text, citations."""
+
+    def test_stage_keys_give_the_real_next_step(self):
+        app = {"progress": {"stage": "documents", "documents": {"PAN": {"status": "verified", "issues": []},
+                                                                 "AADHAAR_FRONT": {"status": "needs_fix", "issues": ["BLURRY"]}}}}
+        ctx = assistant.ctx_from_progress(app, "Riya")
+        self.assertEqual(ctx["stage"], "Documents")
+        self.assertIn("Aadhaar (front)", assistant.next_step(ctx))
+        self.assertNotIn("checklist", assistant.next_step(ctx))
+        d = assistant.ctx_from_progress({"progress": {"stage": "details", "dpage": 2}})
+        self.assertEqual(d["details_page"], "page 3 of 4")
+        self.assertIn("details", assistant.next_step(d))
+
+    def test_missing_slots_are_not_uploaded(self):
+        ctx = assistant.ctx_from_progress({"progress": {"stage": "documents", "documents": {"PAN": {"status": "verified"}}}})
+        self.assertEqual(len(ctx["documents"]), 6)
+        self.assertIn("Aadhaar (front)", assistant.next_step(ctx))
+
+    def test_fallback_never_shows_templates(self):
+        ev = [{"cite": "T", "text": "Hi {applicant_name}, use {secure_reupload_link}"}]
+        ans, cites = assistant.deterministic("How many training hours?", None, ev)
+        self.assertNotIn("{", ans)
+        self.assertIn("15 hours", ans)
+        ans, cites = assistant.deterministic("zzz", None, ev)
+        self.assertNotIn("{", ans)
+        self.assertEqual(cites, [])
+
+    def test_uncited_answer_gets_retrieved_sources(self):
+        ans, cited, ok = assistant.finalize("Take the photo in daylight.", ["Rulebook 4.1", "Rulebook 5"])
+        self.assertTrue(ok)
+        self.assertEqual(cited, ["Rulebook 4.1", "Rulebook 5"])
+
+
 if __name__ == "__main__":
     unittest.main()

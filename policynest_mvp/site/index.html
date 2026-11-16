@@ -718,6 +718,7 @@ body.typing .cp-fab{display:none}
 body.landing .bnav,body.landing .navscrim,body.landing .mprog{display:none!important}
 @media (prefers-reduced-motion:reduce){.nav{transition:none!important}}
 /* ===== Landing page (public, signed-out) and auth dialogs (lane P3b) ===== */
+body.staff #tb-ref,body.staff #tb-status,body.staff #savestate,body.staff .cp-fab,body.staff #cp{display:none!important}
 body.landing .shell,body.landing .cp-fab,body.landing #cp,body.landing #focusbar,body.landing #fs-banner,body.landing #skip-g{display:none!important}
 .landing{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
 .landing[hidden]{display:none}
@@ -1975,7 +1976,9 @@ function saveInfo(){
   return {state:state,text:txt,icon:ic};
 }
 /* ---- top bar, navigation and account menu ---- */
+function staffSignedIn(){ return !!(ACCOUNT&&ACCOUNT.role&&ACCOUNT.role!=="applicant"); }
 function shellChrome(){
+  document.body.classList.toggle("staff",staffSignedIn());
   var key=statusOf(S),name=dispName()||T("ui.guest"),v=verif(),r=effRole();
   var rl=r==="all"?"applicant":r;
   setHtml($("tb-who"),'<b>'+esc(name)+'</b><span class="small muted">'+TE("role."+rl)+'</span>');
@@ -3134,6 +3137,7 @@ function reviewCard(){
    '<p class="small muted">The applicant never sees the words "fraud" or another person\'s data. A confirmed different-person rejection is referred to the fraud desk internally.</p></div>';
 }
 function renderOps(){
+  if(staffSignedIn()){ $("view-ops").innerHTML='<div class="card"><h1>Review console</h1><div class="empty">No case selected. Cases assigned to you will appear here once the review queue screens are built.</div></div>'; return; }
   var x=S.ex,sub=S.reached.SUBMITTED,done=sub&&!S.rechecking&&S.shown>=S.checks.length;
   var dec=!sub?pill("","Awaiting documents"):!done?pill("run","Engine running"):S.decision==="APPROVE"?pill("ok","APPROVE · straight-through"):pill(S.decision==="REJECT"?"bad":"info",S.decision);
   var h='<div class="card"><div class="ophead"><div><h1>'+esc(S.f.name||"New applicant")+'</h1><span class="mono muted">'+S.appId+' · Web · '+esc(S.f.city||"—")+', '+esc(S.f.state||"—")+'</span></div>'+dec+'</div>'+

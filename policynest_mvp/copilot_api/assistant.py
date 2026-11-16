@@ -75,6 +75,17 @@ NEXT_HI = {
     "Certificate": "आप प्रमाणित हो चुके हैं। आपका POSP कोड प्रमाणपत्र पर है।",
 }
 
+STAGE_LABEL = {"intro": "Before you start", "details": "Your details", "documents": "Documents", "verification": "Verification",
+               "training": "Training", "exam": "Exam", "certificate": "Certificate"}
+DOC_STATUS = {"verified": "ok", "ok": "ok", "needs_fix": "needs a fix", "rejected": "rejected"}
+
+
+def stage_label(stage):
+    """The server stores stage keys ("documents"); the tables and prompt use display labels ("Documents")."""
+    s = str(stage or "").strip()
+    return STAGE_LABEL.get(s.lower(), s) or "Before you start"
+
+
 SLOT_LABEL = {"PAN": "PAN card", "AADHAAR_FRONT": "Aadhaar (front)", "AADHAAR_BACK": "Aadhaar (back)",
               "CLASS10": "Class 10 marksheet", "BANK": "Cancelled cheque", "SELFIE": "Selfie"}
 HI_QUERY_HINTS = [
@@ -116,7 +127,7 @@ def next_step(ctx, lang="en"):
     """Deterministic next action from the state alone (used in the prompt and as the no-AI fallback)."""
     ctx = ctx or {}
     table = NEXT_HI if lang == "hi" else NEXT_EN
-    stage = ctx.get("stage") or "Before you start"
+    stage = stage_label(ctx.get("stage"))
     decision = ctx.get("decision")
     docs = ctx.get("documents") or []
     todo = [d for d in docs if d.get("status") not in ("ok",)]
@@ -135,7 +146,7 @@ def next_step(ctx, lang="en"):
     if stage == "Documents" and docs and todo:
         first = todo[0]
         name = first.get("document") or "document"
-        if first.get("status") == "rejected":
+        if first.get("status") in ("rejected", "needs a fix"):
             return (f"{name} बदलें: उसके कार्ड पर Replace दबाकर नई साफ़ फ़ोटो अपलोड करें।" if lang == "hi"
                     else f"Replace your {name}: on its card tap Replace and upload a clearer photo.")
         return (f"अगला दस्तावेज़ अपलोड करें: {name}।" if lang == "hi" else f"Next, upload your {name}.")
@@ -189,21 +200,25 @@ def describe(ctx, lang="en"):
 def ctx_from_progress(app, first_name=None):
     """Normalise the server-side application row (portal.get_application) into the assistant's context."""
     p = (app or {}).get("progress") or {}
+    saved = p.get("documents") or {}
     docs = []
-    for slot, v in (p.get("documents") or {}).items():
-        docs.append({"document": SLOT_LABEL.get(slot, slot), "status": v.get("status", "not uploaded"),
+    for slot, label in SLOT_LABEL.items():  # all six slots, in upload order; a slot with no entry is not uploaded yet
+        v = saved.get(slot) or {}
+        docs.append({"document": label, "status": DOC_STATUS.get(v.get("status"), "not uploaded"),
                      "refusal_reason": None, "open_issues": list(v.get("issues") or [])})
-    order = list(SLOT_LABEL.values())
-    docs.sort(key=lambda d: order.index(d["document"]) if d["document"] in order else 99)
     fu = [{"document": d["document"], "issue": i} for d in docs for i in d["open_issues"]] if p.get("decision") == "NEEDS_MORE_INFO" else []
     ex = p.get("exam") or {}
-    ctx = {"source": "server (signed in)", "first_name": first_name, "stage": p.get("stage") or "Before you start",
+    stage = stage_label(p.get("stage"))
+    ctx = {"source": "server (signed in)", "first_name": first_name, "stage": stage,
            "application_status": (app or {}).get("status"), "decision": p.get("decision"), "round": p.get("round"),
-           "documents": docs, "follow_up_items": fu, "field_errors": [],
+           "documents": docs if (saved or stage not in ("Before you start", "Your details")) else [],
+           "follow_up_items": fu, "field_errors": [],
            "training_hours": (p.get("training") or {}).get("hours"), "exam_score": ex.get("score")}
-    r = p.get("resume") or {}
-    if r.get("action") or r.get("milestone"):
-        ctx["details_page"] = None
+    if stage == "Your details":
+        r = p.get("resume") or {}  # resume.page is 1-based; dpage is 0-based
+        page = p.get("dpage") + 1 if isinstance(p.get("dpage"), int) else r.get("page")
+        if isinstance(page, int) and 1 <= page <= 4:
+            ctx["details_page"] = f"page {page} of 4"
     return ctx
 
 
@@ -248,21 +263,56 @@ def finalize(text, sources, lang="en"):
     cleaned = re.sub(r"[ \t]{2,}", " ", cleaned).strip()
     if not cleaned:
         return safe, [], False
+    if not cited:  # the answer was grounded on these passages; show the top ones so the applicant can check them
+        cited = [c for c in sources if not _TEMPLATE.search(c)][:2]
     return cleaned, cited, True
 
 
+_TEMPLATE = re.compile(r"\{[A-Za-z_]{2,40}\}")
+# Intent -> the FACTS line that answers it (used when no model answer is available).
+_INTENTS = [
+    (r"train|hour|module|exam|pass mark|passing|retake|score|प्रशिक्षण|परीक्षा|पास", "Training:"),
+    (r"photo|blur|clear|glare|corner|image|फोटो|फ़ोटो|धुंधल|साफ", "A good photo"),
+    (r"refus|wrong file|not accept|rejected upload|slot", "Each upload slot"),
+    (r"which documents|what documents|documents? (do i|i) need|upload|दस्तावेज", "Six uploads"),
+    (r"\bage\b|how old|eligib|who can|qualif|उम्र|आयु|योग्य", "Who can apply"),
+    (r"privacy|data|store|safe|stor|गोपनीय|डेटा", "Privacy:"),
+    (r"person|human|review|reviewer|surname|dispute|समीक्षक|रिव्यू", "Some things"),
+    (r"save|resume|come back|later|continue|सेव", "Saving:"),
+    (r"simulat|penny|face match|irdai|how .*check", "Checks of PAN"),
+    (r"stage|step|journey|process|how (does|do) (it|this) work", "Journey"),
+]
+_FACT_LINES = [l[2:].strip() for l in FACTS.splitlines() if l.startswith("- ")]
+
+
+def intent_answer(question, lang="en"):
+    """The FACTS line that answers a common question, or None."""
+    q = retrieval_query(question or "", None)
+    for pat, head in _INTENTS:
+        if re.search(pat, q, re.I):
+            for line in _FACT_LINES:
+                if line.startswith(head):
+                    return line
+    return None
+
+
 def deterministic(question, ctx, evidence, lang="en"):
-    """No-AI answer: the applicant's next action from the app plus the best rulebook passage."""
+    """No-AI answer: the applicant's next action from the app, then the app's own fact for a common question, else the
+    best rulebook passage. Message templates (passages with {placeholders}) are never shown."""
     step = next_step(ctx, lang)
     stage = (ctx or {}).get("stage")
     if stage:
-        step = (f"आपकी प्रगति: {stage}। " if lang == "hi" else f"Your progress: {stage}. ") + step
-    if not evidence:
+        step = (f"आपकी प्रगति: {stage_label(stage)}। " if lang == "hi" else f"Your progress: {stage_label(stage)}. ") + step
+    head = "नियमावली के अनुसार (अंग्रेज़ी में): " if lang == "hi" else "From the rulebook: "
+    usable = [c for c in evidence or [] if not _TEMPLATE.search(c.get("text") or "")]
+    fact = intent_answer(question, lang)
+    if fact:
+        return f"{step}\n\n{head}{fact}", [usable[0]["cite"]] if usable else []
+    if not usable:
         return step, []
-    c = evidence[0]
+    c = usable[0]
     body = re.sub(r"[|#*`>]+", " ", c["text"])
     body = re.sub(r"\s+", " ", body).strip()[:600]
-    head = "नियमावली के अनुसार (अंग्रेज़ी में): " if lang == "hi" else "From the rulebook: "
     return f"{step}\n\n{head}{body}", [c["cite"]]
 
 

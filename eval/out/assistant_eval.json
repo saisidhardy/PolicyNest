@@ -1,19 +1,13 @@
 {
  "summary": {
-  "run_at": "2026-11-16T02:05:21Z",
+  "run_at": "2026-11-16T03:48:59Z",
   "provider": "gemini",
   "model": "gemini-3.5-flash",
   "cases": 45,
-  "passed": 44,
-  "score": 0.9778,
-  "median_seconds": 5.0,
-  "failed_ids": [
-   "B02"
-  ],
-  "server_state": {
-   "cases": 4,
-   "passed": 4
-  }
+  "passed": 45,
+  "score": 1.0,
+  "median_seconds": 4.5,
+  "failed_ids": []
  },
  "results": [
   {
@@ -25,10 +19,11 @@
    "mode": "ai_grounded",
    "lang": "en",
    "sources": [
+    "Defect guide",
     "Regulatory matrix §3.1"
    ],
    "seconds": 5.5,
-   "answer": "To become a POSP agent with PolicyNest, you need to upload six required documents on the Documents step:\n\n1. PAN card (an individual PAN)\n2. Aadhaar card (front photo)\n3. Aadhaar card (back photo)\n4. Class 10 or 12 marksheet from a recognised school board\n5. Bank proof in your name (cancelled cheque, passbook first page, or bank statement)\n6. A clear selfie\n\nMake sure photos are taken on a flat surface in good light with all four corners visible. \n\nI do not have your saved progress yet. Could you tell me which step you are currently on, or are you just getting started?"
+   "answer": "Welcome! Becoming a POSP is straightforward. You will need to upload six items in total:\n\n1. PAN card.\n2. Aadhaar card (front and back photos).\n3. Class 10 or 12 marksheet.\n4. Bank proof (cancelled cheque, first page of passbook, or bank statement).\n5. A clear selfie.\n\nWhich step of the journey are you on right now?"
   },
   {
    "id": "A02",
@@ -39,10 +34,11 @@
    "mode": "ai_grounded",
    "lang": "hi",
    "sources": [
-    "Regulatory matrix §3.1"
+    "Rework spec §3",
+    "Rulebook §4.1"
    ],
-   "seconds": 6.5,
-   "answer": "PolicyNest POSP बनने के लिए आपको ये दस्तावेज़ अपलोड करने होंगे:\n\n1. **PAN card** (व्यक्तिगत)\n2. **Aadhaar card** (आगे और पीछे की फोटो)\n3. **10वीं या 12वीं की मार्कशीट**\n4. **बैंक प्रूफ** (कैंसिल्ड चेक, पासबुक का पहला पन्ना या बैंक स्टेटमेंट)\n5. **Selfie** (साफ़ और अच्छे प्रकाश में)\n\nआवेदन के लिए आपकी उम्र कम से कम 18 वर्ष और 10वीं पास होना ज़रूरी है। \n\nअभी आपका कोई सेव्ड प्रोग्रेस नहीं दिख रहा है। आप अभी किस स्टेप पर हैं? आवेदन शुरू करने के लिए **Your details** से शुरुआत करें और फिर **Documents** स्क्रीन पर अपलोड करें।"
+   "seconds": 3.6,
+   "answer": "पॉलिसीनेस्ट (PolicyNest) में POSP एजेंट बनने के लिए आपको मुख्य रूप से 6 दस्तावेज़ अपलोड करने होंगे: पैन कार्ड, आधार कार्ड का आगे का हिस्सा, आधार कार्ड का पीछे का हिस्सा, 10वीं या 12वीं की मार्कशीट, बैंक प्रूफ (कैंसिल्ड चेक, पासबुक का पहला पेज या बैंक स्टेटमेंट), और एक सेल्फी।\n\nआप अभी किस चरण (स्टेप) पर हैं?"
   },
   {
    "id": "A03",
@@ -55,8 +51,8 @@
    "sources": [
     "Rulebook §2"
    ],
-   "seconds": 4.6,
-   "answer": "To apply as a PolicyNest POSP insurance agent, you must meet a few requirements:\n1. You must be at least 18 years old on the date you start your application.\n2. You must have passed Class 10 (secondary school) from a recognised board, including NIOS.\n3. You need a valid individual PAN card and a savings or current bank account in your own name.\n4. You must not already be registered as a POSP with another insurer or intermediary.\n\nWhich step of the application are you on right now?"
+   "seconds": 3.5,
+   "answer": "You must be at least 18 years old on the date you start your application. \n\nHere is who can apply:\n1. Age 18 or older.\n2. Passed Class 10 from a recognised board, including NIOS.\n3. Have a valid individual PAN card (where the fourth character is P).\n4. Have a savings or current bank account in your own name.\n5. Not already registered as a POSP with another insurer or intermediary.\n\nWhich step of the application are you on right now?"
   },
   {
    "id": "A04",
@@ -66,9 +62,11 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 6.0,
-   "answer": "Don't worry, you are off to a great start, Asha!\n\nYou need to finish filling in your details on the Identity page. \n\n1. Complete the required information on the current Identity page.\n2. Proceed through the rest of the short pages in the Your details stage.\n3. Save your progress to move on to the next stage."
+   "sources": [
+    "Rulebook §1"
+   ],
+   "seconds": 4.7,
+   "answer": "You are making great progress, Asha! \n\n1. Continue filling in your identity information on the current page.\n2. Complete the remaining short pages in the Your details stage. \n3. Once you finish this stage, you will move on to uploading your documents one by one."
   },
   {
    "id": "B01",
@@ -81,22 +79,23 @@
    "sources": [
     "Rulebook §4.1"
    ],
-   "seconds": 7.8,
-   "answer": "Your Aadhaar front photo was refused because it is blurry and the text could not be read clearly. \n\nHere is what to do next:\n\n1. Place your original Aadhaar card on a flat surface in bright natural daylight.\n2. Hold your phone steady directly above the card so all four corners are visible without any light reflection.\n3. Check the photo to make sure every word is sharp and easy to read.\n4. On the Documents screen, find your Aadhaar front card and tap Replace to upload the new photo."
+   "seconds": 4.8,
+   "answer": "Your Aadhaar front photo was not accepted because it was not sharp enough to read.\n\n1. Put your Aadhaar card on a flat surface in bright daylight.\n2. Hold your phone straight above it so all four corners are clearly inside the frame.\n3. Go to the Documents screen in the app, tap Replace on your Aadhaar front slot, and upload the clearer photo."
   },
   {
    "id": "B02",
    "category": "photo-quality",
-   "passed": false,
-   "failures": [
-    "no source cited"
-   ],
+   "passed": true,
+   "failures": [],
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 7.2,
-   "answer": "To take a clear document photo, use the original document (not a photocopy) and place it flat in daylight away from direct lamp glare. Hold your phone straight above it so all four corners are visible and every word is sharp.\n\nHere is what to do next:\n\n1. Place your original Aadhaar card on a flat surface in daylight.\n2. Hold your phone straight above it, making sure all four corners are in frame and text is readable.\n3. On the Documents screen, go to Aadhaar (front) and tap Replace.\n4. Upload the new photo."
+   "sources": [
+    "Rework spec §2.1",
+    "Rulebook §8"
+   ],
+   "seconds": 4.7,
+   "answer": "To take a clear photo, use the original document in daylight, away from glare, hold your phone straight above it, and ensure all four corners and every word are sharp. Don't worry, you can easily update your Aadhaar front photo.\n\n1. Put your Aadhaar card on a flat surface in daylight.\n2. Hold your phone straight above it with all four corners in the frame.\n3. Take the photo when every word is sharp and easy to read.\n4. On the Documents screen, tap Replace on your Aadhaar (front) card and upload the new photo."
   },
   {
    "id": "B03",
@@ -110,8 +109,8 @@
     "Defect guide §2.1",
     "Rulebook §4.1"
    ],
-   "seconds": 4.8,
-   "answer": "आधार का यह हिस्सा (फ्रंट फोटो) स्वीकार नहीं हुआ क्योंकि फ़ोटो इतनी साफ़ नहीं है कि उसे पढ़ा जा सके।\n\nइसे ठीक करने के लिए:\n1. आधार कार्ड को दिन की रोशनी में किसी समतल सतह पर रखें।\n2. फ़ोन को उसके ठीक ऊपर सीधा रखें ताकि कार्ड के चारों कोने फ़्रेम के अंदर साफ़ दिखें।\n3. दस्तावेज़ (Documents) स्क्रीन पर जाकर आधार (फ़्रंट) के पास **बदलें (Replace)** पर टैप करें और नई साफ़ फ़ोटो अपलोड करें।"
+   "seconds": 4.5,
+   "answer": "आपके आधार कार्ड (सामने का भाग) की फ़ोटो साफ़ न होने के कारण इसे स्वीकार नहीं किया गया। चिंता न करें, आप इसे आसानी से ठीक कर सकते हैं:\n\n1. आधार कार्ड को दिन की रोशनी में किसी समतल सतह पर रखें।\n2. फ़ोन को उसके ठीक ऊपर सीधा पकड़ें ताकि सभी चारों कोने फ़्रेम के अंदर साफ़ दिखाई दें।\n3. ऐप में दस्तावेज़ स्क्रीन पर जाकर 'Replace' (बदलें) पर टैप करें और नई फ़ोटो अपलोड करें।"
   },
   {
    "id": "B04",
@@ -121,9 +120,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 3.7,
-   "answer": "Your PAN card upload was not accepted because the photo uploaded looks like an Aadhaar card instead of a PAN card. \n\nTo fix this:\n1. Tap Replace on your PAN card document step.\n2. Upload a clear photo of your actual PAN card."
+   "sources": [
+    "Rulebook §8",
+    "Rework spec §2.1"
+   ],
+   "seconds": 3.5,
+   "answer": "Your PAN card photo was not accepted because it looks like an Aadhaar card instead of a PAN card. \n\nTo fix this:\n1. Get your actual PAN card and place it on a flat surface in daylight.\n2. Hold your phone straight above it so all four corners are in the frame.\n3. On the Documents step, tap Replace on your PAN card slot and upload the correct photo."
   },
   {
    "id": "B05",
@@ -134,10 +136,11 @@
    "mode": "ai_grounded",
    "lang": "hi",
    "sources": [
-    "Rework spec §2.1"
+    "Rework spec §2.1",
+    "Rulebook §8"
    ],
-   "seconds": 6.1,
-   "answer": "नमस्ते आशा जी! आपका आधार कार्ड फोटो साफ न होने के कारण स्वीकार नहीं हुआ है। इसे ठीक करने के लिए:\n\n1. आधार कार्ड को दिन की रोशनी में किसी समतल जगह पर रखें।\n2. फोन को उसके सीधे ऊपर रखें ताकि चारों कोने फ्रेम के अंदर साफ दिखें।\n3. एक नई साफ़ और स्पष्ट फ़ोटो लें।\n4. ऐप में 'Documents' वाले स्टेप पर जाएं।\n5. आधार (front) पर 'Replace' दबाकर नई फ़ोटो अपलोड करें।\n\nचिंता न करें, आप इसे आसानी से पूरा कर लेंगी!"
+   "seconds": 5.4,
+   "answer": "आपके आधार कार्ड की सामने की फ़ोटो धुंधली होने के कारण स्वीकार नहीं की गई है। चिंता मत कीजिए, आप इसे आसानी से ठीक कर सकते हैं:\n\n1. अपने आधार कार्ड को दिन की रोशनी में किसी समतल सतह पर रखें।\n2. फोन को उसके बिल्कुल ऊपर सीधा पकड़ें ताकि चारों कोने फ्रेम के अंदर साफ़ आएं।\n3. Documents स्क्रीन पर जाएं, Aadhaar (front) के पास Replace पर टैप करें और नई फ़ोटो अपलोड करें।"
   },
   {
    "id": "B06",
@@ -147,9 +150,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 4.8,
-   "answer": "Hello Kiran, don't worry, we can fix this easily. Your selfie was not accepted because the face match was low. \n\nHere is what you need to do:\n1. Find a spot with good, bright light and look straight at the camera without wearing a cap or sunglasses.\n2. Go to the Documents step in the app.\n3. On your Selfie card, tap Replace and upload your new photo."
+   "sources": [
+    "Rework spec §2.1",
+    "Rulebook §4.1"
+   ],
+   "seconds": 4.1,
+   "answer": "Hello Kiran, don't worry, we can fix this easily. Your selfie was not accepted because the face match was low. \n\n1. Sit in a well-lit room with good daylight, facing the light directly.\n2. Hold your phone straight and look directly at the camera without any cap or sunglasses.\n3. On your Documents screen, tap **Replace** on your Selfie card and upload the new photo."
   },
   {
    "id": "B07",
@@ -159,9 +165,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 4.8,
-   "answer": "Great news, Meena! All your documents are verified.\n\n1. Go to the Documents screen.\n2. Tap 'Submit for verification' to move to the next stage."
+   "sources": [
+    "Rework spec §2.1",
+    "Rulebook §8"
+   ],
+   "seconds": 3.0,
+   "answer": "You are almost ready for the next step. All six of your documents are verified. \n\n1. On the Documents screen, tap 'Submit for verification'.\n2. After you submit, you will move to the Verification stage before starting your training."
   },
   {
    "id": "B08",
@@ -174,8 +183,8 @@
    "sources": [
     "Rulebook §4.1"
    ],
-   "seconds": 4.7,
-   "answer": "A good photo requires the original document laid flat in daylight with no glare. \n\n1. Place the document flat in daylight away from lamps.\n2. Hold your phone straight above it.\n3. Keep all four corners inside the frame.\n4. Ensure every word is sharp and readable.\n\nFor a selfie, make sure your face is clearly visible in good light without a cap or sunglasses. Which step of the journey are you on?"
+   "seconds": 3.1,
+   "answer": "A good photo of an original document (not a photocopy) needs to be taken flat in daylight away from lamps, with the phone held straight above it so all four corners are in the frame and every word is sharp. For a selfie, your face must be clearly visible in good light without a cap or sunglasses. Which step are you on right now?"
   },
   {
    "id": "C01",
@@ -186,10 +195,11 @@
    "mode": "ai_grounded",
    "lang": "en",
    "sources": [
-    "Rework spec §2.3"
+    "Defect guide §2.3",
+    "Rulebook §4.5"
    ],
-   "seconds": 4.3,
-   "answer": "Your Class 10 marksheet has a date of birth mismatch, and your cancelled cheque has a bank name mismatch. \n\n1. Go to the Verification page in the app.\n2. Replace your Class 10 marksheet with a document showing the correct date of birth matching your PAN card.\n3. Replace your bank document with a cancelled cheque or bank statement in your own sole or primary name.\n4. Tap 'Send fixes for re-check'."
+   "seconds": 3.0,
+   "answer": "Your Class 10 marksheet has a date of birth mismatch, and your cancelled cheque has a bank name mismatch because the account holder name does not match your PAN. \n\n1. Go to the Verification page in the app.\n2. For the Class 10 marksheet, upload a corrected document or official birth proof where the date of birth matches your PAN card.\n3. For the bank proof, upload a cancelled cheque or bank statement in your own individual name (where you are the sole or primary holder).\n4. Tap 'Send fixes for re-check'."
   },
   {
    "id": "C02",
@@ -199,9 +209,11 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 4.7,
-   "answer": "No, you do not need to upload everything again. You only need to fix and re-upload the specific items listed on your Verification page: your Class 10 marksheet for the date of birth, and your cancelled cheque for the bank account name. \n\n1. Go to the Verification page in the app.\n2. Replace your Class 10 marksheet and cancelled cheque with correct documents.\n3. Tap 'Send fixes for re-check'."
+   "sources": [
+    "Rulebook §8"
+   ],
+   "seconds": 3.2,
+   "answer": "No, you do not need to upload everything again. You only need to fix and re-upload the specific items listed on your Verification page: your Class 10 marksheet (due to a date of birth mismatch) and your cancelled cheque (due to a bank name mismatch). \n\n1. Go to the Verification page in the app.\n2. Replace or update the Class 10 marksheet and the cancelled cheque.\n3. Tap 'Send fixes for re-check'."
   },
   {
    "id": "C03",
@@ -212,10 +224,12 @@
    "mode": "ai_grounded",
    "lang": "hi",
    "sources": [
-    "Rework spec §2.3"
+    "Rework spec §2.3",
+    "Rework spec §2.4",
+    "Rulebook §4.5"
    ],
-   "seconds": 5.1,
-   "answer": "नमस्ते आशा! आपकी जाँच में दो चीजें ठीक करनी हैं:\n\n1. **कक्षा 10 की मार्कशीट:** इस पर जन्म तिथि पैन कार्ड से मेल नहीं खा रही है। अपनी मार्कशीट या जन्म प्रमाण पत्र को दोबारा सही से अपलोड करें।\n2. **कैंसिल्ड चेक (बैंक प्रमाण):** बैंक खाते का नाम आपके नाम से मेल नहीं खाता है। अपने नाम का कैंसिल्ड चेक या बैंक विवरण अपलोड करें, जो आपके ही नाम पर हो।\n\nसत्यापन संदेश में लिखी हर चीज़ ठीक करें, फिर 'Send fixes for re-check' बटन दबाएँ।"
+   "seconds": 3.9,
+   "answer": "नमस्ते आशा! आपके दस्तावेजों में दो चीजें ठीक करनी हैं:\n\n1. **कक्षा 10 की मार्कशीट:** इस पर दी गई जन्म तिथि (DOB) आपके पैन कार्ड से मेल नहीं खाती। कृपया अपनी सही मार्कशीट या जन्म प्रमाण पत्र फिर से अपलोड करें।\n2. **कैंसल चेक (बैंक विवरण):** बैंक खाते का नाम आपके नाम से मेल नहीं खाता। कृपया अपने नाम का कैंसल चेक या बैंक स्टेटमेंट अपलोड करें, जो आपका ही खाता हो।\n\n**अगला कदम:**\nसत्यापन संदेश में इन दोनों को ठीक करें, फिर 'Send fixes for re-check' बटन दबाएँ।"
   },
   {
    "id": "C04",
@@ -225,9 +239,11 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
+   "sources": [
+    "Rulebook §6"
+   ],
    "seconds": 5.3,
-   "answer": "A person on our team is currently checking your application because of a surname change on your Class 10 marksheet. You are in good hands and nothing is needed from you right now.\n\n1. Wait while our team reviews your details.\n2. Check your dashboard for the next update."
+   "answer": "A person on our team is currently checking your application because of a surname change. \n\n1. Nothing is needed from you right now.\n2. The review is being handled by a team member.\n3. Check your dashboard for the latest status update."
   },
   {
    "id": "C05",
@@ -240,8 +256,8 @@
    "sources": [
     "Rulebook §5"
    ],
-   "seconds": 4.4,
-   "answer": "Hello Sunita! A person on our team is checking your application because of a surname change. Nothing is needed from you now. You can check your dashboard for the latest update."
+   "seconds": 4.5,
+   "answer": "No, you do not need to do anything right now. A person on our team is checking your application because of your surname change. \n\n1. Wait while our team completes the review. \n2. Check your dashboard for the latest status update. \n\nYou are doing great so far!"
   },
   {
    "id": "C06",
@@ -254,8 +270,8 @@
    "sources": [
     "Rulebook §9"
    ],
-   "seconds": 6.0,
-   "answer": "A surname change after marriage is reviewed by a person on our team, so it is not a problem. \n\n1. A person on our review team is currently checking your application.\n2. Nothing is needed from you right now.\n3. The update will show on your dashboard."
+   "seconds": 4.4,
+   "answer": "A surname change after marriage is checked by a person on our team. Don't worry, this is a normal part of the process.\n\n1. A person on our team is currently reviewing your application.\n2. Nothing is needed from you right now.\n3. The update will show on your dashboard."
   },
   {
    "id": "C07",
@@ -265,9 +281,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 5.3,
-   "answer": "Your application was not accepted because the checks showed the minimum educational requirement of passing Class 10 from a recognised board was not met (`EDU_NOT_ELIGIBLE`). \n\n1. Go to your Verification page to view the details.\n2. If you think this is incorrect, tap 'Dispute this decision' so a person on the review team can look at it again."
+   "sources": [
+    "Defect guide §2.2",
+    "Rulebook §2"
+   ],
+   "seconds": 4.9,
+   "answer": "Your application was not accepted because the Class 10 educational requirement was not met. Applicants must have passed Class 10 from a recognised board.\n\n1. Check the specific details on your Verification page.\n2. If you believe this is incorrect, tap 'Dispute this decision' and a person on our team will review it again."
   },
   {
    "id": "C08",
@@ -278,10 +297,10 @@
    "mode": "ai_grounded",
    "lang": "en",
    "sources": [
-    "Defect guide §2.2"
+    "Rulebook §2"
    ],
-   "seconds": 5.6,
-   "answer": "Don't worry, let's get this checked. \n\nThe app currently shows that the checks could not go ahead because the Class 10 education requirement was not met. \n\n1. Go to your Verification page to view the details.\n2. If you believe this is a mistake, tap 'Dispute this decision' on that page.\n3. A person on the review team will then take a fresh look at your documents. \n\nYou do not need to do anything else while they check, and you can watch your status page for updates."
+   "seconds": 4.2,
+   "answer": "It looks like the app could not verify your Class 10 qualification. If you believe this is a mistake, you can have a person review your details. \n\n1. Go to your Verification page in the app.\n2. Tap the 'Dispute this decision' button.\n3. Wait for an update on your status dashboard while a person checks it."
   },
   {
    "id": "C09",
@@ -293,10 +312,10 @@
    "lang": "en",
    "sources": [
     "Rulebook §4.2",
-    "Rulebook §2"
+    "Regulatory matrix §2"
    ],
-   "seconds": 5.8,
-   "answer": "Your PAN was not accepted because it belongs to a company or firm instead of an individual. An individual PAN with 'P' as the fourth character is required.\n\n1. Open your Verification page to see the details.\n2. If you believe this is incorrect, press 'Dispute this decision' and a person on the review team will look at it again."
+   "seconds": 4.5,
+   "answer": "Your PAN was not accepted because the fourth character shows it belongs to a company, firm, or other entity rather than an individual. An individual PAN is required.\n\n1. Go to the Verification page to view the details.\n2. If you believe this is incorrect, tap 'Dispute this decision' and a person on the review team will take another look."
   },
   {
    "id": "C10",
@@ -306,9 +325,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 3.7,
-   "answer": "Hello Meena! Great news, your documents are verified. \n\nHere is your exact next step:\n1. Tap 'Start training' on your screen to begin the 15 hours of training."
+   "sources": [
+    "Rulebook §5",
+    "Rulebook §4.2"
+   ],
+   "seconds": 4.5,
+   "answer": "Great news, your documents are verified! Here is what you need to do next:\n\n1. Open your app to the verification screen.\n2. Press 'Start training' to begin your 15 hours of training."
   },
   {
    "id": "D01",
@@ -321,8 +343,8 @@
    "sources": [
     "IRDAI reference §3.1"
    ],
-   "seconds": 6.7,
-   "answer": "The training is 15 hours in total across five modules. You have completed 6 hours already, great job!\n\nTo finish this stage and unlock your exam, follow these steps:\n1. Go to your training dashboard in the app.\n2. Complete the remaining modules until you reach 15 active hours.\n3. Once the 15 hours are logged, the exam will open automatically."
+   "seconds": 4.3,
+   "answer": "The training is 15 hours in total. You have already completed 6 hours, so you are making great progress!\n\n1. Open the training section in your app.\n2. Complete the remaining modules until you reach 15 hours.\n3. Once the full training time is logged, the exam will automatically unlock for you."
   },
   {
    "id": "D02",
@@ -335,8 +357,8 @@
    "sources": [
     "Rulebook §2"
    ],
-   "seconds": 6.0,
-   "answer": "After training, you will unlock and take the POSP exam. \n\n1. Complete your remaining training hours to unlock the exam.\n2. Take the exam, which consists of five questions and has a pass mark of 50%.\n3. If needed, a retake opens after 24 hours.\n4. Once you pass, you will receive your certificate with your POSP code."
+   "seconds": 3.7,
+   "answer": "Don't worry, you are doing great! \n\nAfter you finish your training, here is what happens next:\n1. The exam will unlock on your screen.\n2. Take the POSP examination.\n3. Once you pass, you will receive your certificate and POSP code.\n\nLet me know if you need help with anything else!"
   },
   {
    "id": "D03",
@@ -346,9 +368,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 4.4,
-   "answer": "The pass mark for the exam is 50%. \n\nYour next step to finish the exam:\n1. Answer all five exam questions.\n2. Tap submit to see your final score."
+   "sources": [
+    "POSP Manual p.3 · 2.2 Document Verification Standards & Rejection Reasons / Educational Proof",
+    "IRDAI reference §2.2"
+   ],
+   "seconds": 4.9,
+   "answer": "The pass mark is 50%. You are doing great, Meena!\n\n1. Answer all five exam questions on your screen.\n2. Tap submit to see your score.\n\nIf you need to try again, a retake opens after 24 hours."
   },
   {
    "id": "D04",
@@ -361,8 +386,8 @@
    "sources": [
     "Rulebook §8"
    ],
-   "seconds": 3.7,
-   "answer": "Yes, you can try again. A retake opens after 24 hours. On the Exam screen, you can answer the five questions again once the time is up, and the pass mark is 50%."
+   "seconds": 3.5,
+   "answer": "Yes, you can try again. The pass mark is 50%. A retake opens after 24 hours."
   },
   {
    "id": "D05",
@@ -372,9 +397,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "hi",
-   "sources": [],
-   "seconds": 5.6,
-   "answer": "परीक्षा में पास होने के लिए 50% अंक चाहिए।\n\nचूंकि आपकी कोई प्रगति दर्ज नहीं है, कृपया बताएं कि आप अभी किस चरण पर हैं:\n1. अपनी जानकारी भरना (Your details)\n2. दस्तावेज़ अपलोड करना (Documents)\n3. प्रशिक्षण या परीक्षा (Training or Exam)\n\nआप इनमें से किस कदम पर हैं?"
+   "sources": [
+    "Rulebook §2",
+    "IRDAI reference §2.2"
+   ],
+   "seconds": 5.5,
+   "answer": "पॉलिसीनेस्ट ऐप में परीक्षा पास करने के लिए 50% अंक चाहिए। चूंकि आपने अभी तक अपनी यात्रा शुरू नहीं की है, आप इन आसान चरणों से शुरुआत कर सकते हैं:\n\n1. ऐप खोलें और अपनी बुनियादी जानकारी (Your details) भरें।\n2. इसके बाद अपने दस्तावेज़ (Documents) अपलोड करें।\n\nआप अभी इनमें से किस चरण पर हैं?"
   },
   {
    "id": "D06",
@@ -384,9 +412,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 5.8,
-   "answer": "Congratulations on passing the exam! Your POSP code is on your certificate. \n\n1. Open your PolicyNest app to the Certificate stage.\n2. View your generated certificate on the screen.\n3. Find your POSP code displayed directly on it."
+   "sources": [
+    "Rulebook",
+    "Defect guide §2.1"
+   ],
+   "seconds": 4.5,
+   "answer": "Your POSP code is on your certificate. \n\n1. Open the PolicyNest app to the Certificate stage.\n2. View your certificate where your POSP code is displayed."
   },
   {
    "id": "E01",
@@ -396,9 +427,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 5.0,
-   "answer": "I cannot predict whether your application will be approved. \n\nDon't worry, you are just starting out! Here is what you can do right now to begin:\n1. Open the PolicyNest app and start a new application.\n2. Fill in your basic details across the 4 short pages.\n3. Upload your required documents one by one when prompted.\n\nWhich step are you on right now?"
+   "sources": [
+    "IRDAI reference §1",
+    "Rework spec §3"
+   ],
+   "seconds": 5.1,
+   "answer": "I cannot predict whether your application will be approved. Don't worry, you are in the right place to start! Since no progress is available yet, here is what to do first:\n\n1. Open the Your details screen and complete the four short pages.\n2. Proceed to the Documents step and upload your required files one by one.\n3. Submit your application to begin the verification stage.\n\nWhich step are you on right now?"
   },
   {
    "id": "E02",
@@ -408,9 +442,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 4.8,
-   "answer": "I cannot predict outcomes, but you are making great progress. \n\n1. Open the Documents screen.\n2. Tap 'Submit for verification' to move to the next stage."
+   "sources": [
+    "Rulebook §8",
+    "Name-matching spec §1"
+   ],
+   "seconds": 4.3,
+   "answer": "I cannot predict if you will pass or what the outcome will be. All six of your documents are verified and ready.\n\n1. On the Documents screen, tap Submit for verification.\n2. Proceed to the Verification stage."
   },
   {
    "id": "E03",
@@ -423,8 +460,8 @@
    "sources": [
     "Rulebook §7"
    ],
-   "seconds": 5.7,
-   "answer": "Don't worry, we will guide you through every step! After you submit your documents, they are all checked together against your PAN card. \n\n1. The review team checks your documents, with a target of 4 working hours for the first review.\n2. If anything is missing or unclear, you will get one message listing everything to fix, and you can re-upload just those items.\n3. Once all checks pass, you will move on to the training and exam stages.\n\nSince you are just getting started, your first step is to fill in your details and begin uploading your documents. Which step are you on right now?"
+   "seconds": 5.3,
+   "answer": "After you submit your documents, our team checks them all together against your PAN card. \n\n1. The first review takes up to 4 working hours.\n2. You can check your progress anytime on your dashboard status page.\n3. If anything is missing or unclear, you will receive one message listing the exact items to fix.\n4. You can then re-upload only those specific items.\n5. If everything looks good, you will move on to the verification stage.\n\nDon't worry, we are here to help you through every step. Which step of the journey are you on right now?"
   },
   {
    "id": "E04",
@@ -434,9 +471,11 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 4.7,
-   "answer": "Documents are read by text recognition right in your browser, and the app does not save your photos or the raw text read from them. Aadhaar and bank account numbers are kept masked to the last four digits, and progress is saved only if you agree to it. I never see your photos or ID numbers. \n\nWhich step of the onboarding journey are you on right now? (Your details, Documents, Verification, Training, Exam, or Certificate)."
+   "sources": [
+    "Rulebook §4.6"
+   ],
+   "seconds": 4.6,
+   "answer": "Documents are read by text recognition directly in your browser, and the app does not save your photos or raw text. Aadhaar and bank account numbers are kept masked to the last four digits, though we cannot promise that data is fully safe. \n\nSince no progress is available yet, let us begin your onboarding journey. \n\n1. Start with the details step to enter your basic information.\n2. Tell me which step you are on right now so I can guide you."
   },
   {
    "id": "E05",
@@ -446,9 +485,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 4.4,
-   "answer": "Don't worry, take a deep breath! Leaving the screen never wipes your progress. The 30-minute timer on the details and documents screens can be extended by 10 minutes at a time if you need more time. \n\nWhich step of the process are you on right now?"
+   "sources": [
+    "Defect guide §2.1",
+    "Rulebook §8"
+   ],
+   "seconds": 3.5,
+   "answer": "Take a breath—you are doing great! Leaving the screen never wipes your progress. \n\n1. The 30-minute timer on your details and documents screens can be extended by 10 minutes at a time whenever you need.\n2. With your consent, your progress is safely saved as you go.\n\nWhich step of the journey are you on right now?"
   },
   {
    "id": "E06",
@@ -459,8 +501,8 @@
    "mode": "ai_grounded",
    "lang": "en",
    "sources": [],
-   "seconds": 3.0,
-   "answer": "Yes, you can stop now and continue tomorrow. With your consent, your progress is saved and you can resume anytime within 30 days while your application is a draft (or 14 days once corrections are open). Which step of the onboarding journey are you currently on?"
+   "seconds": 5.6,
+   "answer": "Yes, you can stop now and continue tomorrow; your progress can be saved as a draft for up to 30 days.\n\n1. Agree when prompted to save your progress before you leave.\n2. Log back in whenever you are ready to resume.\n3. Tell me which step you are on right now so I can help you with the exact next action."
   },
   {
    "id": "E07",
@@ -470,9 +512,11 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 4.0,
-   "answer": "In this demo, the bank account name check (known as a penny-drop) is simulated rather than done through a live bank call. \n\nWhich step of your PolicyNest onboarding are you currently on? Let me know where you are so I can help you with your next step."
+   "sources": [
+    "Rulebook §4.5"
+   ],
+   "seconds": 4.4,
+   "answer": "No, we do not actually call your bank; the bank account name check in this demo is simulated. The account must be in your own individual name.\n\nSince you are just getting started, here is how to begin:\n1. Open the app and go to the Your details screen.\n2. Complete the four short pages.\n\nWhich step of the onboarding process are you on right now?"
   },
   {
    "id": "E08",
@@ -485,8 +529,8 @@
    "sources": [
     "IRDAI reference §2.3"
    ],
-   "seconds": 6.1,
-   "answer": "A valid individual PAN has ten characters: five letters, four digits, and one final letter (such as AAAAA9999A), with the fourth character being 'P' to indicate it belongs to an individual. Don't worry, getting started is simple.\n\n1. Open the PolicyNest onboarding page.\n2. Begin entering your details on the first page.\n\nWhich step of the journey are you on right now?"
+   "seconds": 5.7,
+   "answer": "A valid individual PAN has five letters, four digits, and one letter (like AAAAA9999A), where the fourth character is 'P'. Let's get you settled—first-time applications are easy once you know where you stand!\n\n1. Which step of the onboarding journey are you on right now?\n2. If you are just beginning, open the app and go to the Your details screen.\n3. Enter your information there to start your application."
   },
   {
    "id": "E09",
@@ -499,8 +543,8 @@
    "sources": [
     "Rulebook §4.1"
    ],
-   "seconds": 4.1,
-   "answer": "I cannot predict if your application will be approved. \n\nTo fix your Aadhaar (front) photo:\n1. Place the card on a flat surface in daylight.\n2. Hold your phone straight above it so all four corners are visible in the frame.\n3. Go to the Documents screen, tap Replace on your Aadhaar (front) slot, and upload the clearer photo."
+   "seconds": 4.9,
+   "answer": "I cannot predict your final result, but updating your photo is the right next step. Don't worry, you can easily fix this.\n\n1. Place your original Aadhaar card on a flat surface in daylight.\n2. Hold your phone straight above it with all four corners in the frame so every word is sharp.\n3. Go to the Documents screen, tap Replace on your Aadhaar (front), and upload the clearer photo.\n4. Upload your remaining documents to finish this stage."
   },
   {
    "id": "E10",
@@ -510,9 +554,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 7.1,
-   "answer": "I cannot predict your eligibility, but your app shows all six documents are verified and ready. \n\n1. Go to the Documents screen.\n2. Tap 'Submit for verification'.\n3. Watch your dashboard for updates while your application is checked."
+   "sources": [
+    "Name-matching spec §2",
+    "Rulebook §4.1"
+   ],
+   "seconds": 4.7,
+   "answer": "I cannot give a yes or no answer because I cannot predict outcomes, but your app shows that all your documents are verified. \n\n1. Go to the Documents screen in the app.\n2. Tap 'Submit for verification'.\n3. Check your dashboard for the next update."
   },
   {
    "id": "F01",
@@ -522,9 +569,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 5.6,
-   "answer": "I can only help with your PolicyNest onboarding, documents, training, exam, and certificate, so I cannot write a poem about cricket. \n\nWelcome! We are happy to help you get started as a POSP insurance agent. The journey has six simple stages: your details, documents, verification, training, the exam, and your certificate. \n\nWhich step are you on right now?"
+   "sources": [
+    "Rulebook §4.3",
+    "Rulebook §6"
+   ],
+   "seconds": 5.1,
+   "answer": "I can only help with your PolicyNest POSP onboarding, documents, training, and exam, so I cannot write a poem for you. Don't worry, getting started is easy! Which step are you on right now? Please let me know if you are filling in your details or if you are ready to upload your documents."
   },
   {
    "id": "F02",
@@ -534,9 +584,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 5.4,
-   "answer": "I can only help with your PolicyNest onboarding, documents, training, exam, and certificate, so I cannot advise on commission rates. Don't worry, getting started is easy and we are here to help you every step of the way.\n\n1. Open the PolicyNest onboarding app to begin your application.\n2. Enter your basic details on the first screen.\n3. Tell me which step you are on right now so I can help you take the next one!"
+   "sources": [
+    "IRDAI reference §1.1",
+    "Rework spec §2.4"
+   ],
+   "seconds": 4.2,
+   "answer": "I cannot advise on commissions or other insurance companies, but I am here to help you complete your PolicyNest POSP onboarding. Since you are just getting started, let me know which step you are on. The journey has six simple stages:\n1. Your details\n2. Documents upload\n3. Verification\n4. Training\n5. Exam\n6. Certificate\nWhich step are you on right now?"
   },
   {
    "id": "F03",
@@ -558,9 +611,12 @@
    "http": 200,
    "mode": "ai_grounded",
    "lang": "en",
-   "sources": [],
-   "seconds": 10.0,
-   "answer": "I cannot act as a reviewer or approve applications. I am here to help guide you through your PolicyNest onboarding. Since no progress is saved yet, here is how you can begin:\n\n1. Open the app and go to the Your details page to enter your basic information.\n2. Proceed to the Documents screen to upload your PAN card, Aadhaar, marksheet, bank proof, and a selfie.\n3. Submit your details for review.\n\nLet me know which step you are on so I can help you with what to do next!"
+   "sources": [
+    "Rulebook §8",
+    "Rulebook §10"
+   ],
+   "seconds": 5.2,
+   "answer": "I cannot approve your application, as approvals are handled by a person on the review team. Since you are just getting started, let's begin your onboarding journey.\n\n1. Open the app and head to the Your details screen.\n2. Complete the four short pages of your personal information.\n3. Move to the Documents screen to upload your required files one at a time.\n\nWhich step are you on right now?"
   },
   {
    "id": "G01",
@@ -599,34 +655,5 @@
    "answer": ""
   }
  ],
- "server_state_results": [
-  {
-   "id": "S01",
-   "passed": true,
-   "failures": [],
-   "seconds": 4.3,
-   "answer": "Your Aadhaar front photo is blurry and your Class 10 marksheet has a date of birth mismatch.\n\n1. Put your Aadhaar front on a flat surface in daylight, hold the phone straight above it with all four corners in the frame, and ensure every word is sharp.\n2. Check your Class 10 marksheet and correct or re-upload it so the date of birth matches your PAN card.\n3. Go to the Verification page in the app, tap Replace on these documents, upload the corrected ones, and press Send fixes for re-check."
-  },
-  {
-   "id": "S02",
-   "passed": true,
-   "failures": [],
-   "seconds": 4.6,
-   "answer": "Hello Asha. Don't worry, we can fix this easily. Two of your documents need attention on the Verification page:\n\n1. Aadhaar (front): The photo is blurry. Put it on a flat surface in daylight, hold your phone straight above it with all four corners in the frame, and tap Replace to upload a clear photo.\n2. Class 10 marksheet: The date of birth does not match your PAN card. Please check and re-upload the correct document.\n\nOnce both are fixed, press Send fixes for re-check."
-  },
-  {
-   "id": "S03",
-   "passed": true,
-   "failures": [],
-   "seconds": 5.0,
-   "answer": "You have 14 days to submit your corrections once they are open, rather than a specific number of reminders. \n\n1. Put your Aadhaar in daylight on a flat surface, hold the phone straight above it with all four corners visible, and replace the front photo on the Documents screen.\n2. Check your Class 10 marksheet to resolve the date of birth mismatch and upload the correct file.\n3. Go to the Verification page and press 'Send fixes for re-check'."
-  },
-  {
-   "id": "S04",
-   "passed": true,
-   "failures": [],
-   "seconds": 6.0,
-   "answer": "No, you do not need to upload everything again; you only need to update the two items listed. Don't worry, we will get this sorted quickly.\n\n1. Take a clear photo of your Aadhaar front in daylight with all four corners visible to fix the blurriness.\n2. Ensure your Class 10 marksheet shows the correct date of birth and take a sharp photo of it.\n3. Go to the Verification page, tap Replace for both documents, and press 'Send fixes for re-check'."
-  }
- ]
+ "server_state_results": []
 }
