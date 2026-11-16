@@ -492,6 +492,18 @@ dialog#modal:not([open]){display:none}
 .cp-chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px} .cp-chips button{font:inherit;font-size:.8rem;border:1px solid var(--line);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;min-height:32px;cursor:pointer}
 .cp form{display:flex;gap:8px;padding:0 16px 10px} .cp form input{flex:1;min-width:0;font:inherit;border:1px solid var(--line);border-radius:999px;padding:10px 14px;background:var(--surface);color:inherit}
 .cp-foot{margin:0;padding:0 16px 14px;font-size:.72rem;color:var(--muted)}
+.cp-log:focus-visible{outline:3px solid var(--info);outline-offset:-3px}
+.cp-status{padding:0 16px 8px;min-height:0} .cp-status:empty{display:none}
+.cp-quick button,.cp-tools button,.cp-tools select{min-height:44px}
+.cp-quick button{text-align:left;line-height:1.3}
+.cp-tools{border-top:1px solid var(--line);padding-top:10px} .cp-tools button,.cp-tools select{font:inherit;font-size:.8rem;border:1px solid var(--line);background:transparent;color:inherit;border-radius:999px;padding:7px 12px;cursor:pointer}
+.cp-tools button[hidden]{display:none}
+.cp-typing{padding:14px 16px} .cp-dots{display:inline-flex;gap:5px} .cp-dots i{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:cpdot 1.1s infinite ease-in-out both} .cp-dots i:nth-child(2){animation-delay:.18s} .cp-dots i:nth-child(3){animation-delay:.36s}
+@keyframes cpdot{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.cp-src{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px} .cp-src li{font-size:.72rem;line-height:1.2;padding:4px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink);max-width:100%;overflow-wrap:anywhere}
+.cp-retry{margin-top:8px;font:inherit;font-size:.82rem;font-weight:600;min-height:44px;padding:8px 16px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:inherit;cursor:pointer}
+.cp-m.a:not(.cp-typing) small{display:block}
+@media (max-width:640px){.cp{height:min(88vh,calc(100dvh - 12px))}.cp-tools{flex-wrap:nowrap;overflow-x:auto;padding-bottom:12px}.cp-tools>*{flex:0 0 auto}.cp-quick{padding-bottom:6px}.cp form input{font-size:16px}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Accessibility (PRD FR-41 to FR-44) */
 .skip{position:absolute;left:12px;top:-64px;z-index:100;background:var(--night);color:var(--night-ink);border-radius:999px;padding:10px 18px;font-weight:700;font-size:.9rem;text-decoration:none}
@@ -815,14 +827,14 @@ dialog.pdlg:not([open]){display:none}
 <div class="navscrim" id="navscrim" data-act="nav-close" hidden></div>
 <nav class="bnav" id="bnav" aria-label="Quick navigation"></nav>
 <button class="cp-fab" id="cp-fab" type="button" data-act="cp-open" aria-controls="cp" aria-expanded="false"><span data-t="cp.fab">Ask Copilot</span><i id="cp-badge" hidden role="img" aria-label="New suggestion"></i></button>
-<aside class="cp" id="cp" hidden role="dialog" aria-modal="true" aria-labelledby="cp-title">
+<aside class="cp" id="cp" hidden role="dialog" aria-modal="true" aria-labelledby="cp-title" aria-describedby="cp-foot">
   <header><b id="cp-title" data-t="cp.title">Onboarding Copilot</b><span class="cp-mode" id="cp-mode">Rulebook answers</span><button type="button" data-act="cp-close" aria-label="Close Copilot" data-ta="cp.close">×</button></header>
-  <div class="cp-log" id="cp-log" aria-live="polite"></div>
-  <div class="cp-chips"><button type="button" id="guide-next">Show next action</button><button type="button" id="guide-read">Read guidance</button><button type="button" id="guide-stop">Stop voice</button><button type="button" id="guide-mic">Ask by voice</button><select id="guide-lang" aria-label="Voice language"><option value="en-IN">English voice</option><option value="hi-IN">Hindi voice</option></select><button type="button" id="guide-appeal">Ask a human reviewer</button></div>
-  <p class="cp-foot" id="guide-status" role="status"></p><button class="btn sm" type="button" id="guide-helped">This helped resolve my question</button>
-  <div class="cp-chips"><button type="button" data-cpq="What should I do next?" data-t="cp.q1">What next?</button><button type="button" data-cpq="Why was my document not accepted and how do I fix it?" data-t="cp.q2">Why was it refused?</button><button type="button" data-cpq="Which documents do I need and what makes a good photo?" data-t="cp.q3">Documents needed</button><button type="button" data-cpq="What happens after I submit?" data-t="cp.q4">After I submit</button></div>
-  <form id="cp-form" autocomplete="off"><label class="sr-only" for="cp-q" data-t="cp.label">Ask a question</label><input id="cp-q" maxlength="600" placeholder="Ask about your documents or the steps" data-tp="cp.ph"><button class="btn sm pri" type="submit" data-t="cp.send">Send</button></form>
-  <p class="cp-foot" data-t="cp.foot">Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.</p>
+  <div class="cp-log" id="cp-log" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false" tabindex="0" data-ta="cp.log"></div>
+  <p class="cp-foot cp-status" id="guide-status" role="status"></p>
+  <div class="cp-chips cp-quick" id="cp-quick" role="group" aria-label="Suggested questions" data-ta="cp.quick"></div>
+  <form id="cp-form" autocomplete="off"><label class="sr-only" for="cp-q" data-t="cp.label">Ask a question</label><input id="cp-q" maxlength="600" placeholder="Ask about your documents or the steps" data-tp="cp.ph" enterkeyhint="send"><button class="btn sm pri" type="submit" data-t="cp.send">Send</button></form>
+  <div class="cp-chips cp-tools"><button type="button" id="guide-next" data-t="cp.g.next">Show next action</button><button type="button" id="guide-read" data-t="cp.g.read">Read guidance</button><button type="button" id="guide-stop" data-t="cp.g.stop">Stop voice</button><button type="button" id="guide-mic" data-t="cp.g.mic">Ask by voice</button><select id="guide-lang" aria-label="Voice language"><option value="en-IN">English voice</option><option value="hi-IN">Hindi voice</option></select><button type="button" id="guide-appeal" data-t="cp.g.appeal">Ask a human reviewer</button><button type="button" id="guide-helped" data-t="cp.g.helped">This helped resolve my question</button></div>
+  <p class="cp-foot" id="cp-foot" data-t="cp.foot">Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.</p>
 </aside>
 <dialog id="modal" role="alertdialog" aria-labelledby="m-t" aria-describedby="m-b"><div class="mbox"><h2 id="m-t"></h2><p id="m-b"></p><div class="actions" id="m-a"></div></div></dialog>
 
@@ -1627,7 +1639,7 @@ en:{
  "trust.3.b2":"Aadhaar is kept as the last four digits only.",
  "trust.3.b3":"When you sign in, our server keeps your details (name, date of birth, contact details, state, city, education and bank IFSC) and your progress, with only the last four digits of PAN and bank account. Full PAN, full Aadhaar and full bank account numbers are never stored on the server.",
  "trust.3.b4":"The server copy is not backed up. Only you and the reviewers assigned to your application can see it.",
- "trust.3.b5":"Questions you ask the Copilot send your first name and your progress, never your ID numbers or images.",
+ "trust.3.b5":"When you ask the Copilot a question, your question, first name and step progress are processed by the AI provider that runs it (currently Google Gemini). Your ID numbers and images are never sent.",
  "trust.4.b1":"Signed in: your progress is saved to your account as you go, and the top bar shows the last saved time. You continue from the same place on any device.",
  "trust.4.b2":"Not signed in: nothing is sent to our server. If you choose to save on this device, progress is kept here for 30 days (14 days once we have asked for fixes). Document photos are not kept, only the result of each check.",
  "trust.4.b3":"You can delete saved progress at any time.",
@@ -1738,7 +1750,7 @@ hi:{
  "trust.2.b3":"ग़लत या अस्पष्ट दस्तावेज़ कारण के साथ लौटा दिया जाता है, ताकि आप एक बार में सुधार कर सकें। जिन बातों में विवेक चाहिए, वे हमारी टीम के किसी व्यक्ति के पास जाती हैं। सिस्टम उन्हें अकेले तय नहीं करता।",
  "trust.3.b1":"आपके दस्तावेज़ों की तस्वीरें और उनसे पढ़ा गया टेक्स्ट इसी डिवाइस पर रहता है। वे अपलोड नहीं होते और सहेजे भी नहीं जाते।","trust.3.b2":"Aadhaar सिर्फ़ आख़िरी चार अंकों के रूप में रखा जाता है।",
  "trust.3.b3":"साइन इन करने पर हमारा सर्वर आपका विवरण (नाम, जन्म तिथि, संपर्क विवरण, राज्य, शहर, शिक्षा और बैंक IFSC) और आपकी प्रगति रखता है, PAN और बैंक खाते के सिर्फ़ आख़िरी चार अंकों के साथ। पूरा PAN, पूरा Aadhaar और पूरा बैंक खाता नंबर सर्वर पर कभी नहीं रखा जाता।",
- "trust.3.b4":"सर्वर की प्रति का बैकअप नहीं लिया जाता। इसे सिर्फ़ आप और आपके आवेदन के लिए तय समीक्षक देख सकते हैं।","trust.3.b5":"Copilot से सवाल पूछने पर आपका पहला नाम और आपकी प्रगति भेजी जाती है, आपके पहचान-पत्रों के नंबर या तस्वीरें कभी नहीं।",
+ "trust.3.b4":"सर्वर की प्रति का बैकअप नहीं लिया जाता। इसे सिर्फ़ आप और आपके आवेदन के लिए तय समीक्षक देख सकते हैं।","trust.3.b5":"Copilot से सवाल पूछने पर आपका सवाल, पहला नाम और चरण की प्रगति उस AI सेवा-प्रदाता द्वारा संसाधित होती है जो इसे चलाता है (अभी Google Gemini)। आपके पहचान-पत्रों के नंबर या तस्वीरें कभी नहीं भेजी जाती।",
  "trust.4.b1":"साइन इन होने पर आपकी प्रगति साथ-साथ आपके खाते में सहेजी जाती है, और ऊपर की पट्टी में आख़िरी बार सहेजने का समय दिखता है। आप किसी भी डिवाइस पर उसी जगह से आगे बढ़ सकते हैं।",
  "trust.4.b2":"साइन इन नहीं होने पर हमारे सर्वर को कुछ नहीं भेजा जाता। अगर आप इस डिवाइस पर सहेजना चुनते हैं, तो प्रगति यहाँ 30 दिन रखी जाती है (सुधार माँगे जाने के बाद 14 दिन)। दस्तावेज़ों की तस्वीरें नहीं रखी जातीं, सिर्फ़ हर जाँच का नतीजा रखा जाता है।",
  "trust.4.b3":"आप सहेजी हुई प्रगति कभी भी मिटा सकते हैं।",
@@ -2039,7 +2051,7 @@ function flow(){
 }
 function applyLang(){
   document.documentElement.lang=LANG;
-  ["view-apply","view-ops","view-audit","view-eval","cp-log","modal"].forEach(function(id){ var el=$(id); if(!el) return; if(LANG==="hi") el.setAttribute("lang","en"); else el.removeAttribute("lang"); });
+  ["view-apply","view-ops","view-audit","view-eval","modal"].forEach(function(id){ var el=$(id); if(!el) return; if(LANG==="hi") el.setAttribute("lang","en"); else el.removeAttribute("lang"); });
 }
 function setLang(l,remote){
   if(l!=="hi") l="en"; if(l===LANG&&remote!==true) return;
@@ -3029,6 +3041,7 @@ document.addEventListener("click",function(e){
   if(t.getAttribute("data-spec")) return addDoc(t.getAttribute("data-spec"),null);
   if(t.getAttribute("data-dk")!==null){ S.dk=Number(t.getAttribute("data-dk")); render(); var cd=document.querySelector("#view-apply .cards"); if(cd&&cd.scrollIntoView) try{cd.scrollIntoView({block:"nearest"})}catch(_){} return; }
   if(t.getAttribute("data-cpq")) return cpAsk(t.getAttribute("data-cpq"));
+  if(t.getAttribute("data-cpretry")!==null){ var rm=CP.log[Number(t.getAttribute("data-cpretry"))]; if(rm&&rm.q&&!CP.busy){ CP.log.splice(CP.log.indexOf(rm),1); cpDraw(); cpAsk(rm.q,true); } return; }
   if(t.getAttribute("data-mod")!==null){ var i=Number(t.getAttribute("data-mod")); S.mods[i]=true; log("HOURS_LOGGED","TRAINING_ENGINE",MODULES[i][0]+" · "+MODULES[i][1]+".0 h"); var hh=0;S.mods.forEach(function(m,j){if(m)hh+=MODULES[j][1]});
     if(S.mods.every(Boolean)){setState("TRAINING_COMPLETED");log("TRAINING_COMPLETE","TRAINING_ENGINE","15.0 hours logged across 5 modules"); cheer("training complete!","All 15 hours are logged. You are ready for the exam.","star")}
     else cheer("module done: "+MODULES[i][0]+".",hh+" of 15 hours logged.","ok");
@@ -3368,10 +3381,35 @@ function nextStepText(){
 /* ---------- Onboarding Copilot: live app state + rulebook retrieval (BM25) + Claude through a key-holding proxy ---------- */
 var COPILOT_URL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'http://localhost:8787':"https://policynest-copilot.embarko.app";
 var CP={log:[],kb:null,idf:null,llm:null,busy:false,seen:{},idleT:null};
-function cpOpen(on,focusQuestion){ var p=$("cp"),f=$("cp-fab");clearTimeout(CP.focusT);p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a","Hi "+fname()+". I can see where you are and what each document needs. "+nextStepText()); cpDraw(); if(focusQuestion!==false)CP.focusT=setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else { document.body.classList.remove("typing"); f.focus(); } }
-function cpPush(who,text,meta){ CP.log.push({who:who,text:text,meta:meta||""}); if(CP.log.length>40) CP.log.shift(); cpDraw(); }
-function cpDraw(){ var l=$("cp-log"); if(!l) return; l.innerHTML=CP.log.map(function(m){return '<div class="cp-m '+m.who+'">'+esc(m.text)+(m.meta?'<small>'+esc(m.meta)+'</small>':'')+'</div>'}).join(""); l.scrollTop=l.scrollHeight;
+function cpOpen(on,focusQuestion){ var p=$("cp"),f=$("cp-fab");clearTimeout(CP.focusT);p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a",T("cp.hello",{n:fname()})+" "+nextStepText()); cpQuick(); cpDraw(); if(focusQuestion!==false)CP.focusT=setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else { document.body.classList.remove("typing"); f.focus(); } }
+function cpPush(who,text,meta,extra){ var m={who:who,text:text,meta:meta||""}; if(extra) Object.keys(extra).forEach(function(k){m[k]=extra[k]}); CP.log.push(m); if(CP.log.length>40) CP.log.shift(); cpDraw(); }
+function cpShort(s){ s=String(s); return s.length>52?s.slice(0,51)+"…":s; }
+function cpDraw(){ var l=$("cp-log"); if(!l) return; l.setAttribute("aria-busy",CP.busy?"true":"false");
+  l.innerHTML=CP.log.map(function(m,i){
+    if(m.typing) return '<div class="cp-m a cp-typing" role="status"><span class="sr-only">'+esc(T("cp.think"))+'</span><span class="cp-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>';
+    return '<div class="cp-m '+m.who+'" lang="'+(/[ऀ-ॿ]/.test(m.text)?"hi":"en")+'">'+esc(m.text)+
+      (m.sources&&m.sources.length?'<ul class="cp-src" aria-label="'+esc(T("cp.src"))+'">'+m.sources.slice(0,4).map(function(x){return '<li title="'+esc(x)+'">'+esc(cpShort(x))+'</li>'}).join("")+'</ul>':"")+
+      (m.meta?'<small>'+esc(m.meta)+'</small>':"")+
+      (m.retry?'<button type="button" class="cp-retry" data-cpretry="'+i+'">'+esc(T("cp.retry"))+'</button>':"")+'</div>'}).join(""); l.scrollTop=l.scrollHeight;
   var md=$("cp-mode"); if(md) md.textContent=CP.llm?T("cp.mode.ai"):T("cp.mode.rule"); }
+/* Suggested questions that depend on where the applicant is (and follow the UI language) */
+function cpQuestions(){ var hi=LANG==="hi"; function q(en,h){ return hi?h:en; }
+  if(!S.begun) return [q("What do I need before I start?","शुरू करने से पहले मुझे क्या चाहिए?"),q("Which documents do I need?","मुझे कौन से दस्तावेज़ चाहिए?"),q("Can I stop and continue later?","क्या रुककर बाद में जारी रखा जा सकता है?")];
+  if(S.step===0) return [q("What should I do next?","अब मुझे क्या करना है?"),q("Which documents do I need?","मुझे कौन से दस्तावेज़ चाहिए?"),q("Why do you ask for these details?","ये जानकारियाँ क्यों माँगी जाती हैं?")];
+  if(S.step===1){ var bad=DOCS.filter(function(d){var st=S.docs[d.k];return st&&st.status==="rejected"})[0];
+    var first=bad?(q("Why was my "+(DOC_LABEL[bad.k]?DOC_LABEL[bad.k][0]:bad.label)+" refused?","मेरा "+(DOC_LABEL[bad.k]?DOC_LABEL[bad.k][1]:bad.label)+" क्यों अस्वीकार हुआ?")):q("Why was my PAN refused?","मेरा PAN क्यों अस्वीकार हुआ?");
+    return [first,q("How do I take a clear photo?","साफ़ फ़ोटो कैसे लूँ?"),q("What happens after I submit?","जमा करने के बाद क्या होता है?")]; }
+  if(S.step===2){ if(S.decision==="NEEDS_MORE_INFO") return [q("What do I need to fix?","मुझे क्या ठीक करना है?"),q("Do I have to upload everything again?","क्या मुझे सब कुछ दोबारा अपलोड करना होगा?")];
+    if(S.decision==="HUMAN_REVIEW") return [q("What is happening with my application?","मेरे आवेदन के साथ क्या हो रहा है?"),q("Do I need to do anything now?","क्या मुझे अभी कुछ करना है?")];
+    if(S.decision==="REJECT") return [q("Why was I not accepted?","मुझे स्वीकार क्यों नहीं किया गया?"),q("What can I do if I disagree?","अगर मैं सहमत नहीं हूँ तो क्या कर सकता हूँ?")];
+    return [q("What happens next?","आगे क्या होगा?"),q("How long does verification take?","सत्यापन में कितना समय लगता है?")]; }
+  if(S.step===3) return [q("How long is the training?","प्रशिक्षण कितना लंबा है?"),q("What happens after training?","प्रशिक्षण के बाद क्या होता है?")];
+  if(S.step===4) return [q("What is the pass mark?","पास होने के लिए कितने अंक चाहिए?"),q("What if I do not pass?","अगर मैं पास न हुआ तो?")];
+  return [q("Where is my POSP code?","मेरा POSP कोड कहाँ है?"),q("What do I do with my certificate?","प्रमाणपत्र का क्या करना है?")];
+}
+function cpQuick(){ var c=$("cp-quick"); if(!c||typeof S==="undefined"||!S||typeof DOCS==="undefined"||!DOCS) return; var key=(S.begun?S.step:-1)+"|"+S.decision+"|"+LANG+"|"+DOCS.map(function(d){var st=S.docs[d.k];return st&&st.status==="rejected"?1:0}).join("");
+  if(c.getAttribute("data-key")===key) return; c.setAttribute("data-key",key);
+  c.innerHTML=cpQuestions().map(function(x){return '<button type="button" data-cpq="'+esc(x)+'">'+esc(x)+'</button>'}).join(""); }
 function cpNudge(id,text){ if(CP.seen[id]) return; CP.seen[id]=1; cpPush("n",text,"Suggestion"); if($("cp").hidden) $("cp-badge").hidden=false; }
 function tokens(s){return String(s).toLowerCase().replace(/[^a-z0-9ऀ-ॿ ]+/g," ").split(/\s+/).filter(function(w){return w.length>1&&!/^(the|and|for|are|you|your|is|of|to|in|on|a|an|it|be|or|my|me|i|we|do|does|what|how|why|can|this|that|with|not)$/.test(w)})}
 function kbLoad(){ if(CP.kb!==null||typeof fetch!=="function") return; CP.kb=[];
@@ -3402,24 +3440,32 @@ function intentAnswer(q){
   if(/next|what now|kya karu|aage|stuck|help/i.test(q)) return nextStepText();
   return null;
 }
-function cpAsk(q){
+function cpAsk(q,isRetry){
   var assistantStarted=performance.now();
   q=String(q||"").trim(); if(!q||CP.busy) return; if($("cp").hidden) cpOpen(true);
-  if(/\b\d{4}\s?\d{4}\s?\d{4}\b|\b[A-Za-z]{5}\d{4}[A-Za-z]\b|\b\d{9,18}\b/.test(q)){ cpPush("a","Please don't type your PAN, Aadhaar or account number here. I don't need them to help you; ask your question without the number."); return; }
-  cpPush("u",q); var hits=retrieve(q+" "+(S.step===1?"document photo upload":""),5),ctx=copilotContext();
-  var hist=CP.log.filter(function(m){return m.who==="u"||m.who==="a"}).slice(-7,-1).map(function(m){return {role:m.who==="u"?"user":"assistant",text:m.text}});
-  function offline(){ var t=intentAnswer(q)||(hits.length?"From the "+hits[0].cite+": "+hits[0].text.replace(/[|#*`>]/g," ").replace(/\s+/g," ").slice(0,420)+"…":"I couldn't find that in the rulebook. "+nextStepText());
-    var why=CP.capped?"AI answers paused for today (daily limit)":"AI answers not connected"; cpPush("a",t,(hits.length?"Sources: "+hits.slice(0,3).map(function(h){return h.cite}).join(", ")+" · ":"")+why); }
+  if(/\b\d{4}\s?\d{4}\s?\d{4}\b|\b[A-Za-z]{5}\d{4}[A-Za-z]\b|\b\d{9,18}\b/.test(q)){ cpPush("a",T("cp.err.id")); return; }
+  if(!isRetry) cpPush("u",q); var hits=retrieve(q+" "+(S.step===1?"document photo upload":""),5),ctx=copilotContext();
+  var lg=CP.log.filter(function(m){return (m.who==="u"||m.who==="a")&&!m.typing&&!m.offline}); lg.pop();
+  var hist=lg.slice(-6).map(function(m){return {role:m.who==="u"?"user":"assistant",text:m.text}});
+  function offline(reason,retry){ var t=intentAnswer(q)||(hits.length?"From the "+hits[0].cite+": "+hits[0].text.replace(/[|#*`>]/g," ").replace(/\s+/g," ").slice(0,420)+"…":"I couldn't find that in the rulebook. "+nextStepText());
+    cpPush("a",t,reason||T("cp.err.net"),{sources:hits.slice(0,3).map(function(h){return h.cite}),offline:true,retry:retry?true:false,q:q}); }
   if(typeof fetch!=="function") return offline();
-  CP.busy=true; cpPush("a","Thinking…"); var ctl=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort()},30000);
-  Promise.resolve(ACCOUNT&&CONS.sync?syncProgress():null).then(function(){return fetch(COPILOT_URL+"/api/assistant",{method:"POST",credentials:'include',headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,history:hist}),signal:ctl?ctl.signal:undefined})})
-   .then(function(r){return r.ok?r.json():Promise.reject(r.status)}).then(function(o){ CP.log.pop(); var ans=String(o.answer||"");
+  CP.busy=true; cpPush("a","",null,{typing:true}); var ctl=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort()},30000);
+  function done(){ CP.log=CP.log.filter(function(m){return !m.typing}); }
+  Promise.resolve(ACCOUNT&&CONS.sync?syncProgress():null).then(function(){return fetch(COPILOT_URL+"/api/assistant",{method:"POST",credentials:'include',headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,history:hist,context:ctx,lang:LANG}),signal:ctl?ctl.signal:undefined})})
+   .then(function(r){ if(r.ok) return r.json(); return r.json().catch(function(){return {}}).then(function(b){ var e=new Error("http"); e.status=r.status; e.code=b&&b.error; throw e; }); })
+   .then(function(o){ done(); var ans=String(o.answer||"");
       if(/\b(fraud|fake|forged|tamper)/i.test(ans)||/\byou (are|have been) (approved|rejected)\b/i.test(ans)) ans="I can't say how your application will be decided; the verification checks and our team do that. "+nextStepText(); /* client-side guardrail */
       if(o.context_source==='general_policy_only')ans+='\n\nOn this device: '+guidanceText();
-      cpPush("a",ans,o.sources&&o.sources.length?"Sources: "+o.sources.join(", "):"");
+      CP.llm=o.mode==="ai_grounded"||CP.llm; var note=o.fallback_note||"";
+      cpPush("a",ans,note,{sources:o.sources||[],offline:o.mode!=="ai_grounded"});
       $('guide-status').textContent=o.mode==='ai_grounded'?'AI answer grounded in retrieved sources.':'Policy retrieval and deterministic guidance. Ask a reviewer if this does not resolve your concern.';
       productEvent('assistant_question');performanceMetric('assistant_ms',performance.now()-assistantStarted);log("COPILOT_ANSWER","SYSTEM","Copilot answered a question · server retrieval · first name and progress only");})
-   .catch(function(st){ CP.log.pop(); CP.llm=false; if(st===429) CP.capped=true; offline(); }).then(function(){ clearTimeout(to); CP.busy=false; cpDraw(); });
+   .catch(function(e){ done(); var st=e&&e.status,code=e&&e.code;
+      if(st===429){ if(code==="daily_cap") CP.capped=true; offline(T(code==="daily_cap"?"cp.err.cap":"cp.err.rate"),false); }
+      else if(st===401){ offline(T("cp.err.session"),false); }
+      else if(st===400&&code==="id_number"){ cpPush("a",T("cp.err.id")); }
+      else { CP.llm=false; offline(T("cp.err.net"),true); } }).then(function(){ clearTimeout(to); CP.busy=false; cpDraw(); });
 }
 document.addEventListener("submit",function(e){ if(e.target&&e.target.id==="cp-form"){ e.preventDefault(); var i=$("cp-q"); cpAsk(i.value); i.value=""; } });
 /* Proactive help: 90 seconds with no activity on a details or documents page */
@@ -3678,6 +3724,9 @@ var I18N_P6={en:{
  "cp.q1":"What next?","cp.q2":"Why was it refused?","cp.q3":"Documents needed","cp.q4":"After I submit",
  "cp.label":"Ask a question","cp.ph":"Ask about your documents or the steps","cp.send":"Send",
  "cp.foot":"Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.",
+ "cp.hello":"Hi {n}. I can see where you are in your application and what each document needs.","cp.think":"Thinking…","cp.retry":"Try again","cp.src":"Sources","cp.log":"Conversation","cp.quick":"Suggested questions",
+ "cp.err.net":"I couldn't reach the AI assistant just now, so this answer comes from the rulebook and your progress.","cp.err.rate":"You have asked many questions in a short time. Please wait a few minutes. Meanwhile, this answer comes from the rulebook.","cp.err.cap":"AI answers are paused for today (daily limit). This answer comes from the rulebook.","cp.err.session":"Your sign-in has ended, so I can't see your saved progress. Sign in again for help that fits your application.","cp.err.id":"Please don't type your PAN, Aadhaar or account number here. I don't need them to help you; ask your question without the number.",
+ "cp.g.next":"Show next action","cp.g.read":"Read guidance","cp.g.stop":"Stop voice","cp.g.mic":"Ask by voice","cp.g.appeal":"Ask a human reviewer","cp.g.helped":"This helped resolve my question",
  "cp.badge":"New suggestion","pb.compliance":"Compliance checks passed","pb.training":"Training hours completed","pb.conf":"Read confidence","pb.docs":"Documents verified","pb.docs.text":"{n} of 6 documents verified","fb.exit":"Save and exit","fb.title":"PolicyNest onboarding",
  "val.name":"Enter your full name as printed on your PAN card.","val.dob":"Enter your date of birth.","val.age":"You must be 18 or older to register as a POSP.","val.mobile":"Enter a 10-digit Indian mobile number.","val.email":"Enter a valid email address.","val.pan":"PAN is five letters, four digits, one letter (AAAAA9999A).","val.aadhaar4":"Enter only the last four digits.","val.state":"Choose your state.","val.education":"Choose your highest education.","val.city":"Enter your city.","val.acct":"Account number is 9 to 18 digits.","val.ifsc":"IFSC is four letters, a zero, then six characters.","val.consent":"Consent is needed to process your documents.",
  "f.name":"Full name as on PAN","f.dob":"Date of birth","f.pan":"PAN","f.aadhaar4":"Aadhaar, last four digits","f.mobile":"Mobile number","f.email":"Email","f.city":"City","f.acct":"Account number","f.ifsc":"IFSC","f.education":"Highest education","f.state":"State","f.consent":"Consent",
@@ -3701,6 +3750,9 @@ var I18N_P6={en:{
  "cp.q1":"आगे क्या?","cp.q2":"अस्वीकार क्यों हुआ?","cp.q3":"ज़रूरी दस्तावेज़","cp.q4":"जमा करने के बाद",
  "cp.label":"प्रश्न पूछें","cp.ph":"अपने दस्तावेज़ों या चरणों के बारे में पूछें","cp.send":"भेजें",
  "cp.foot":"उत्तर PolicyNest नियमावली और इस पेज पर आपकी प्रगति पर आधारित हैं। Copilot आपको स्वीकृत या अस्वीकृत नहीं कर सकता। यहाँ अपना पूरा PAN, आधार या खाता नंबर कभी न लिखें।",
+ "cp.hello":"नमस्ते {n}। मुझे दिख रहा है कि आपका आवेदन किस चरण पर है और हर दस्तावेज़ को क्या चाहिए।","cp.think":"उत्तर तैयार हो रहा है…","cp.retry":"फिर कोशिश करें","cp.src":"स्रोत","cp.log":"बातचीत","cp.quick":"सुझाए गए सवाल",
+ "cp.err.net":"अभी AI सहायक से संपर्क नहीं हो सका, इसलिए यह उत्तर नियमावली और आपकी प्रगति से बना है।","cp.err.rate":"आपने थोड़े समय में बहुत सवाल पूछे हैं। कृपया कुछ मिनट रुकें। तब तक यह उत्तर नियमावली से है।","cp.err.cap":"आज के लिए AI उत्तर रुके हैं (दैनिक सीमा)। यह उत्तर नियमावली से है।","cp.err.session":"आपका साइन-इन समाप्त हो गया है, इसलिए मैं आपकी सहेजी प्रगति नहीं देख पा रहा। अपने आवेदन के हिसाब से मदद के लिए फिर साइन इन करें।","cp.err.id":"कृपया यहाँ अपना PAN, आधार या खाता नंबर न लिखें। मदद के लिए उसकी ज़रूरत नहीं है; नंबर के बिना अपना सवाल पूछें।",
+ "cp.g.next":"अगला कदम दिखाएँ","cp.g.read":"मार्गदर्शन सुनें","cp.g.stop":"आवाज़ रोकें","cp.g.mic":"बोलकर पूछें","cp.g.appeal":"किसी व्यक्ति से जँचवाएँ","cp.g.helped":"इससे मेरा सवाल हल हुआ",
  "cp.badge":"नया सुझाव","pb.compliance":"पूरी हुई अनुपालन जाँचें","pb.training":"पूरे हुए प्रशिक्षण घंटे","pb.conf":"पढ़ने का भरोसा","pb.docs":"सत्यापित दस्तावेज़","pb.docs.text":"6 में से {n} दस्तावेज़ सत्यापित","fb.exit":"सहेजें और बाहर निकलें","fb.title":"PolicyNest ऑनबोर्डिंग",
  "val.name":"अपना पूरा नाम वैसे ही लिखें जैसा आपके PAN कार्ड पर छपा है।","val.dob":"अपनी जन्म तिथि भरें।","val.age":"POSP के रूप में पंजीकरण के लिए आपकी उम्र 18 वर्ष या अधिक होनी चाहिए।","val.mobile":"10 अंकों का भारतीय मोबाइल नंबर भरें।","val.email":"सही ईमेल पता भरें।","val.pan":"PAN में पाँच अक्षर, चार अंक और एक अक्षर होता है (AAAAA9999A)।","val.aadhaar4":"केवल आधार के आख़िरी चार अंक भरें।","val.state":"अपना राज्य चुनें।","val.education":"अपनी उच्चतम शिक्षा चुनें।","val.city":"अपना शहर भरें।","val.acct":"खाता संख्या 9 से 18 अंकों की होती है।","val.ifsc":"IFSC में चार अक्षर, फिर शून्य, फिर छह वर्ण होते हैं।","val.consent":"आपके दस्तावेज़ों की प्रक्रिया के लिए सहमति ज़रूरी है।",
  "f.name":"PAN के अनुसार पूरा नाम","f.dob":"जन्म तिथि","f.pan":"PAN","f.aadhaar4":"आधार, आख़िरी चार अंक","f.mobile":"मोबाइल नंबर","f.email":"ईमेल","f.city":"शहर","f.acct":"खाता संख्या","f.ifsc":"IFSC","f.education":"उच्चतम शिक्षा","f.state":"राज्य","f.consent":"सहमति",
@@ -3732,7 +3784,7 @@ function staticI18n(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-t]"),function(el){ var v=T(el.getAttribute("data-t")); if(el.textContent!==v) el.textContent=v; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-tp]"),function(el){ el.setAttribute("placeholder",T(el.getAttribute("data-tp"))); });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ta]"),function(el){ el.setAttribute("aria-label",T(el.getAttribute("data-ta"))); });
-  var bi=$("cp-badge"); if(bi) bi.setAttribute("aria-label",T("cp.badge"));
+  var bi=$("cp-badge"); if(bi) bi.setAttribute("aria-label",T("cp.badge")); cpQuick();
   var fbt=document.querySelector("#focusbar>b"); if(fbt) fbt.textContent=T("fb.title");
   $("bnav").setAttribute("aria-label",T("nav.bottom"));
 }

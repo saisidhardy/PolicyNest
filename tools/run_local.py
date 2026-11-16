@@ -15,13 +15,13 @@ def configure():
     if not key.exists():key.write_text(secrets.token_urlsafe(48),encoding='ascii')
     os.environ.setdefault('JWT_SECRET',key.read_text(encoding='ascii'))
     os.environ.setdefault('POLICYNEST_DB_PATH',str(local/'policynest.sqlite3'))
-    os.environ['POLICYNEST_SKIP_DOTENV']='1'
+    (os.environ.pop if '--ai' in sys.argv else os.environ.__setitem__)(*(('POLICYNEST_SKIP_DOTENV',None) if '--ai' in sys.argv else ('POLICYNEST_SKIP_DOTENV','1')))  # --ai lets the proxy read the repo .env keys itself
     sys.path.insert(0,str(ROOT/'policynest_mvp'/'copilot_api'))
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--ai',action='store_true');a=p.parse_args()
     configure()
-    if not a.ai:os.environ['ANTHROPIC_API_KEY']=''
+    if not a.ai:os.environ['ANTHROPIC_API_KEY']='';os.environ['GEMINI_API_KEY']=''
     import main as api
     api.auth.init_db();api.workflows.init();api.telemetry.init()
     server=ThreadingHTTPServer(('127.0.0.1',8787),api.H)

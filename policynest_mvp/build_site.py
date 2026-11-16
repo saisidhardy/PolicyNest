@@ -121,18 +121,24 @@ kb = json.dumps(safe, ensure_ascii=False)
 (here / "copilot_api" / "kb.json").write_text(kb, encoding="utf-8")
 print("KB:", len(safe), "applicant passages from", len(chunks), "chunks;", redacted, "had internal wording removed")
 
-# Secrets never ship: the Copilot key lives only in .env / the proxy app's env vars.
+# Secrets never ship: model keys live only in .env / the proxy app's env vars. Checked in every built site folder
+# (site/ and site-demo/): the actual key values from .env, Anthropic keys (sk-ant-) and Gemini keys (AIza..., AQ.).
+import re as _re
 env = root / ".env"
-key = ""
+keys = []
 if env.is_file():
     for line in env.read_text(encoding="utf-8").splitlines():
-        if line.startswith("ANTHROPIC_API_KEY="):
-            key = line.split("=", 1)[1].strip()
-for f in site.rglob("*"):
-    if f.is_file() and f.suffix in (".html", ".js", ".json"):
-        t = f.read_text(encoding="utf-8", errors="ignore")
-        if "sk-ant-" in t or (key and not key.startswith("your-") and key in t):
-            raise SystemExit(f"Refusing to build: an API key appears in {f}")
+        if line.startswith(("ANTHROPIC_API_KEY=", "GEMINI_API_KEY=")):
+            v = line.split("=", 1)[1].strip()
+            if v and not v.startswith("your-") and len(v) >= 12:
+                keys.append(v)
+KEY_SHAPES = _re.compile(r"sk-ant-|AIza[0-9A-Za-z_\-]{30,}|AQ\.[0-9A-Za-z_\-]{20,}")
+for folder in {site, *(p for p in (here / "site", here / "site-demo") if p.is_dir())}:
+    for f in folder.rglob("*"):
+        if f.is_file() and f.suffix in (".html", ".js", ".json", ".css", ".txt", ".map"):
+            t = f.read_text(encoding="utf-8", errors="ignore")
+            if KEY_SHAPES.search(t) or any(k in t for k in keys):
+                raise SystemExit(f"Refusing to build: an API key appears in {f}")
 # FR-57: warn (never fail) when the engine block has changed since the evaluation was measured.
 # Same canonicalisation as tools/check_pack.py: text from "/* ENGINE:START" up to "/* ENGINE:END */", CRLF -> LF.
 import hashlib

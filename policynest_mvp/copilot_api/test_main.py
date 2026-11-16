@@ -11,6 +11,7 @@ import urllib.request
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
+os.environ["GEMINI_API_KEY"] = ""  # unit tests never use a live provider
 os.environ["ANTHROPIC_API_KEY"] = "test-key-not-real"  # set before import; .env values never override it
 os.environ.pop("APP_NAME", None)
 sys.path.insert(0, str(Path(__file__).resolve().parent))

@@ -34,6 +34,14 @@ def collect():
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(tempfile.gettempdir(), "policynest-copilot.tar.gz")
     files = collect()
+    # Never ship a key: refuse if any packaged text file holds a key-shaped string (Anthropic sk-ant-, Gemini AIza... or AQ.).
+    import re
+    shapes = re.compile(r"sk-ant-[0-9A-Za-z_-]{10,}|AIza[0-9A-Za-z_-]{30,}|AQ\.[0-9A-Za-z_-]{20,}")
+    for full, arc in files:
+        if arc.endswith((".py", ".json", ".txt", ".mjs", ".md")):
+            with open(full, encoding="utf-8", errors="ignore") as fh:
+                if shapes.search(fh.read()):
+                    raise SystemExit("Refusing to package: a key-shaped string appears in " + arc)
     with tarfile.open(out, "w:gz") as tar:
         for full, arc in files:
             tar.add(full, arcname=arc)

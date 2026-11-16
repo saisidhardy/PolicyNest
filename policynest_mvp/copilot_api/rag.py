@@ -17,6 +17,10 @@ log=logging.getLogger('policynest.rag')
 HERE=Path(__file__).resolve().parent
 INDEX=HERE/'rag_index.json'
 BANNED=re.compile(r'\b(fraud\w*|fake|forged|forgery|tamper\w*|suspicious)\b',re.I)
+# Manual passages that contradict the rulebook or this app (exam pass mark 35% vs 50%; passport-size photo rule vs a selfie)
+# never reach an applicant answer. The rulebook and the app's facts take precedence.
+CONTRADICTS=re.compile(r'minimum score of 35\s?%|passport[- ]size',re.I)
+SCHEMA=2
 STOP=set('the and for are you your is of to in on a an it be or my me i we do does what how why can this that with not'.split())
 
 
@@ -36,13 +40,13 @@ def prepare():
     for c in manual['chunks']:
         # Original extraction is retained unchanged; only applicant-safe text enters the answer corpus.
         text='\n'.join(line for line in c['text'].splitlines() if not BANNED.search(line))
-        if not text.strip() or BANNED.search(c['section']+' '+c['subsection']): continue
+        if not text.strip() or BANNED.search(c['section']+' '+c['subsection']) or CONTRADICTS.search(text): continue
         qa=c['text'].splitlines()[0] if c['text'].lstrip().startswith('Q') else ''
         cite=f"POSP Manual p.{c['page_number']} · {c['subsection'] or c['section']}"+((' · '+qa[:100]) if qa else '')
         classification='Organization-specific placeholder' if re.search(r'\[[A-Z][^\]]+\]',text) else ('Illustrative example' if c['content_type']=='Q&A' else c['source_classification'])
         chunks.append(dict(c,text=text,head=c['subsection'] or c['section'],cite=cite,audience='applicant',source_classification=classification))
     for i,c in enumerate(chunks): c['chunk_id']=f'kb-{i}'
-    out={'chunks':chunks,'schema_version':1,'embedding_model':None}
+    out={'chunks':chunks,'schema_version':SCHEMA,'embedding_model':None}
     if degraded: return out
     try: INDEX.write_text(json.dumps(out,ensure_ascii=False),encoding='utf-8')
     except OSError as e: log.warning('could not write the retrieval index (%s)',type(e).__name__)
@@ -92,7 +96,9 @@ def _kb_only():
 def _load_index():
     """Index file, else rebuild it, else keyword/kb-only with a logged warning. Never raises."""
     try:
-        if INDEX.exists(): return json.loads(INDEX.read_text(encoding='utf-8'))
+        if INDEX.exists():
+            data=json.loads(INDEX.read_text(encoding='utf-8'))
+            if data.get('schema_version')==SCHEMA: return data
         return prepare()
     except (OSError,ValueError,KeyError) as e:
         log.warning('retrieval index unavailable (%s); using the rulebook passages only',type(e).__name__)
