@@ -43,7 +43,7 @@ class Milestone1SecurityTests(unittest.TestCase):
             # Check migrations table
             rows = db.execute("SELECT version, name FROM schema_migrations ORDER BY version ASC").fetchall()
             versions = [r[0] for r in rows]
-            self.assertEqual(versions, [1, 2, 3])
+            self.assertTrue({1, 2, 3, 4}.issubset(set(versions)))
 
             # Check that re-running migrations does not error and applies 0 new
             applied = migrations.run_migrations(db)

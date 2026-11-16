@@ -279,8 +279,18 @@ def _public_app(row):
     details = json.loads(row['details'])
     if details.get('mobile'):
         details['mobile'] = _mask_mobile(details['mobile'])
-    return {'reference': row['reference'], 'version': row['version'], 'status': row['status'], 'details': details,
-            'progress': json.loads(row['progress']), 'updated_at': row['updated_at']}
+    keys = row.keys()
+    out = {'reference': row['reference'], 'version': row['version'], 'status': row['status'], 'details': details,
+           'progress': json.loads(row['progress']), 'updated_at': row['updated_at']}
+    if 'stage' in keys:
+        out['stage'] = row['stage']
+    if 'section' in keys:
+        out['section'] = row['section']
+    if 'page' in keys:
+        out['page'] = row['page']
+    if 'resume_position' in keys:
+        out['resume_position'] = json.loads(row['resume_position'] or '{}')
+    return out
 
 
 def _new_reference():
@@ -328,10 +338,30 @@ def put_application(user, body):
         details = clean_details(body['details'], stored_details) if 'details' in body else stored_details
         progress = clean_progress(body['progress']) if 'progress' in body else json.loads(row['progress'])
         now = int(time.time())
-        changed = db.execute(
-            'UPDATE applications SET version=version+1,details=?,progress=?,status=?,updated_at=? WHERE user_id=? AND version=?',
-            (json.dumps(details, separators=(',', ':')), json.dumps(progress, separators=(',', ':')),
-             derive_status(progress), now, user['id'], version)).rowcount
+
+        cols = {r[1] for r in db.execute('PRAGMA table_info(applications)')}
+        extra_sets, extra_args = [], []
+        if 'resume_position' in cols and 'resume_position' in body:
+            extra_sets.append('resume_position=?')
+            extra_args.append(json.dumps(body['resume_position'] or {}, separators=(',', ':')))
+        if 'stage' in cols and 'stage' in body:
+            extra_sets.append('stage=?')
+            extra_args.append(str(body['stage'])[:30])
+        if 'section' in cols and 'section' in body:
+            extra_sets.append('section=?')
+            extra_args.append(str(body['section'])[:30])
+        if 'page' in cols and 'page' in body:
+            extra_sets.append('page=?')
+            extra_args.append(int(body['page']))
+
+        set_clause = 'version=version+1,details=?,progress=?,status=?,updated_at=?'
+        if extra_sets:
+            set_clause += ',' + ','.join(extra_sets)
+
+        args = [json.dumps(details, separators=(',', ':')), json.dumps(progress, separators=(',', ':')),
+                derive_status(progress), now] + extra_args + [user['id'], version]
+
+        changed = db.execute(f'UPDATE applications SET {set_clause} WHERE user_id=? AND version=?', args).rowcount
         if not changed:
             current = db.execute('SELECT * FROM applications WHERE user_id=?', (user['id'],)).fetchone()
             raise PortalError(409, 'stale', application=_public_app(current))
@@ -498,13 +528,80 @@ def mark_read(user, body):
     return {'unread': unread}
 
 
+# ---------------------------------------------------------------- milestone 2 handlers
+def _handle_dashboard(u, b, p):
+    import application as app_module
+    lang = (p.get('lang') or ['en'])[0]
+    return 200, app_module.get_applicant_dashboard(u, lang=lang)
+
+def _handle_resume(u, b, p):
+    import application as app_module
+    return 200, app_module.get_resume_position(u)
+
+def _handle_draft_save(u, b, p):
+    import application as app_module
+    try:
+        return 200, app_module.save_draft(u, b)
+    except ValueError as e:
+        if str(e) == 'conflict_detected':
+            raise PortalError(409, 'conflict_detected', application=app_module.get_application(u))
+        raise PortalError(400, str(e))
+
+def _handle_submit(u, b, p):
+    import application as app_module
+    try:
+        return 200, app_module.submit_application(u)
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_profile_get(u, b, p):
+    import profile as prof_module
+    return 200, {'profile': prof_module.get_applicant_profile(u)}
+
+def _handle_profile_patch(u, b, p):
+    import profile as prof_module
+    try:
+        return 200, {'profile': prof_module.update_applicant_profile(u, b)}
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_change_password(u, b, p):
+    import profile as prof_module
+    try:
+        return 200, prof_module.change_applicant_password(u, b.get('current_password'), b.get('new_password'))
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_sign_out_all(u, b, p):
+    import profile as prof_module
+    return 200, prof_module.sign_out_all_sessions(u)
+
+def _handle_data_export(u, b, p):
+    import profile as prof_module
+    return 200, prof_module.export_applicant_data(u)
+
+def _handle_delete_request(u, b, p):
+    import profile as prof_module
+    return 200, prof_module.request_account_deletion(u, b.get('reason'))
+
+
 # ---------------------------------------------------------------- route table
 ROUTES = {
     ('GET', '/api/me'): lambda u, b, p: (200, get_profile(u)),
     ('PATCH', '/api/me'): lambda u, b, p: (200, patch_profile(u, b)),
+    ('GET', '/api/me/profile'): _handle_profile_get,
+    ('PATCH', '/api/me/profile'): _handle_profile_patch,
+    ('GET', '/api/me/dashboard'): _handle_dashboard,
+    ('POST', '/api/me/change-password'): _handle_change_password,
+    ('POST', '/api/me/sessions/sign-out-all'): _handle_sign_out_all,
+    ('POST', '/api/me/privacy/export'): _handle_data_export,
+    ('POST', '/api/me/privacy/delete-request'): _handle_delete_request,
     ('POST', '/api/applications/me'): lambda u, b, p: (200, {'application': create_application(u)}),
     ('GET', '/api/applications/me'): lambda u, b, p: (200, {'application': get_application(u)}),
     ('PUT', '/api/applications/me'): lambda u, b, p: (200, put_application(u, b)),
+    ('POST', '/api/applications/me/draft'): _handle_draft_save,
+    ('GET', '/api/applications/me/resume'): _handle_resume,
+    ('POST', '/api/applications/me/submit'): _handle_submit,
     ('POST', '/api/applications/me/events'): lambda u, b, p: (200, post_events(u, b)),
     ('GET', '/api/applications/me/timeline'): lambda u, b, p: (200, timeline(u, p)),
     ('GET', '/api/notifications'): lambda u, b, p: (200, list_notifications(u, p)),

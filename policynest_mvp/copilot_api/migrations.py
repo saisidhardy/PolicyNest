@@ -321,6 +321,42 @@ def migrate_003_domain_entities_foundation(db):
     db.execute("CREATE INDEX IF NOT EXISTS idx_cert_number ON certificates(certificate_number)")
 
 
+@migration(4, "004_application_persistence_and_profile_expansion")
+def migrate_004_application_persistence_and_profile_expansion(db):
+    """Expand user profile and application persistence columns."""
+    user_cols = {r[1] for r in db.execute('PRAGMA table_info(users)')}
+    for col_name, ddl in [
+        ('city', "TEXT"),
+        ('state', "TEXT"),
+        ('pincode', "TEXT"),
+        ('notification_prefs', "TEXT NOT NULL DEFAULT '{\"email\":true,\"in_app\":true,\"sms\":false}'"),
+    ]:
+        if col_name not in user_cols:
+            db.execute(f"ALTER TABLE users ADD COLUMN {col_name} {ddl}")
+
+    app_cols = {r[1] for r in db.execute('PRAGMA table_info(applications)')}
+    for col_name, ddl in [
+        ('stage', "TEXT NOT NULL DEFAULT 'Welcome'"),
+        ('section', "TEXT NOT NULL DEFAULT 'basics'"),
+        ('page', "INTEGER NOT NULL DEFAULT 1"),
+        ('resume_position', "TEXT NOT NULL DEFAULT '{}'"),
+        ('submitted_at', "INTEGER"),
+        ('verified_at', "INTEGER"),
+        ('risk_hold', "INTEGER NOT NULL DEFAULT 0"),
+    ]:
+        if col_name not in app_cols:
+            db.execute(f"ALTER TABLE applications ADD COLUMN {col_name} {ddl}")
+
+    db.execute("""CREATE TABLE IF NOT EXISTS data_deletion_requests (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'REQUESTED',
+        reason TEXT,
+        requested_at INTEGER NOT NULL,
+        processed_at INTEGER
+    )""")
+
+
 def run_migrations(db):
     """Run all unapplied migrations in ascending order within a single transaction."""
     db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (
