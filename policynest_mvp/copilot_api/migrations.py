@@ -540,6 +540,32 @@ def migrate_009_posp_agreements_table(db):
     db.execute("CREATE INDEX IF NOT EXISTS idx_posp_agree_app ON posp_agreements(application_id)")
 
 
+@migration(10, "010_communications_and_compliance_audit_packs")
+def migrate_010_communications_and_compliance_audit_packs(db):
+    """Add communication_dispatches and compliance_audit_packs tables."""
+    db.execute("""CREATE TABLE IF NOT EXISTS communication_dispatches (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        channel TEXT NOT NULL,
+        template_key TEXT NOT NULL,
+        recipient TEXT NOT NULL,
+        subject TEXT,
+        content TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'DELIVERED',
+        created_at INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS compliance_audit_packs (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        generated_by INTEGER NOT NULL REFERENCES users(id),
+        bundle_hash TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_dispatch_user ON communication_dispatches(user_id, created_at)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_compliance_pack_user ON compliance_audit_packs(user_id)")
+
+
 def run_migrations(db):
     """Run all unapplied migrations in ascending order within a single transaction."""
     db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (

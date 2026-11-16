@@ -1106,6 +1106,47 @@ def _handle_cert_admin_revoke(u, b, p):
     except FileNotFoundError:
         raise PortalError(404, 'certificate_not_found')
 
+def _handle_notif_dispatch(u, b, p):
+    import communications
+    user_id = int(b.get('user_id') or u['id'])
+    template_key = b.get('template_key') or b.get('template')
+    if not template_key:
+        raise PortalError(400, 'template_key_required')
+    context = b.get('context', {})
+    channels = tuple(b.get('channels', ['in_app', 'email', 'sms']))
+    try:
+        return 200, communications.dispatch_notification(user_id, template_key, context=context, channels=channels)
+    except FileNotFoundError:
+        raise PortalError(404, 'user_not_found')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_notif_dispatched_list(u, b, p):
+    import communications
+    user_id = int(p.get('user_id', [u['id']])[0])
+    limit = int(p.get('limit', ['50'])[0])
+    return 200, {'dispatched': communications.list_dispatched_messages(user_id, limit=limit)}
+
+def _handle_audit_timeline(u, b, p):
+    import communications
+    target_user_id = int(p.get('user_id', [u['id']])[0])
+    try:
+        return 200, communications.get_unified_audit_timeline(u, target_user_id)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_compliance_pack(u, b, p):
+    import communications
+    target_user_id = int(p.get('user_id', [0])[0] or b.get('user_id', 0))
+    if not target_user_id:
+        raise PortalError(400, 'user_id_required')
+    try:
+        return 200, communications.generate_compliance_audit_pack(u, target_user_id)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'target_not_found')
+
 
 # ---------------------------------------------------------------- route table
 ROUTES = {
@@ -1174,4 +1215,9 @@ ROUTES = {
     ('GET', '/api/certificates/me'): _handle_cert_me,
     ('GET', '/api/certificates/admin/list'): _handle_cert_admin_list,
     ('POST', '/api/certificates/admin/revoke'): _handle_cert_admin_revoke,
+    ('POST', '/api/notifications/dispatch'): _handle_notif_dispatch,
+    ('GET', '/api/notifications/dispatched'): _handle_notif_dispatched_list,
+    ('GET', '/api/audit/timeline'): _handle_audit_timeline,
+    ('GET', '/api/compliance/audit-pack'): _handle_compliance_pack,
+    ('POST', '/api/compliance/audit-pack'): _handle_compliance_pack,
 }
