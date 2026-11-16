@@ -33,7 +33,7 @@ def own_case(actor):
     if actor['role'] != 'applicant': raise ValueError('forbidden')
     init()
     with auth._db() as db:
-        db.execute('INSERT OR IGNORE INTO cases VALUES(?,?,NULL,?)', ('PN-' + secrets.token_hex(8), actor['id'], 'DRAFT'))
+        db.execute('INSERT OR IGNORE INTO cases (id, applicant_id, reviewer_id, status) VALUES (?, ?, NULL, ?)', ('PN-' + secrets.token_hex(8), actor['id'], 'DRAFT'))
         return dict(db.execute('SELECT * FROM cases WHERE applicant_id=?', (actor['id'],)).fetchone())
 
 
@@ -116,3 +116,17 @@ def review(actor,case_id,status,note,rule):
         _audit(db,case_id,actor,'REVIEW_'+status)
         portal.record_reviewer_event(db,row['applicant_id'],REVIEW_EVENT[status])  # key only: no note, rule or evidence
     return {'status':status,'rule':rule}
+
+
+# Re-export modern review operations capabilities (Milestone 4)
+from review_ops import (
+    get_queues,
+    claim_case,
+    release_case,
+    reassign_case,
+    get_case_dossier,
+    decide_case,
+    submit_appeal,
+    list_appeals,
+    decide_appeal,
+)

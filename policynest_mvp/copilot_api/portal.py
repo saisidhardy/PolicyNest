@@ -668,6 +668,113 @@ def _handle_doc_guidelines(u, b, p):
     return 200, {'guidelines': documents.get_guidelines(slot, lang)}
 
 
+# ---------------------------------------------------------------- milestone 4 review operations handlers
+def _handle_reviewer_queues(u, b, p):
+    import review_ops
+    try:
+        q_type = p.get('type', ['my_queue'])[0]
+        status_filter = p.get('status', [None])[0]
+        search = p.get('search', [None])[0]
+        page = int(p.get('page', ['1'])[0])
+        limit = int(p.get('limit', ['20'])[0])
+        return 200, review_ops.get_queues(u, queue_type=q_type, status_filter=status_filter, search=search, page=page, limit=limit)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_reviewer_claim(u, b, p):
+    import review_ops
+    try:
+        return 200, review_ops.claim_case(u, b.get('case_id'))
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'case_not_found')
+    except ValueError as e:
+        raise PortalError(409 if str(e) == 'case_already_claimed' else 400, str(e))
+
+def _handle_reviewer_release(u, b, p):
+    import review_ops
+    try:
+        return 200, review_ops.release_case(u, b.get('case_id'), reason=b.get('reason', 'Self-released'))
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'case_not_found')
+
+def _handle_reviewer_reassign(u, b, p):
+    import review_ops
+    try:
+        return 200, review_ops.reassign_case(u, b.get('case_id'), int(b.get('target_reviewer_id')), reason=b.get('reason', 'Workload rebalancing'))
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_reviewer_dossier(u, b, p):
+    import review_ops
+    case_id = p.get('case_id', [''])[0] or (b.get('case_id') if isinstance(b, dict) else '')
+    if not case_id:
+        raise PortalError(400, 'missing_case_id')
+    try:
+        return 200, {'dossier': review_ops.get_case_dossier(u, case_id)}
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'case_not_found')
+
+def _handle_reviewer_decide(u, b, p):
+    import review_ops
+    try:
+        return 200, review_ops.decide_case(
+            u,
+            case_id=b.get('case_id'),
+            status=b.get('status'),
+            note=b.get('note'),
+            rule=b.get('rule'),
+            slot_defects=b.get('slot_defects'),
+            cooling_off_days=b.get('cooling_off_days'),
+        )
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'case_not_found')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_appeals_submit(u, b, p):
+    import review_ops
+    try:
+        return 200, review_ops.submit_appeal(u, b.get('case_id'), b.get('explanation'), evidence=b.get('evidence'))
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_appeals_list(u, b, p):
+    import review_ops
+    try:
+        return 200, {'appeals': review_ops.list_appeals(u, status_filter=p.get('status', [None])[0])}
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_appeals_decide(u, b, p):
+    import review_ops
+    try:
+        return 200, review_ops.decide_appeal(
+            u,
+            appeal_reference=b.get('appeal_reference') or b.get('id'),
+            verdict=b.get('verdict'),
+            response_text=b.get('response'),
+            restore_status=b.get('restore_status'),
+        )
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'appeal_not_found')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+
 # ---------------------------------------------------------------- route table
 ROUTES = {
     ('GET', '/api/me'): lambda u, b, p: (200, get_profile(u)),
@@ -696,4 +803,13 @@ ROUTES = {
     ('GET', '/api/documents/cross-checks'): _handle_doc_cross_checks,
     ('POST', '/api/documents/correction'): _handle_doc_correction,
     ('GET', '/api/documents/guidelines'): _handle_doc_guidelines,
+    ('GET', '/api/reviewer/queues'): _handle_reviewer_queues,
+    ('POST', '/api/reviewer/claim'): _handle_reviewer_claim,
+    ('POST', '/api/reviewer/release'): _handle_reviewer_release,
+    ('POST', '/api/reviewer/reassign'): _handle_reviewer_reassign,
+    ('GET', '/api/reviewer/dossier'): _handle_reviewer_dossier,
+    ('POST', '/api/reviewer/decision'): _handle_reviewer_decide,
+    ('POST', '/api/appeals/submit'): _handle_appeals_submit,
+    ('GET', '/api/appeals'): _handle_appeals_list,
+    ('POST', '/api/appeals/decide'): _handle_appeals_decide,
 }

@@ -357,6 +357,32 @@ def migrate_004_application_persistence_and_profile_expansion(db):
     )""")
 
 
+@migration(5, "005_review_operations_and_appeals_expansion")
+def migrate_005_review_operations_and_appeals_expansion(db):
+    """Expand cases and appeals with operational timestamps and audit references."""
+    case_cols = {r[1] for r in db.execute('PRAGMA table_info(cases)')}
+    for col_name, ddl in [
+        ('claimed_at', "INTEGER"),
+        ('cooling_off_until', "INTEGER"),
+        ('escalation_reason', "TEXT"),
+        ('created_at', "INTEGER"),
+        ('updated_at', "INTEGER"),
+    ]:
+        if col_name not in case_cols:
+            db.execute(f"ALTER TABLE cases ADD COLUMN {col_name} {ddl}")
+
+    appeal_cols = {r[1] for r in db.execute('PRAGMA table_info(appeals)')}
+    for col_name, ddl in [
+        ('resolved_by', "INTEGER REFERENCES users(id)"),
+        ('resolution_notes', "TEXT"),
+    ]:
+        if col_name not in appeal_cols:
+            db.execute(f"ALTER TABLE appeals ADD COLUMN {col_name} {ddl}")
+
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cases_reviewer ON cases(reviewer_id, status)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_appeals_case ON appeals(case_id, status)")
+
+
 def run_migrations(db):
     """Run all unapplied migrations in ascending order within a single transaction."""
     db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (
