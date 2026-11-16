@@ -422,6 +422,71 @@ def migrate_006_fraud_engine_and_aml_expansion(db):
     db.execute("CREATE INDEX IF NOT EXISTS idx_fraud_status ON fraud_cases(status, risk_tier)")
 
 
+@migration(7, "007_training_lms_and_curriculum_seed")
+def migrate_007_training_lms_and_curriculum_seed(db):
+    """Expand training progress tracking and seed mandatory 15-hour IRDAI POSP curriculum."""
+    prog_cols = {r[1] for r in db.execute('PRAGMA table_info(training_progress)')}
+    for col_name, ddl in [
+        ('last_heartbeat_at', "INTEGER"),
+        ('current_section', "INTEGER NOT NULL DEFAULT 0"),
+        ('bookmark_position', "TEXT NOT NULL DEFAULT '{}'"),
+    ]:
+        if col_name not in prog_cols:
+            db.execute(f"ALTER TABLE training_progress ADD COLUMN {col_name} {ddl}")
+
+    # Seed 5 IRDAI Modules if not present
+    existing_count = db.execute("SELECT COUNT(*) FROM training_modules").fetchone()[0]
+    if existing_count == 0:
+        modules_seed = [
+            (
+                "MOD-01",
+                "v1",
+                "Introduction to Insurance & Core Principles",
+                180,
+                '{"title_hi":"बीमा और मूल सिद्धांतों का परिचय","hours":3.0,"category":"Principles","description":"Core principles: Uberrima Fides, Insurable Interest, Indemnity, Subrogation, Proximate Cause.","sections":[{"title":"Foundations of Insurance","duration_min":60},{"title":"Fundamental Principles","duration_min":60},{"title":"POSP Role & Boundaries","duration_min":60}]}',
+                1,
+            ),
+            (
+                "MOD-02",
+                "v1",
+                "General Insurance: Motor, Property & Commercial",
+                210,
+                '{"title_hi":"सामान्य बीमा: मोटर, संपत्ति और वाणिज्यिक","hours":3.5,"category":"General","description":"Motor Vehicle Act 2019, Third-Party vs Comprehensive, Fire, Burglary, and Package policies.","sections":[{"title":"Motor Insurance Essentials","duration_min":75},{"title":"Property & Fire Coverage","duration_min":75},{"title":"Package & Rural Products","duration_min":60}]}',
+                2,
+            ),
+            (
+                "MOD-03",
+                "v1",
+                "Life Insurance: Term, Endowment & Savings Plans",
+                210,
+                '{"title_hi":"जीवन बीमा: टर्म, एंडोमेंट और बचत योजनाएं","hours":3.5,"category":"Life","description":"Human Life Value, Term Assurance, Pure Protection, Traditional vs ULIP, and Riders.","sections":[{"title":"HLV & Term Protection","duration_min":75},{"title":"Endowment & Money Back","duration_min":75},{"title":"Riders & Claim Settlement","duration_min":60}]}',
+                3,
+            ),
+            (
+                "MOD-04",
+                "v1",
+                "Health Insurance & Personal Accident Coverage",
+                180,
+                '{"title_hi":"स्वास्थ्य बीमा और व्यक्तिगत दुर्घटना कवरेज","hours":3.0,"category":"Health","description":"Inpatient hospitalization, waiting periods, pre-existing diseases, cashless network, and personal accident.","sections":[{"title":"Health Plans & Waiting Periods","duration_min":60},{"title":"Cashless Claims & Network","duration_min":60},{"title":"Personal Accident Insurance","duration_min":60}]}',
+                4,
+            ),
+            (
+                "MOD-05",
+                "v1",
+                "POSP Code of Conduct, Ethics & Compliance",
+                120,
+                '{"title_hi":"पीओएसपी आचार संहिता, नैतिकता और अनुपालन","hours":2.0,"category":"Ethics","description":"IRDAI POSP Guidelines 2015, anti-rebating Section 41, single affiliation rule, and Ombudsman.","sections":[{"title":"Code of Conduct & Section 41","duration_min":60},{"title":"Grievance & Ombudsman Scheme","duration_min":60}]}',
+                5,
+            ),
+        ]
+        db.executemany(
+            """INSERT INTO training_modules (
+                id, program_version, title, duration_minutes, content_json, sequence_order
+            ) VALUES (?, ?, ?, ?, ?, ?)""",
+            modules_seed,
+        )
+
+
 def run_migrations(db):
     """Run all unapplied migrations in ascending order within a single transaction."""
     db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (

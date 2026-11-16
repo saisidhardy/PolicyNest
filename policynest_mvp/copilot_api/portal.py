@@ -872,6 +872,108 @@ def _handle_fraud_rules(u, b, p):
     import fraud_engine
     return 200, {'rules': list(fraud_engine.FRAUD_RULES.values())}
 
+def _handle_training_overview(u, b, p):
+    import training_lms
+    try:
+        lang = p.get('lang', ['en'])[0]
+        return 200, training_lms.get_training_overview(u, lang=lang)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'application_not_found')
+
+def _handle_training_module_detail(u, b, p):
+    import training_lms
+    module_id = p.get('id', [None])[0] or (b.get('module_id') if isinstance(b, dict) else None)
+    if not module_id:
+        raise PortalError(400, 'module_id_required')
+    lang = p.get('lang', ['en'])[0]
+    try:
+        return 200, training_lms.get_module_detail(u, module_id, lang=lang)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'module_not_found')
+
+def _handle_training_heartbeat(u, b, p):
+    import training_lms
+    module_id = b.get('module_id')
+    if not module_id:
+        raise PortalError(400, 'module_id_required')
+    try:
+        return 200, training_lms.record_training_heartbeat(
+            u,
+            module_id=module_id,
+            seconds_increment=int(b.get('seconds_increment', 30)),
+            section_index=int(b.get('section_index', 0)),
+            bookmark=b.get('bookmark'),
+        )
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'not_found')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_training_complete_module(u, b, p):
+    import training_lms
+    module_id = b.get('module_id')
+    if not module_id:
+        raise PortalError(400, 'module_id_required')
+    try:
+        return 200, training_lms.complete_training_module(u, module_id=module_id)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'not_found')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_training_admin_list_modules(u, b, p):
+    import training_lms
+    try:
+        return 200, {'modules': training_lms.admin_list_modules(u)}
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_training_admin_upsert_module(u, b, p):
+    import training_lms
+    try:
+        return 200, training_lms.admin_upsert_module(
+            u,
+            module_id=b.get('id'),
+            title=b.get('title'),
+            duration_minutes=int(b.get('duration_minutes', 60)),
+            content=b.get('content', {}),
+            sequence_order=int(b.get('sequence_order', 1)),
+        )
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_training_admin_user_progress(u, b, p):
+    import training_lms
+    target_user_id = int(p.get('user_id', [0])[0] or b.get('user_id', 0))
+    if not target_user_id:
+        raise PortalError(400, 'user_id_required')
+    try:
+        return 200, training_lms.admin_get_user_progress(u, target_user_id)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'user_not_found')
+
+def _handle_training_admin_reset(u, b, p):
+    import training_lms
+    target_user_id = int(b.get('user_id', 0))
+    if not target_user_id:
+        raise PortalError(400, 'user_id_required')
+    try:
+        return 200, training_lms.admin_reset_user_progress(u, target_user_id, b.get('module_id'))
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
 
 # ---------------------------------------------------------------- route table
 ROUTES = {
@@ -918,4 +1020,13 @@ ROUTES = {
     ('GET', '/api/fraud/blacklist'): _handle_fraud_blacklist_get,
     ('POST', '/api/fraud/blacklist'): _handle_fraud_blacklist_add,
     ('GET', '/api/fraud/rules'): _handle_fraud_rules,
+    ('GET', '/api/training/modules'): _handle_training_overview,
+    ('GET', '/api/training/module'): _handle_training_module_detail,
+    ('POST', '/api/training/heartbeat'): _handle_training_heartbeat,
+    ('POST', '/api/training/complete'): _handle_training_complete_module,
+    ('GET', '/api/training/progress'): _handle_training_overview,
+    ('GET', '/api/training/admin/modules'): _handle_training_admin_list_modules,
+    ('POST', '/api/training/admin/modules'): _handle_training_admin_upsert_module,
+    ('GET', '/api/training/admin/user-progress'): _handle_training_admin_user_progress,
+    ('POST', '/api/training/admin/reset'): _handle_training_admin_reset,
 }
