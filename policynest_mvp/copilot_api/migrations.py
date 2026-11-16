@@ -517,6 +517,29 @@ def migrate_008_examination_engine_and_question_bank(db):
     db.execute("CREATE INDEX IF NOT EXISTS idx_qbank_cat ON exam_question_bank(category)")
 
 
+@migration(9, "009_posp_agreements_table")
+def migrate_009_posp_agreements_table(db):
+    """Add posp_agreements table for digital appointment agreement execution."""
+    db.execute("""CREATE TABLE IF NOT EXISTS posp_agreements (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        application_id INTEGER NOT NULL REFERENCES applications(id),
+        agreement_type TEXT NOT NULL DEFAULT 'IRDAI_POSP_APPOINTMENT',
+        version TEXT NOT NULL DEFAULT '2026.1',
+        terms_accepted INTEGER NOT NULL DEFAULT 1,
+        code_of_conduct_accepted INTEGER NOT NULL DEFAULT 1,
+        anti_rebating_declared INTEGER NOT NULL DEFAULT 1,
+        signer_name TEXT NOT NULL,
+        signer_ip TEXT NOT NULL,
+        signed_at INTEGER NOT NULL,
+        agreement_hash TEXT NOT NULL,
+        counter_signed_by TEXT NOT NULL DEFAULT 'Principal Officer, PolicyNest Broking Technologies',
+        counter_signed_at INTEGER NOT NULL
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_posp_agree_user ON posp_agreements(user_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_posp_agree_app ON posp_agreements(application_id)")
+
+
 def run_migrations(db):
     """Run all unapplied migrations in ascending order within a single transaction."""
     db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (

@@ -60,6 +60,7 @@ APPLICANT_ACTIONS = {
     "training.update",
     "exam.start",
     "exam.submit",
+    "agreement.execute",
     "certificate.read",
     "correction.submit",
 }

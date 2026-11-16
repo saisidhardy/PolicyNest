@@ -378,6 +378,32 @@ class H(BaseHTTPRequestHandler):
                 if not policy.allows(user, "application.read", case): raise ValueError("forbidden")
                 return self._json(200, auth.load_snapshot(user) or {"snapshot": None})
             except ValueError as e: return self._json(403 if str(e)=="forbidden" else 401, {"error": str(e)})
+        # Zero-Auth Public Certificate Verification: /api/certificates/verify/<identifier>
+        if self.path.startswith("/api/certificates/verify/"):
+            parts = self.path.split("/")
+            cert_id = parts[4] if len(parts) >= 5 else ""
+            import certification
+            res = certification.verify_certificate_public(cert_id)
+            return self._json(200 if res.get("verified") else 404, res)
+
+        # Public SVG Certificate Render: /api/certificates/render/<identifier>
+        if self.path.startswith("/api/certificates/render/"):
+            parts = self.path.split("/")
+            cert_id = parts[4] if len(parts) >= 5 else ""
+            import certification
+            res = certification.verify_certificate_public(cert_id)
+            if not res.get("verified"):
+                return self._json(404, {"error": "certificate_not_found"})
+            svg_content = certification.render_certificate_svg(res)
+            content_bytes = svg_content.encode("utf-8")
+            self.send_response(200)
+            _cors(self, self.headers.get("Origin", ""))
+            self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
+            self.send_header("Content-Length", str(len(content_bytes)))
+            self.end_headers()
+            self.wfile.write(content_bytes)
+            return
+
         if self.path.startswith("/api/health") or self.path == "/":
             xff = [p for p in (self.headers.get("X-Forwarded-For") or "").split(",") if p.strip()]
             # xff_hops lets us check how the edge builds X-Forwarded-For (no addresses are returned)

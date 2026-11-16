@@ -389,7 +389,9 @@ EVENTS = {
     'training_complete': ('you', 'success', '#exam'),
     'exam_passed': ('policynest', 'success', '#certificate'),
     'exam_failed': ('policynest', 'action', '#exam'),
+    'agreement_executed': ('you', 'success', '#certificate'),
     'certificate_issued': ('policynest', 'success', '#certificate'),
+    'certificate_revoked': ('policynest', 'error', '#status'),
     'dispute_submitted': ('you', 'info', '#history'),
     'verification_completed': ('policynest', 'info', '#documents'),
     'doc_corrected': ('you', 'info', '#documents'),
@@ -1038,6 +1040,72 @@ def _handle_exam_admin_override(u, b, p):
     except PermissionError:
         raise PortalError(403, 'forbidden')
 
+def _handle_cert_eligibility(u, b, p):
+    import certification
+    try:
+        return 200, certification.get_certificate_eligibility(u)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_cert_agreement_template(u, b, p):
+    import certification
+    lang = p.get('lang', ['en'])[0]
+    try:
+        return 200, certification.get_posp_agreement_template(u, lang=lang)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_cert_agreement_execute(u, b, p):
+    import certification
+    declaration = b.get('declaration_accepted', True)
+    client_ip = b.get('client_ip', '127.0.0.1')
+    try:
+        return 200, certification.execute_posp_agreement(u, declaration_accepted=declaration, client_ip=client_ip)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_cert_issue(u, b, p):
+    import certification
+    try:
+        return 200, certification.issue_posp_certificate(u)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except ValueError as e:
+        raise PortalError(400, str(e))
+
+def _handle_cert_me(u, b, p):
+    import certification
+    try:
+        return 200, certification.get_user_certificate(u)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'certificate_not_found')
+
+def _handle_cert_admin_list(u, b, p):
+    import certification
+    status = p.get('status', [None])[0]
+    limit = int(p.get('limit', ['50'])[0])
+    try:
+        return 200, {'certificates': certification.admin_list_certificates(u, status=status, limit=limit)}
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+
+def _handle_cert_admin_revoke(u, b, p):
+    import certification
+    cert_id = b.get('certificate_number') or b.get('id')
+    reason = b.get('reason', 'Administrative revocation')
+    if not cert_id:
+        raise PortalError(400, 'certificate_number_required')
+    try:
+        return 200, certification.admin_revoke_certificate(u, cert_id, reason)
+    except PermissionError:
+        raise PortalError(403, 'forbidden')
+    except FileNotFoundError:
+        raise PortalError(404, 'certificate_not_found')
+
 
 # ---------------------------------------------------------------- route table
 ROUTES = {
@@ -1099,4 +1167,11 @@ ROUTES = {
     ('POST', '/api/exam/submit'): _handle_exam_submit,
     ('GET', '/api/exam/admin/attempts'): _handle_exam_admin_attempts,
     ('POST', '/api/exam/admin/override-cooldown'): _handle_exam_admin_override,
+    ('GET', '/api/certificates/eligibility'): _handle_cert_eligibility,
+    ('GET', '/api/certificates/agreement/template'): _handle_cert_agreement_template,
+    ('POST', '/api/certificates/agreement/execute'): _handle_cert_agreement_execute,
+    ('POST', '/api/certificates/issue'): _handle_cert_issue,
+    ('GET', '/api/certificates/me'): _handle_cert_me,
+    ('GET', '/api/certificates/admin/list'): _handle_cert_admin_list,
+    ('POST', '/api/certificates/admin/revoke'): _handle_cert_admin_revoke,
 }
