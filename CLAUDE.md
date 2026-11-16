@@ -87,6 +87,24 @@ The numbered folders `01_…` to `08_…` in this directory are the source packa
 
 ## Deployment
 
+**Live since 16 Nov 2026: the production applicant portal (commits up to `eaf7328`).**
+
+- **Sites:**
+  - https://policynest.embarko.app is the production build (`site/`, `build_site.py`): landing page, accounts, no demo tools.
+  - https://policynest-demo.embarko.app is the demo build (`site-demo/`, `build_site.py --mode demo`): demo controls, `?demo=1`, "View as". Its app id is `cmwiqathn0hfu13bahr07m7bt`.
+- **Proxy:** `policynest-copilot` runs the new backend (accounts, saving, notifications, the Gemini assistant). Package it with `python tools/package_proxy.py <out.tar.gz>`.
+  - **Env vars on Embarko:** `GEMINI_API_KEY`, `JWT_SECRET` (random, set by Claude, never printed), `COPILOT_ORIGINS` (both sites), `RAG_SEMANTIC=0`, `GEMINI_MODEL=gemini-3.5-flash`, `GEMINI_FALLBACK_MODEL=gemini-3.5-flash-lite`.
+  - **Storage:** SQLite in Embarko's `DATA_DIR`, which is **not backed up**.
+  - **No SMTP:** password-recovery emails are not sent.
+- **Live check on 16 Nov:**
+  - `/api/health` reports `llm:true` (gemini); `/api/ready` passes.
+  - CORS allows only the two sites.
+  - T1–T10 10/10 on the live demo.
+  - The live assistant answers grounded and cited, in English and Hindi, and refuses ID numbers and outcome predictions.
+  - Production redirects `#apply` to `#welcome` and shows no demo controls.
+- **Report:** `planning/PORTAL_VERIFICATION.md`. Open: minor findings m1 to m9 and the review-console redesign.
+
+
 - **Live site: https://policynest.embarko.app** (Embarko static hosting, app name `policynest`, claimed and permanent, owned by the user's Embarko account).
 - The deploy token is stored on this machine at `~/.embarko/credentials` (`C:\Users\swarn\.embarko\credentials`). Never print it or commit it.
 - Claude can also redeploy through the Embarko connector in claude.ai (`deploy_app`, app name `policynest`) when it is signed in.
