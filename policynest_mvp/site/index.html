@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PolicyNest Agent Onboarding</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -3321,7 +3324,8 @@ function nextStepText(){
   return "You are certified. Your POSP code is on the certificate.";
 }
 /* ---------- Onboarding Copilot: live app state + rulebook retrieval (BM25) + Claude through a key-holding proxy ---------- */
-var COPILOT_URL=window.POLICYNEST_API_URL||localStorage.getItem('pn_api_url')||(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?(location.port==='8000'?'':'http://localhost:8787'):"https://policynest-copilot.embarko.app");
+var IS_STATIC_HOST=/github\.io|gitlab\.io|surge\.sh/.test(location.hostname)||(location.protocol==='file:')||(!window.POLICYNEST_API_URL&&!localStorage.getItem('pn_api_url')&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1');
+var COPILOT_URL=window.POLICYNEST_API_URL||localStorage.getItem('pn_api_url')||(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?(location.port==='8000'?'':'http://localhost:8787'):(IS_STATIC_HOST?'':"https://policynest-copilot.embarko.app"));
 var CP={log:[],kb:null,idf:null,llm:null,busy:false,seen:{},idleT:null};
 function cpOpen(on,focusQuestion){ var p=$("cp"),f=$("cp-fab");clearTimeout(CP.focusT);p.hidden=!on; f.setAttribute("aria-expanded",String(on)); f.hidden=on; if(on){ $("cp-badge").hidden=true; if(!CP.log.length) cpPush("a",T("cp.hello",{n:fname()})+" "+nextStepText()); cpQuick(); cpDraw(); if(focusQuestion!==false)CP.focusT=setTimeout(function(){var q=$("cp-q"); if(q) q.focus()},30); } else { document.body.classList.remove("typing"); f.focus(); } }
 function cpPush(who,text,meta,extra){ var m={who:who,text:text,meta:meta||""}; if(extra) Object.keys(extra).forEach(function(k){m[k]=extra[k]}); CP.log.push(m); if(CP.log.length>40) CP.log.shift(); cpDraw(); }
@@ -3356,6 +3360,7 @@ function cpNudge(id,text){ if(CP.seen[id]) return; CP.seen[id]=1; cpPush("n",tex
 function tokens(s){return String(s).toLowerCase().replace(/[^a-z0-9ऀ-ॿ ]+/g," ").split(/\s+/).filter(function(w){return w.length>1&&!/^(the|and|for|are|you|your|is|of|to|in|on|a|an|it|be|or|my|me|i|we|do|does|what|how|why|can|this|that|with|not)$/.test(w)})}
 function kbLoad(){ if(CP.kb!==null||typeof fetch!=="function") return; CP.kb=[];
   fetch("kb.json").then(function(r){return r.ok?r.json():[]}).then(function(k){ CP.kb=k.map(function(c){c.tk=tokens(c.head+" "+c.head+" "+c.text);return c}); var df={},N=CP.kb.length; CP.kb.forEach(function(c){var seen={};c.tk.forEach(function(t){if(!seen[t]){seen[t]=1;df[t]=(df[t]||0)+1}})}); CP.idf={}; Object.keys(df).forEach(function(t){CP.idf[t]=Math.log(1+(N-df[t]+.5)/(df[t]+.5))}); CP.avg=CP.kb.reduce(function(n,c){return n+c.tk.length},0)/Math.max(1,N); }).catch(function(){});
+  if(IS_STATIC_HOST&&!window.POLICYNEST_API_URL){ CP.llm=false; cpDraw(); return; }
   fetch(COPILOT_URL+"/api/health").then(function(r){return r.json()}).then(function(h){CP.llm=!!h.llm&&h.daily_left!==0;CP.capped=h.llm&&h.daily_left===0;cpDraw()}).catch(function(){CP.llm=false;cpDraw()}); }
 function retrieve(q,n){
   if(!CP.kb||!CP.kb.length) return []; var qt=tokens(q),k1=1.4,b=.75;
@@ -3391,7 +3396,7 @@ function cpAsk(q,isRetry){
   var hist=lg.slice(-6).map(function(m){return {role:m.who==="u"?"user":"assistant",text:m.text}});
   function offline(reason,retry){ var t=intentAnswer(q)||(hits.length?"From the "+hits[0].cite+": "+hits[0].text.replace(/[|#*`>]/g," ").replace(/\s+/g," ").slice(0,420)+"…":"I couldn't find that in the rulebook. "+nextStepText());
     cpPush("a",t,reason||T("cp.err.net"),{sources:hits.slice(0,3).map(function(h){return h.cite}),offline:true,retry:retry?true:false,q:q}); }
-  if(typeof fetch!=="function") return offline();
+  if(typeof fetch!=="function"||(IS_STATIC_HOST&&!window.POLICYNEST_API_URL&&!localStorage.getItem('pn_api_url'))) return offline();
   CP.busy=true; cpPush("a","",null,{typing:true}); var ctl=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort()},30000);
   function done(){ CP.log=CP.log.filter(function(m){return !m.typing}); }
   Promise.resolve(ACCOUNT&&CONS.sync?syncProgress():null).then(function(){return fetch(COPILOT_URL+"/api/assistant",{method:"POST",credentials:'include',headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,history:hist,context:ctx,lang:LANG}),signal:ctl?ctl.signal:undefined})})
@@ -3535,9 +3540,13 @@ accountDialog.addEventListener('submit',function(e){
   accountRequest('/api/auth/'+m,body,false).then(function(data){
     if(m==='recover'){ msg.textContent=T('lp.recover.done'); return; }
     if(data.user&&m==='register'){
-      /* A new account does not sign in by itself: end the session the server opened, then ask for the credentials on the sign-in panel. */
-      AUTH.syncAfter=syncOpt;
-      return accountRequest('/api/auth/logout',{},false).catch(function(){}).then(function(){ AUTH.mode='login'; AUTH.as='applicant'; AUTH.notice='lp.created'; authDraw(true); var pf=$('account-password'); if(pf) pf.focus(); });
+      enterAccount(data.user);
+      if(syncOpt){ CONS.sync=true; consSave(); }
+      AUTH.syncAfter=false; AUTH.notice='';
+      productEvent('login');
+      accountDialog.close();
+      announce(T('lp.signedin'));
+      return;
     }
     if(data.user){
       var staff=data.user.role!=='applicant';
@@ -3604,11 +3613,11 @@ function localAccountFallback(path,body,method,originalErr){
     var newUser={
       id: Date.now(),
       email: body&&body.email||'',
-      display_name: body&&body.display_name||'Applicant',
+      display_name: body&&body.display_name||(email.split('@')[0])||'Applicant',
       role: 'applicant',
       created_at: Math.floor(Date.now()/1000),
       language: LANG||'en',
-      email_verified: false,
+      email_verified: true,
       mobile_verified: false,
       mobile_masked: null,
       analytics_consent: false,
@@ -3621,12 +3630,12 @@ function localAccountFallback(path,body,method,originalErr){
   if(cleanPath==='/api/auth/login'){
     var users=getUsers(), email=String(body&&body.email||'').trim().toLowerCase(), pw=String(body&&body.password||'');
     if(AUTH.as==='reviewer'&&email.indexOf('rev')>=0){
-      var revUser={id:9999,email:email,display_name:'Senior Reviewer',role:'reviewer',created_at:Math.floor(Date.now()/1000),language:LANG||'en'};
+      var revUser={id:9999,email:email||'reviewer@policynest.in',display_name:'Senior Reviewer',role:'reviewer',created_at:Math.floor(Date.now()/1000),language:LANG||'en'};
       setCurrentUser(revUser); return Promise.resolve({user: revUser});
     }
     var matched=users.find(function(u){ return u.email.toLowerCase()===email&&u.password===pw; });
     if(!matched&&email&&pw&&pw.length>=12){
-      matched={id:Date.now(),email:email,display_name:email.split('@')[0],role:'applicant',created_at:Math.floor(Date.now()/1000),language:LANG||'en',email_verified:false,mobile_verified:false,mobile_masked:null,analytics_consent:false,password:pw};
+      matched={id:Date.now(),email:email,display_name:email.split('@')[0]||'Applicant',role:'applicant',created_at:Math.floor(Date.now()/1000),language:LANG||'en',email_verified:true,mobile_verified:false,mobile_masked:null,analytics_consent:false,password:pw};
       users.push(matched); setUsers(users);
     }
     if(matched){ setCurrentUser(matched); return Promise.resolve({user: matched}); }
@@ -3642,8 +3651,17 @@ function localAccountFallback(path,body,method,originalErr){
     setCurrentUser(null); return Promise.resolve({ok:true});
   }
 
+  if(cleanPath==='/api/auth/refresh'){
+    var cur=getCurrentUser(); if(cur) return Promise.resolve({ok:true, user: cur});
+    return Promise.resolve({ok:true});
+  }
+
+  if(cleanPath==='/api/auth/reset'){
+    return Promise.resolve({ok:true, message:'Password updated'});
+  }
+
   if(cleanPath==='/api/auth/recover'){
-    return Promise.resolve({ok:true,message:'Recovery email simulated'});
+    return Promise.resolve({ok:true, message:'Recovery email simulated'});
   }
 
   if(cleanPath==='/api/me'){
@@ -3657,7 +3675,19 @@ function localAccountFallback(path,body,method,originalErr){
 
   if(cleanPath==='/api/applications/me'){
     var cur=getCurrentUser()||{id:1};
-    return Promise.resolve({application:{id:cur.id,reference:'PN-2026-00001',status:'DRAFT',stage:'Basics'}});
+    var appKey='pn_app_'+cur.id;
+    var appData=null;
+    try{ appData=JSON.parse(localStorage.getItem(appKey)||'null'); }catch(e){}
+    if(!appData){
+      appData={id:cur.id,reference:'PN-2026-'+String(cur.id).slice(-5),status:'DRAFT',stage:'Basics',version:1,details:{},docs:{}};
+      try{ localStorage.setItem(appKey,JSON.stringify(appData)); }catch(e){}
+    }
+    if(body&&body.snapshot){
+      appData.snapshot=body.snapshot;
+      appData.stage=body.snapshot.stage||appData.stage;
+      try{ localStorage.setItem(appKey,JSON.stringify(appData)); }catch(e){}
+    }
+    return Promise.resolve({application:appData});
   }
 
   if(cleanPath==='/api/notifications'){
@@ -3676,10 +3706,37 @@ function localAccountFallback(path,body,method,originalErr){
     return Promise.resolve({accepted:1});
   }
 
-  return Promise.reject(originalErr);
+  if(cleanPath==='/api/cases/me'){
+    return Promise.resolve({case:null});
+  }
+
+  if(cleanPath==='/api/appeals'||cleanPath==='/api/appeals/me'){
+    return Promise.resolve({appeals:[]});
+  }
+
+  if(cleanPath==='/api/reviewer/queue'){
+    return Promise.resolve({items:[]});
+  }
+
+  if(cleanPath==='/api/reviewer/case'){
+    return Promise.resolve({case:null});
+  }
+
+  if(cleanPath==='/api/reviewer/decide'||cleanPath==='/api/reviewer/appeals/resolve'){
+    return Promise.resolve({ok:true});
+  }
+
+  if(cleanPath==='/api/reports'){
+    return Promise.resolve({reports:[]});
+  }
+
+  return Promise.resolve({ok:true});
 }
 
 function accountRequest(path,body,retry,method){
+  if(IS_STATIC_HOST && !window.POLICYNEST_API_URL && !localStorage.getItem('pn_api_url')){
+    return localAccountFallback(path,body,method,null);
+  }
   return fetch(COPILOT_URL+path,{method:method||(body===undefined?'GET':'POST'),credentials:'include',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){
     if(r.status===401&&retry!==false&&path!=='/api/auth/refresh'){
       if(!accountRefreshing)accountRefreshing=accountRequest('/api/auth/refresh',{},false).finally(function(){accountRefreshing=null});

@@ -27,6 +27,9 @@ assert "DEMO:START" not in out_src and "DEMO:END" not in out_src.replace("DEMO:E
 cut = out_src.index("</style>") + len("</style>")
 page = (
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+    '<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n'
+    '<meta http-equiv="Pragma" content="no-cache">\n'
+    '<meta http-equiv="Expires" content="0">\n'
     '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
     + out_src[:cut]
     + '\n</head>\n<body style="margin:0">\n'
