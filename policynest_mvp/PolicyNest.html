@@ -2406,7 +2406,7 @@ var NAV=[
  {k:"nav.review",v:"ops",h:"review",i:ICONS[2],staff:1},
  {k:"nav.evaluation",v:"eval",h:"evaluation",i:'<path d="M2.5 13.5h11M4 11V7.5M7 11V4.5M10 11V6M13 11V3"/>',staff:1},
  {k:"nav.audit",v:"audit",h:"audit",i:'<path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.4 4h.4M2.4 8h.4M2.4 12h.4"/>',staff:1},
- {k:"nav.verify",v:"verify",h:"verification",i:ICONS[2]},
+ {k:"nav.verify",v:"verify",h:"verification",i:ICONS[2],staff:1},
  {k:"nav.analytics",v:"analytics",h:"analytics",i:GRID_ICON,staff:1}];
 function ico(p){return '<svg viewBox="0 0 16 16" aria-hidden="true">'+p+'</svg>'}
 function stepState(i){return S.status==="CERTIFIED"||i<S.step?"done":i===S.step?"now":"next"}
@@ -2475,11 +2475,25 @@ function shellChrome(){
 }
 function navHtml(){
   var out="",lastStaff=false;
+  var curRole = (ACCOUNT && ACCOUNT.role) || "applicant";
+  var isPriya = ACCOUNT && (ACCOUNT.email === "priya.sharma@example.com" || (S && S.appId === "PN-2026-00102"));
+
   NAV.forEach(function(n){
     if(!canSee(n.v)) return;
-    if(n.staff&&!lastStaff){ lastStaff=true; out+='<span class="mgrp" role="presentation">'+TE("nav.staff")+'</span>'; }
-    var cur=VIEW===n.v&&(n.v!=="apply"||(n.stage||null)===ROUTE_STAGE);
-    out+='<a href="#'+n.h+'"'+(cur?' aria-current="page"':'')+'>'+ico(n.i)+'<span>'+TE(n.k)+'</span></a>';
+    
+    // For standard applicant (e.g. Aarav Patel), hide locked future stages from sidebar
+    if(curRole === "applicant" && n.stage && !isPriya){
+      var stageIdx = HASH_STAGE[n.stage];
+      if(stageIdx > (S.step || 0) + 1 && S.status !== "CERTIFIED") return;
+    }
+
+    if(n.staff && !lastStaff){
+      lastStaff = true;
+      var grpLabel = (curRole === "admin") ? "Administration" : "Review Operations";
+      out += '<span class="mgrp" role="presentation">' + grpLabel + '</span>';
+    }
+    var cur = VIEW === n.v && (n.v !== "apply" || (n.stage || null) === ROUTE_STAGE);
+    out += '<a href="#' + n.h + '"' + (cur ? ' aria-current="page"' : '') + '>' + ico(n.i) + '<span>' + TE(n.k) + '</span></a>';
   });
   return out;
 }
@@ -3950,7 +3964,24 @@ var ROLES=[
 ];
 var ROLE=(function(){ if(!DEMO_BUILD) return "applicant"; var v=null; try{ v=localStorage.getItem("pn-role") }catch(e){} if(v&&roleOf(v)) return v; return DEMO?"all":"applicant" })();
 function roleOf(k){ var key=(k===undefined)?ROLE:k; for(var i=0;i<ROLES.length;i++) if(ROLES[i].k===key) return ROLES[i]; return null }
-function canSee(v){ if(v==="help"||v==="welcome"||v==="verify"||v==="analytics") return true; if(DEMO_BUILD&&ROLE==="all") return true; return can(ROLE,VIEW_ACT[v]); }
+function canSee(v){
+  if(v==="help"||v==="welcome") return true;
+  // If visitor is signed out on landing page
+  if(!ACCOUNT){
+    return (v==="analytics"||v==="verify");
+  }
+  var r = (ACCOUNT && ACCOUNT.role) || "applicant";
+  if(r === "admin") {
+    // Administrator sees executive analytics, oversight queue, verification, evaluation, audit, profile
+    return (v==="analytics"||v==="ops"||v==="verify"||v==="eval"||v==="audit"||v==="notif"||v==="acct"||v==="help");
+  }
+  if(r === "reviewer") {
+    // Reviewer sees underwriting queue, verification, evaluation, audit, analytics, profile
+    return (v==="ops"||v==="verify"||v==="eval"||v==="audit"||v==="analytics"||v==="notif"||v==="acct"||v==="help");
+  }
+  // Applicant sees personal dashboard, application lifecycle, notifications, history, account
+  return (v==="dash"||v==="apply"||v==="notif"||v==="hist"||v==="acct"||v==="help");
+}
 function rolesFor(v){ return ROLES.filter(function(r){return r.k!=="all"&&can(r.k,VIEW_ACT[v])}) }
 function rvRoleNote(){ var r=roleOf(); return (/*DEMO:START*/DEMO_BUILD?" · demo role: ":/*DEMO:END*/" · role: ")+(r?r.label:"not set") }
 /* Production: the role follows the server account (applicant when signed out). */
@@ -5702,8 +5733,27 @@ function setupQuickTools(){
           loadPriyaShowcaseProfile();
           show('dash');
         } else {
-          S.begun = true; S.step = 1;
-          show('apply', 'documents');
+          fresh();
+          S.begun = true;
+          S.step = 1;
+          S.status = "DRAFT";
+          S.appId = "PN-2026-00101";
+          S.f = {
+            name: "Aarav Patel",
+            dob: "1992-04-12",
+            mobile: "9876501234",
+            email: "aarav.patel@example.com",
+            pan: "ABCDE1234F",
+            aadhaar4: "4321",
+            state: "Gujarat",
+            city: "Ahmedabad",
+            acct: "",
+            ifsc: "",
+            education: "Graduate",
+            consent: true
+          };
+          persist();
+          show('dash');
         }
       }
     };
