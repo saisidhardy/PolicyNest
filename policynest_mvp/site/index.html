@@ -4526,7 +4526,7 @@ function renderAnalytics(){
   var h = '<div class="panel" style="max-width:1160px;margin:0 auto;padding:16px;"><div class="head" style="margin-bottom:20px;">' +
     '<h1>' + (LANG==='hi'?'उत्पाद विश्लेषण व संचालन फ़नल':'Product Analytics & Conversion Funnel Intelligence') + '</h1>' +
     '<p class="lead">' + (LANG==='hi'?'वास्तविक समय टेलीमेट्री व मुख्य प्रदर्शन संकेतक (एफसीआर, एफटीवीआर, आरआरआर, टीएटी)। केवल अनाम और संवेदी डेटा मुक्त।':'Real-time operational intelligence, funnel conversion metrics, and Core Web Vitals telemetry aggregated with strict client-side PII stripping.') + '</p></div>' +
-  h += '<div class="box hot" id="live-db-metrics" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 18px;border-radius:10px;background:var(--sunken);border:1px solid var(--line);">' +
+    '<div class="box hot" id="live-db-metrics" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 18px;border-radius:10px;background:var(--sunken);border:1px solid var(--line);">' +
     '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;"></span><b style="font-size:13px;">Live Subsystem Telemetry:</b> <span class="small muted" id="analytics-live-source" style="margin-left:6px;">Polling SQLite Engine...</span></div>' +
     '<div style="display:flex;gap:14px;align-items:center;font-size:12px;font-family:monospace;">' +
     '<span>Registered: <b id="stat-live-registered">-</b></span>' +
@@ -4534,8 +4534,7 @@ function renderAnalytics(){
     '<span>KYC Verified: <b id="stat-live-verified">-</b></span>' +
     '<span>Certified: <b id="stat-live-certified">-</b></span>' +
     '<button type="button" class="btn sm" id="btn-refresh-analytics" style="font-size:11px;padding:3px 8px;margin-left:6px;cursor:pointer;">🔄 Refresh</button>' +
-    '</div></div>';
- +
+    '</div></div>' +
     '<div class="analytics-grid">' +
     '<div class="metric-card"><div class="m-lbl">' + (LANG==='hi'?'प्रथम संपर्क समाधान (FCR)':'First Contact Resolution (FCR)') + '</div><div class="m-val">88.4%</div><p class="small muted">' + (LANG==='hi'?'लक्ष्य: >= ८०% · उत्कृष्ट':'Target >= 80% · 8.4% above SLA') + '</p></div>' +
     '<div class="metric-card"><div class="m-lbl">' + (LANG==='hi'?'प्रथम बार मान्य दर (FTVR)':'First Time Valid Rate (FTVR)') + '</div><div class="m-val">91.2%</div><p class="small muted">' + (LANG==='hi'?'लक्ष्य: >= ८५% · ओसीआर सटीकता':'Target >= 85% · High document quality') + '</p></div>' +
