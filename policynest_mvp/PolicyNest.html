@@ -1236,9 +1236,9 @@ body.landing #pn-quick-float-bar {
         <strong style="display:block;">👤 Aarav Patel (Applicant in Onboarding)</strong>
         <span class="small muted">Profile created · Ready for document uploads and KYC checks</span>
       </button>
-      <button type="button" class="btn sec" data-quick-profile="priya" style="text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;">
-        <strong style="display:block;">📄 Priya Sharma (Applicant Under Review)</strong>
-        <span class="small muted">Documents submitted · Awaiting reviewer decision or correction</span>
+      <button type="button" class="btn sec" data-quick-profile="priya" style="text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;border-left:3px solid var(--brand);">
+        <strong style="display:block;">📄 Priya Sharma (Applicant Under Review · Presentation Showcase)</strong>
+        <span class="small muted">Complete journey pre-populated across all 6 stages (Basics, 6/6 Docs, Verification, 15h LMS, Exam, Certificate)</span>
       </button>
       <button type="button" class="btn sec" data-quick-profile="vikram" style="text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;">
         <strong style="display:block;">🔍 Vikram Malhotra (Senior Reviewer)</strong>
@@ -2619,6 +2619,25 @@ function renderDash(){
   var pre=key==="not_started"||key==="draft"||key==="in_progress";
   /* hello and reference */
   var h='<div class="dash"><div class="dhello"><div><h1>'+esc(T(cert?"ui.congrats":"ui.hello",{name:greetName()}))+'</h1></div></div>';
+  
+  /* Interactive Presentation Stage Jumper Bar for Priya Sharma showcase */
+  if(S.appId === "PN-2026-00102" || (ACCOUNT && ACCOUNT.email === "priya.sharma@example.com")){
+    h += '<div class="box hot" style="margin-bottom:20px;padding:16px 20px;background:var(--surface);border:2px solid var(--brand);border-radius:12px;box-shadow:0 8px 30px -10px rgba(200,80,26,0.25);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">' +
+      '<div><span style="background:var(--brand);color:#141414;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Presentation Showcase</span>' +
+      '<b style="font-size:15px;margin-left:8px;">Priya Sharma · Complete POSP Lifecycle</b>' +
+      '<span class="small muted" style="display:block;margin-top:2px;">All 6 stages populated with verified data for live presentation. Click any stage to inspect:</span></div>' +
+      '<div class="pill ok" style="font-weight:700;">✓ Fully Populated &amp; Verified</div></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">' +
+      '<button type="button" class="btn sm" data-jump-stage="0" style="font-size:12px;font-weight:600;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;"><span>📝 Stage 0</span><b>Personal Basics</b><span class="small muted">Profile &amp; KYC</span></button>' +
+      '<button type="button" class="btn sm" data-jump-stage="1" style="font-size:12px;font-weight:600;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;"><span>📑 Stage 1</span><b>Documents</b><span class="small muted">6 / 6 Verified</span></button>' +
+      '<button type="button" class="btn sm" data-jump-stage="2" style="font-size:12px;font-weight:600;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;"><span>🔍 Stage 2</span><b>Underwriting</b><span class="small muted">Under Review</span></button>' +
+      '<button type="button" class="btn sm" data-jump-stage="3" style="font-size:12px;font-weight:600;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;"><span>🎓 Stage 3</span><b>15h Training</b><span class="small muted">5 Modules Done</span></button>' +
+      '<button type="button" class="btn sm" data-jump-stage="4" style="font-size:12px;font-weight:600;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;"><span>✍️ Stage 4</span><b>POSP Exam</b><span class="small muted">Score: 88% Passed</span></button>' +
+      '<button type="button" class="btn sm" data-jump-stage="5" style="font-size:12px;font-weight:600;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;"><span>🏆 Stage 5</span><b>Certificate</b><span class="small muted">IRDAI Issued</span></button>' +
+      '</div></div>';
+  }
+
   /* Purposeful Spatial Journey & Vault Preview */
   h += renderJourneyMap(S.step, "dash-journey-map", true);
   h += renderApplicationHealthModel("dash-health-preview");
@@ -5550,6 +5569,94 @@ function badgeSync(){
 }
 try{ new MutationObserver(function(){ badgeSync(); }).observe(document.body,{childList:true}); }catch(e){}
 
+
+function loadPriyaShowcaseProfile(){
+  fresh();
+  S.begun = true;
+  S.appId = "PN-2026-00102";
+  S.status = "UNDER_REVIEW";
+  S.step = 2;
+  S.reached = { DRAFT: 1, SUBMITTED: 1, UNDER_REVIEW: 1, IN_REVIEW: 1, APPROVED: 1, CERTIFIED: 1 };
+  S.round = 1;
+  S.rounds = [];
+  S.decision = "APPROVE";
+  S.ttd = 1420;
+  S.posp = "IRDAI/POSP/2026/08421";
+  S.issued = new Date().toISOString().slice(0, 10);
+  S.started = Date.now() - 86400000;
+  S.consentAt = Date.now() - 86400000;
+
+  S.f = {
+    name: "Priya Sharma",
+    dob: "1995-07-22",
+    mobile: "9876543210",
+    email: "priya.sharma@example.com",
+    pan: "ABCPS1234K",
+    aadhaar4: "5678",
+    state: "Maharashtra",
+    city: "Pune",
+    acct: "912345678901",
+    ifsc: "HDFC0001234",
+    education: "Graduate",
+    consent: true
+  };
+
+  DOCS.forEach(function(d){
+    S.docs[d.k] = {
+      status: "ok",
+      file: true,
+      name: d.label + " (Verified)",
+      url: null,
+      ocr: { conf: 0.98, words: [] },
+      remote: false,
+      versions: []
+    };
+    S.fb[d.k] = {
+      good: [d.label + " verified", "High contrast OCR scan clear"],
+      fix: [],
+      stop: [],
+      human: [],
+      later: [],
+      codes: []
+    };
+  });
+
+  S.checks = [
+    { doc: "PAN", label: "PAN Card Authenticity & Active Status", rule: "IRDAI §3.1", res: "PASS", ev: "NSDL / ITD registry verified · Active", key: "PAN" },
+    { doc: "Aadhaar", label: "Aadhaar Verhoeff Checksum & Identity", rule: "IRDAI §3.2", res: "PASS", ev: "UIDAI Verhoeff algorithm passed · Last 4 digits: 5678", key: "AADHAAR_FRONT" },
+    { doc: "Name Match", label: "8-Tier Indian Name Resolution", rule: "IRDAI §3.3", res: "PASS", ev: "Tier 1 Exact Match (Priya Sharma across PAN & Bank)", key: "PAN" },
+    { doc: "Age & DOB", label: "Age Eligibility Check (>= 18 yrs)", rule: "IRDAI §2.1", res: "PASS", ev: "Age 31 years (DOB: 22/07/1995)", key: "PAN" },
+    { doc: "Bank Account", label: "Bank Account Penny-Drop Verification", rule: "IRDAI §3.4", res: "PASS", ev: "NPCI IMPS matched to Priya Sharma · Active HDFC Acct", key: "BANK" },
+    { doc: "Education", label: "Minimum Educational Qualification", rule: "IRDAI §2.2", res: "PASS", ev: "Class 10 CBSE Board Verified · Graduate Degree", key: "CLASS10" },
+    { doc: "Central Registry", label: "IRDAI Single Affiliation Registry", rule: "IRDAI §4.1", res: "PASS", ev: "Clear: No conflicting POSP appointments nationwide", key: "PAN" },
+    { doc: "Biometrics", label: "Face Liveness & Biometric Match", rule: "IRDAI §3.5", res: "PASS", ev: "Liveness score: 99.2% · Facial match score: 98.4%", key: "SELFIE" }
+  ];
+  S.shown = S.checks.length;
+
+  S.mods = [true, true, true, true, true];
+
+  S.exam = {
+    ans: { 0: 1, 1: 0, 2: 0, 3: 1, 4: 2 },
+    score: 88,
+    passed: true
+  };
+
+  S.seal = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+  S.events = [
+    { event: "APPLICATION_CREATED", actor: "Priya Sharma", t: Date.now() - 86400000, desc: "Account registered and application initialized" },
+    { event: "DETAILS_SAVED", actor: "Priya Sharma", t: Date.now() - 82800000, desc: "Personal, address, and bank details recorded" },
+    { event: "DOCS_UPLOADED", actor: "Priya Sharma", t: Date.now() - 79200000, desc: "All 6 verification documents uploaded with on-device OCR" },
+    { event: "KYC_VERIFIED", actor: "System Engine", t: Date.now() - 75600000, desc: "Automated 8-tier name match and penny-drop checks passed" },
+    { event: "UNDERWRITING_ASSIGNED", actor: "System", t: Date.now() - 72000000, desc: "Assigned to Senior Underwriter Vikram Malhotra" },
+    { event: "TRAINING_COMPLETED", actor: "LMS Academy", t: Date.now() - 36000000, desc: "Completed 15 hours of mandatory IRDAI training modules" },
+    { event: "EXAM_PASSED", actor: "Exam Engine", t: Date.now() - 18000000, desc: "Scored 88% on IRDAI POSP certification exam" },
+    { event: "ISSUE_CREDENTIAL", actor: "IRDAI Authority", t: Date.now() - 3600000, desc: "POSP Certificate issued: IRDAI/POSP/2026/08421" }
+  ];
+
+  persist();
+}
+
 /* ---------- Quick Tools: Profile Switcher & Dev Mailbox ---------- */
 function setupQuickTools(){
   var btnProfile = $('btn-quick-profile');
@@ -5592,9 +5699,8 @@ function setupQuickTools(){
         } else if(roleKey === 'vikram'){
           show('ops');
         } else if(roleKey === 'priya'){
-          S.begun = true; S.step = 4;
-          S.training = { hours: 15, modules_done: 5, passed: true };
-          show('apply', 'exam');
+          loadPriyaShowcaseProfile();
+          show('dash');
         } else {
           S.begun = true; S.step = 1;
           show('apply', 'documents');
