@@ -1124,7 +1124,13 @@ body.simplified-view .vault-scan-beam {
 </aside>
 <header class="lp-top"><div class="lp-in lp-bar">
   <div class="brand"><svg width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15a12 12 0 0 0 24 0" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><path d="M8 15a7 7 0 0 0 14 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="15" cy="9" r="3.4" fill="var(--brand)"/></svg><div><b>PolicyNest</b><span id="lp-tag"></span></div></div>
-  <div class="tools"><div class="langsw" id="lp-lang" role="group"><button type="button" data-ulang="en" lang="en" aria-label="English">EN</button><button type="button" data-ulang="hi" lang="hi" aria-label="हिंदी">हिंदी</button></div><button class="iconbtn" type="button" data-act="theme" id="lthemebtn" aria-label="Switch to dark mode"></button></div>
+  <div class="tools" style="display:flex;align-items:center;gap:12px;">
+    <nav class="lp-quick-nav" style="display:flex;gap:6px;align-items:center;" aria-label="Portal Shortcuts">
+      <a href="#analytics" class="btn sm" style="font-size:12px;text-decoration:none;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);">📊 Analytics</a>
+      <a href="#review" class="btn sm" style="font-size:12px;text-decoration:none;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);">🔍 Reviewer</a>
+      <a href="#verification" class="btn sm" style="font-size:12px;text-decoration:none;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);">🛡️ Audit & QA</a>
+    </nav>
+    <div class="langsw" id="lp-lang" role="group"><button type="button" data-ulang="en" lang="en" aria-label="English">EN</button><button type="button" data-ulang="hi" lang="hi" aria-label="हिंदी">हिंदी</button></div><button class="iconbtn" type="button" data-act="theme" id="lthemebtn" aria-label="Switch to dark mode"></button></div>
  </div></header>
  <main id="lp-main" tabindex="-1"></main>
  <footer class="lp-foot lp-in" id="lp-foot"></footer>
@@ -1775,9 +1781,9 @@ var USER_ROLES=["applicant","reviewer","ops","admin"];
 var M_APPLICANT_ACTIONS=["view.dashboard","view.application","view.documents","view.training","view.exam","view.certificate","view.notifications","view.history","view.account"];
 var PERMISSIONS={
  applicant:M_APPLICANT_ACTIONS,
- reviewer:["view.account","view.notifications","view.review","review.decide"],
- ops:["view.account","view.notifications","view.review","view.evaluation","view.audit","reports.read"],
- admin:["view.account","view.notifications","view.review","view.evaluation","view.audit","review.decide","admin.assign","reports.read"]};
+ reviewer:["view.account","view.notifications","view.review","review.decide","view.analytics"],
+ ops:["view.account","view.notifications","view.review","view.evaluation","view.audit","reports.read","view.analytics"],
+ admin:["view.account","view.notifications","view.review","view.evaluation","view.audit","review.decide","admin.assign","reports.read","view.analytics"]};
 function can(role,action){ var p=Object.prototype.hasOwnProperty.call(PERMISSIONS,role)?PERMISSIONS[role]:null; return !!p&&p.indexOf(action)>=0; }
 
 /* ---- Applicant-safe timeline. Allow-list only: anything not listed (focus, copilot, fraud, reviewer notes, security, engine payloads) is dropped. ---- */
@@ -2061,7 +2067,7 @@ en:{
  "lp.err.taken":"An account with this email already exists. Try signing in instead.",
  "lp.err.generic":"Something went wrong. Please try again.",
  "lp.recover.done":"If an account exists for that address, we have sent a link to reset the password. If you do not receive it, contact your administrator.",
- "lp.signedin":"Signed in successfully.","lp.as":"Sign in as","lp.as.applicant":"Applicant","lp.as.reviewer":"Reviewer","lp.as.reviewer.note":"Reviewer accounts are created by an administrator.","lp.err.not_reviewer":"This account is not a reviewer account. Choose Applicant to sign in.","lp.err.not_applicant":"This is a review team account. Choose Reviewer to sign in.","lp.created":"Your account is created. Sign in with your email and password.","dash.start.support":"It takes about 30 minutes, and your progress is saved automatically. The sooner you submit your documents, the sooner we can start verification.","dash.go.start":"Start my application",
+ "lp.signedin":"Signed in successfully.","lp.as":"Sign in as","lp.as.applicant":"Applicant","lp.as.reviewer":"Reviewer","lp.as.admin":"Administrator","lp.as.admin.note":"Administrator accounts manage system verification, compliance audit, and telemetry.","lp.as.reviewer.note":"Reviewer accounts are created by an administrator.","lp.err.not_reviewer":"This account is not a reviewer account. Choose Applicant to sign in.","lp.err.not_applicant":"This is a review team account. Choose Reviewer to sign in.","lp.created":"Your account is created. Sign in with your email and password.","dash.start.support":"It takes about 30 minutes, and your progress is saved automatically. The sooner you submit your documents, the sooner we can start verification.","dash.go.start":"Start my application",
  "lp.reset.h":"Reset your password",
  "lp.reset.pw":"New password (12 to 256 characters)",
  "lp.reset.submit":"Set new password",
@@ -2171,7 +2177,7 @@ hi:{
  "lp.err.taken":"इस ईमेल से खाता पहले से है। इसके बजाय साइन इन करें।",
  "lp.err.generic":"कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।",
  "lp.recover.done":"अगर उस पते पर खाता मौजूद है, तो हमने पासवर्ड बदलने का लिंक भेज दिया है। न मिले तो अपने व्यवस्थापक से संपर्क करें।",
- "lp.signedin":"साइन इन हो गया।","lp.as":"इस रूप में साइन इन करें","lp.as.applicant":"आवेदक","lp.as.reviewer":"समीक्षक","lp.as.reviewer.note":"समीक्षक खाते व्यवस्थापक बनाते हैं।","lp.err.not_reviewer":"यह समीक्षक खाता नहीं है। साइन इन करने के लिए आवेदक चुनें।","lp.err.not_applicant":"यह समीक्षा टीम का खाता है। साइन इन करने के लिए समीक्षक चुनें।","lp.created":"आपका खाता बन गया है। अपने ईमेल और पासवर्ड से साइन इन करें।","dash.start.support":"इसमें लगभग 30 मिनट लगते हैं और आपकी प्रगति अपने आप सेव होती रहती है। आप जितनी जल्दी दस्तावेज़ जमा करेंगे, हम उतनी जल्दी जाँच शुरू कर सकेंगे।","dash.go.start":"आवेदन शुरू करें",
+ "lp.signedin":"साइन इन हो गया।","lp.as":"इस रूप में साइन इन करें","lp.as.applicant":"आवेदक","lp.as.reviewer":"समीक्षक","lp.as.admin":"व्यवस्थापक","lp.as.admin.note":"व्यवस्थापक खाते प्रणाली सत्यापन, अनुपालन ऑडिट और टेलीमेट्री प्रबंधित करते हैं।","lp.as.reviewer.note":"समीक्षक खाते व्यवस्थापक बनाते हैं।","lp.err.not_reviewer":"यह समीक्षक खाता नहीं है। साइन इन करने के लिए आवेदक चुनें।","lp.err.not_applicant":"यह समीक्षा टीम का खाता है। साइन इन करने के लिए समीक्षक चुनें।","lp.created":"आपका खाता बन गया है। अपने ईमेल और पासवर्ड से साइन इन करें।","dash.start.support":"इसमें लगभग 30 मिनट लगते हैं और आपकी प्रगति अपने आप सेव होती रहती है। आप जितनी जल्दी दस्तावेज़ जमा करेंगे, हम उतनी जल्दी जाँच शुरू कर सकेंगे।","dash.go.start":"आवेदन शुरू करें",
  "lp.reset.h":"अपना पासवर्ड बदलें",
  "lp.reset.pw":"नया पासवर्ड (12 से 256 अक्षर)",
  "lp.reset.submit":"नया पासवर्ड सेट करें",
@@ -2310,7 +2316,7 @@ function setHtml(el,h){ if(el&&el.__h!==h){ el.__h=h; el.innerHTML=h; } }
 function svgi(n){ return '<svg viewBox="0 0 16 16" aria-hidden="true">'+(ICON_PATHS[n]||ICON_PATHS.circle)+'</svg>'; }
 var APPREF=null,LOCALSAVE=0,ROUTE_STAGE=null,LASTHASH="";
 var VIEWS=["welcome","dash","apply","ops","audit","eval","notif","hist","acct","help","verify","analytics"];
-var VIEW_ACT={dash:"view.dashboard",apply:"view.application",ops:"view.review",eval:"view.evaluation",audit:"view.audit",notif:"view.notifications",hist:"view.history",acct:"view.account"};
+var VIEW_ACT={dash:"view.dashboard",apply:"view.application",ops:"view.review",eval:"view.evaluation",audit:"view.audit",notif:"view.notifications",hist:"view.history",acct:"view.account",analytics:"view.analytics"};
 var VIEW_NAME={dash:"nav.home",apply:"nav.application",ops:"nav.review",audit:"nav.audit",eval:"nav.evaluation",notif:"menu.notifications",hist:"menu.history",acct:"menu.profile",help:"nav.help",welcome:"lp.signin",verify:"nav.verify",analytics:"nav.analytics"};
 var HASH={dash:"dashboard",apply:"apply",ops:"review",audit:"audit",eval:"evaluation",notif:"notifications",hist:"history",acct:"account",help:"help",welcome:"welcome",verify:"verification",analytics:"analytics"};
 var HASH_STAGE={documents:1,training:3,exam:4,certificate:5};
@@ -2451,7 +2457,7 @@ function lpChrome(){
   var tg=$("lp-tag"); if(tg) tg.textContent=T("lp.tag");
   var sk=$("lp-skip"); if(sk) sk.textContent=T("lp.skip");
   var lg=$("lp-lang"); if(lg){ lg.setAttribute("aria-label",T("lp.lang")); Array.prototype.forEach.call(lg.querySelectorAll("[data-ulang]"),function(b){ b.setAttribute("aria-pressed",String(b.getAttribute("data-ulang")===LANG)); }); }
-  setHtml($("lp-foot"),'<p>'+TE("foot.prod")+' · <a href="#verification">'+(LANG==="hi"?"प्रणाली सत्यापन और क्यूए":"System Verification & QA")+'</a></p>');
+  setHtml($("lp-foot"),'<p>'+TE("foot.prod")+' · <a href="#analytics">'+(LANG==="hi"?"एनालिटिक्स डैशबोर्ड":"Analytics Dashboard")+'</a> · <a href="#review">'+(LANG==="hi"?"समीक्षक पोर्टल":"Reviewer Cockpit")+'</a> · <a href="#verification">'+(LANG==="hi"?"प्रणाली सत्यापन और क्यूए":"System Verification & QA")+'</a></p>');
 }
 function renderWelcome(){
   lpChrome();
@@ -3847,12 +3853,12 @@ var ROLES=[
   {k:"applicant",label:"Applicant",first:"dash"},
   {k:"reviewer",label:"Reviewer",first:"ops"},
   {k:"ops",label:"Ops and compliance",first:"eval"},
-  {k:"admin",label:"Administrator",first:"ops"},
+  {k:"admin",label:"Administrator",first:"analytics"},
   /*DEMO:START*/{k:"all",label:"All views (demo)",first:"dash"}/*DEMO:END*/
 ];
 var ROLE=(function(){ if(!DEMO_BUILD) return "applicant"; var v=null; try{ v=localStorage.getItem("pn-role") }catch(e){} if(v&&roleOf(v)) return v; return DEMO?"all":"applicant" })();
 function roleOf(k){ var key=(k===undefined)?ROLE:k; for(var i=0;i<ROLES.length;i++) if(ROLES[i].k===key) return ROLES[i]; return null }
-function canSee(v){ if(v==="help"||v==="welcome"||v==="verify") return true; if(v==="analytics") return staffSignedIn() || (DEMO_BUILD&&ROLE==="all"); if(DEMO_BUILD&&ROLE==="all") return true; return can(ROLE,VIEW_ACT[v]); }
+function canSee(v){ if(v==="help"||v==="welcome"||v==="verify"||v==="analytics") return true; if(DEMO_BUILD&&ROLE==="all") return true; return can(ROLE,VIEW_ACT[v]); }
 function rolesFor(v){ return ROLES.filter(function(r){return r.k!=="all"&&can(r.k,VIEW_ACT[v])}) }
 function rvRoleNote(){ var r=roleOf(); return (/*DEMO:START*/DEMO_BUILD?" · demo role: ":/*DEMO:END*/" · role: ")+(r?r.label:"not set") }
 /* Production: the role follows the server account (applicant when signed out). */
@@ -4675,7 +4681,7 @@ function authDraw(keepEmail){
   var m=AUTH.mode,em=keepEmail&&$('account-email')?$('account-email').value:'';
   var h='<form class="mbox" id="account-form" novalidate><h2 id="account-heading">'+TE('lp.dlg.'+m)+'</h2><p class="small">'+TE('lp.dlg.'+m+'.sub')+'</p>'+
     '<div class="errsum" id="account-errors" role="alert" tabindex="-1" hidden></div>';
-  if(m==='login') h+='<fieldset class="asrole"><legend class="small">'+TE('lp.as')+'</legend><div class="seg">'+['applicant','reviewer'].map(function(r){ return '<button type="button" data-auth-as="'+r+'" aria-pressed="'+(AUTH.as===r)+'">'+TE('lp.as.'+r)+'</button>'; }).join('')+'</div></fieldset>';
+  if(m==='login') h+='<fieldset class="asrole"><legend class="small">'+TE('lp.as')+'</legend><div class="seg">'+['applicant','reviewer','admin'].map(function(r){ return '<button type="button" data-auth-as="'+r+'" aria-pressed="'+(AUTH.as===r)+'">'+TE('lp.as.'+r)+'</button>'; }).join('')+'</div></fieldset>';
   if(m==='register') h+='<label for="account-name">'+TE('lp.f.name')+'</label><input id="account-name" type="text" autocomplete="name" maxlength="80" required>';
   h+='<label for="account-email">'+TE('lp.f.email')+'</label><input id="account-email" type="email" autocomplete="'+(m==='register'?'email':'username')+'" maxlength="254" value="'+esc(em)+'" required>';
   if(m!=='recover') h+='<label for="account-password">'+TE(m==='register'?'lp.f.password.new':'lp.f.password')+'</label><input id="account-password" type="password" autocomplete="'+(m==='login'?'current-password':'new-password')+'" maxlength="256" required>';
@@ -4698,7 +4704,7 @@ function authDraw(keepEmail){
   }
 
   accountDialog.innerHTML=h;
-  if(m==='login'&&AUTH.as==='reviewer'){ var rg=accountDialog.querySelector('[data-auth-mode="register"]'); if(rg){ var nt=document.createElement('span'); nt.className='small muted'; nt.textContent=T('lp.as.reviewer.note'); rg.replaceWith(nt); } }
+  if(m==='login'&&(AUTH.as==='reviewer'||AUTH.as==='admin')){ var rg=accountDialog.querySelector('[data-auth-mode="register"]'); if(rg){ var nt=document.createElement('span'); nt.className='small muted'; nt.textContent=T(AUTH.as==='admin'?'lp.as.admin.note':'lp.as.reviewer.note'); rg.replaceWith(nt); } }
   if(m==='login'&&AUTH.notice){ var om=$('account-message'); if(om){ om.hidden=false; om.textContent=T(AUTH.notice); } }
 }
 function openAuth(mode){
@@ -4717,7 +4723,7 @@ function authErrors(list){
 }
 accountDialog.addEventListener('click',function(e){
   var t=e.target; if(!t||!t.closest) return;
-  var as=t.closest('[data-auth-as]'); if(as){ AUTH.as=as.getAttribute('data-auth-as')==='reviewer'?'reviewer':'applicant'; AUTH.notice=''; authDraw(true); var ab=accountDialog.querySelector('[data-auth-as="'+AUTH.as+'"]'); if(ab) ab.focus(); return; }
+  var as=t.closest('[data-auth-as]'); if(as){ var cAs=as.getAttribute('data-auth-as'); AUTH.as=(cAs==='admin')?'admin':(cAs==='reviewer')?'reviewer':'applicant'; AUTH.notice=''; authDraw(true); var ab=accountDialog.querySelector('[data-auth-as="'+AUTH.as+'"]'); if(ab) ab.focus(); return; }
   var sw=t.closest('[data-auth-mode]'); if(sw){ AUTH.notice=''; AUTH.mode=sw.getAttribute('data-auth-mode'); authDraw(true); var f=$(AUTH.mode==='register'?'account-name':'account-email'); if(f) f.focus(); return; }
   var fl=t.closest('[data-focus]'); if(fl){ e.preventDefault(); var el=$(fl.getAttribute('data-focus')); if(el) el.focus(); return; }
   if(t.closest('#account-close')) accountDialog.close();
@@ -4747,7 +4753,8 @@ accountDialog.addEventListener('submit',function(e){
     }
     if(data.user){
       var staff=data.user.role!=='applicant';
-      if(staff!==(AUTH.as==='reviewer')){
+      var expStaff=(AUTH.as==='reviewer'||AUTH.as==='admin');
+      if(staff!==expStaff){
         /* The chosen sign-in type must match the account's role (the server decides the role; this only guides the person). */
         return accountRequest('/api/auth/logout',{},false).catch(function(){}).then(function(){ msg.hidden=true; authErrors([[null,staff?'lp.err.not_applicant':'lp.err.not_reviewer']]); });
       }
