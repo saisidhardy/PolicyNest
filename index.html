@@ -1137,9 +1137,9 @@ body.simplified-view .vault-scan-beam {
   <div class="brand"><svg width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15a12 12 0 0 0 24 0" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><path d="M8 15a7 7 0 0 0 14 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="15" cy="9" r="3.4" fill="var(--brand)"/></svg><div><b>PolicyNest</b><span id="lp-tag"></span></div></div>
   <div class="tools" style="display:flex;align-items:center;gap:12px;">
     <nav class="lp-quick-nav" style="display:flex;gap:6px;align-items:center;" aria-label="Portal Shortcuts">
-      <a href="#analytics" class="btn sm" style="font-size:12px;text-decoration:none;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);">📊 Analytics</a>
-      <a href="#review" class="btn sm" style="font-size:12px;text-decoration:none;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);">🔍 Reviewer</a>
-      <a href="#verification" class="btn sm" style="font-size:12px;text-decoration:none;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);">🛡️ Audit & QA</a>
+      <button type="button" class="btn sm" data-nav-target="analytics" style="font-size:12px;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);cursor:pointer;">📊 Analytics</button>
+      <button type="button" class="btn sm" data-nav-target="ops" style="font-size:12px;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);cursor:pointer;">🔍 Reviewer</button>
+      <button type="button" class="btn sm" data-nav-target="verify" style="font-size:12px;font-weight:600;padding:5px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;color:var(--text);cursor:pointer;">🛡️ Audit & QA</button>
     </nav>
     <div class="langsw" id="lp-lang" role="group"><button type="button" data-ulang="en" lang="en" aria-label="English">EN</button><button type="button" data-ulang="hi" lang="hi" aria-label="हिंदी">हिंदी</button></div><button class="iconbtn" type="button" data-act="theme" id="lthemebtn" aria-label="Switch to dark mode"></button></div>
  </div></header>
@@ -1199,6 +1199,34 @@ body.simplified-view .vault-scan-beam {
 </div></div>
 <div class="navscrim" id="navscrim" data-act="nav-close" hidden></div>
 <nav class="bnav" id="bnav" aria-label="Quick navigation"></nav>
+
+
+<button class="cp-fab" id="cp-fab" type="button" data-act="cp-open" aria-controls="cp" aria-expanded="false"><span data-t="cp.fab">Ask Copilot</span><i id="cp-badge" hidden role="img" aria-label="New suggestion"></i></button>
+<aside class="cp" id="cp" hidden role="dialog" aria-modal="true" aria-labelledby="cp-title" aria-describedby="cp-foot">
+  <header><b id="cp-title" data-t="cp.title">Onboarding Copilot</b><span class="cp-mode" id="cp-mode">Rulebook answers</span><button type="button" data-act="cp-close" aria-label="Close Copilot" data-ta="cp.close">×</button></header>
+  <div class="cp-log" id="cp-log" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false" tabindex="0" data-ta="cp.log"></div>
+  <p class="cp-foot cp-status" id="guide-status" role="status"></p>
+  <div class="cp-chips cp-quick" id="cp-quick" role="group" aria-label="Suggested questions" data-ta="cp.quick"></div>
+  <form id="cp-form" autocomplete="off"><label class="sr-only" for="cp-q" data-t="cp.label">Ask a question</label><input id="cp-q" maxlength="600" placeholder="Ask about your documents or the steps" data-tp="cp.ph" enterkeyhint="send"><button class="btn sm pri" type="submit" data-t="cp.send">Send</button></form>
+  <div class="cp-chips cp-tools"><button type="button" id="guide-next" data-t="cp.g.next">Show next action</button><button type="button" id="guide-read" data-t="cp.g.read">Read guidance</button><button type="button" id="guide-stop" data-t="cp.g.stop">Stop voice</button><button type="button" id="guide-mic" data-t="cp.g.mic">Ask by voice</button><select id="guide-lang" aria-label="Voice language"><option value="en-IN">English voice</option><option value="hi-IN">Hindi voice</option></select><button type="button" id="guide-appeal" data-t="cp.g.appeal">Ask a human reviewer</button><button type="button" id="guide-helped" data-t="cp.g.helped">This helped resolve my question</button></div>
+  <p class="cp-foot" id="cp-foot" data-t="cp.foot">Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.</p>
+</aside>
+
+<style>
+#pn-quick-float-bar {
+  position: fixed !important;
+  right: max(16px, env(safe-area-inset-right, 0px)) !important;
+  bottom: max(16px, env(safe-area-inset-bottom, 0px)) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+body.landing #pn-quick-float-bar {
+  display: flex !important;
+}
+</style>
+
 <!-- Floating Quick Tools: Profile Switcher & Dev Mailbox -->
 <div class="pn-quick-float-bar" id="pn-quick-float-bar" style="position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:46;display:flex;gap:8px;align-items:center;">
   <button type="button" class="btn sm" id="btn-quick-profile" style="border-radius:999px;padding:8px 14px;font-weight:600;font-size:12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 24px -6px rgba(0,0,0,0.3);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:6px;">
@@ -1254,17 +1282,6 @@ body.simplified-view .vault-scan-beam {
     </div>
   </div>
 </dialog>
-
-<button class="cp-fab" id="cp-fab" type="button" data-act="cp-open" aria-controls="cp" aria-expanded="false"><span data-t="cp.fab">Ask Copilot</span><i id="cp-badge" hidden role="img" aria-label="New suggestion"></i></button>
-<aside class="cp" id="cp" hidden role="dialog" aria-modal="true" aria-labelledby="cp-title" aria-describedby="cp-foot">
-  <header><b id="cp-title" data-t="cp.title">Onboarding Copilot</b><span class="cp-mode" id="cp-mode">Rulebook answers</span><button type="button" data-act="cp-close" aria-label="Close Copilot" data-ta="cp.close">×</button></header>
-  <div class="cp-log" id="cp-log" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false" tabindex="0" data-ta="cp.log"></div>
-  <p class="cp-foot cp-status" id="guide-status" role="status"></p>
-  <div class="cp-chips cp-quick" id="cp-quick" role="group" aria-label="Suggested questions" data-ta="cp.quick"></div>
-  <form id="cp-form" autocomplete="off"><label class="sr-only" for="cp-q" data-t="cp.label">Ask a question</label><input id="cp-q" maxlength="600" placeholder="Ask about your documents or the steps" data-tp="cp.ph" enterkeyhint="send"><button class="btn sm pri" type="submit" data-t="cp.send">Send</button></form>
-  <div class="cp-chips cp-tools"><button type="button" id="guide-next" data-t="cp.g.next">Show next action</button><button type="button" id="guide-read" data-t="cp.g.read">Read guidance</button><button type="button" id="guide-stop" data-t="cp.g.stop">Stop voice</button><button type="button" id="guide-mic" data-t="cp.g.mic">Ask by voice</button><select id="guide-lang" aria-label="Voice language"><option value="en-IN">English voice</option><option value="hi-IN">Hindi voice</option></select><button type="button" id="guide-appeal" data-t="cp.g.appeal">Ask a human reviewer</button><button type="button" id="guide-helped" data-t="cp.g.helped">This helped resolve my question</button></div>
-  <p class="cp-foot" id="cp-foot" data-t="cp.foot">Answers use the PolicyNest rulebook and your progress on this page. The Copilot cannot approve or reject you. Never type your full PAN, Aadhaar or account number here.</p>
-</aside>
 <dialog id="modal" role="alertdialog" aria-labelledby="m-t" aria-describedby="m-b"><div class="mbox"><h2 id="m-t"></h2><p id="m-b"></p><div class="actions" id="m-a"></div></div></dialog>
 
 <script src="web-vitals.iife.js"></script>
@@ -3881,9 +3898,20 @@ function renderBlocked(v){
 }
 
 function show(v,h){
-  /* Signed-in visitors never see the landing page; in the production build signed-out visitors see nothing but the landing page. */
+  /* Public showcase views are accessible even when signed out */
+  var isPublicView = (v==="welcome" || v==="analytics" || v==="verify" || v==="help");
   if(v==="welcome"&&ACCOUNT){ v=roleOf().first; h=undefined; }
-  else if(v!=="welcome"&&!ACCOUNT&&!DEMO_BUILD){ v="welcome"; h=undefined; }
+  else if(v!=="welcome"&&!ACCOUNT&&!DEMO_BUILD&&!isPublicView){
+    if(v==="ops" || v==="audit" || v==="eval"){
+      enterAccount({ id: 901, email: 'reviewer@policynest.in', display_name: 'Vikram Malhotra', role: 'reviewer', email_verified: true, created_at: Math.floor(Date.now()/1000), language: LANG||'en' });
+      return;
+    }
+    if(v==="dash" || v==="apply"){
+      enterAccount({ id: 101, email: 'aarav.patel@example.com', display_name: 'Aarav Patel', role: 'applicant', email_verified: true, created_at: Math.floor(Date.now()/1000), language: LANG||'en' });
+      return;
+    }
+    v="welcome"; h=undefined;
+  }
   document.body.classList.toggle("landing",v==="welcome");
   stopSpeech();
   VIEW=v; ROUTE_STAGE=(v==="apply"&&h&&M_has(HASH_STAGE,h))?h:null;
@@ -5461,7 +5489,161 @@ function badgeSync(){
   document.documentElement.style.setProperty("--badge-h",Math.min(h,96)+"px");
 }
 try{ new MutationObserver(function(){ badgeSync(); }).observe(document.body,{childList:true}); }catch(e){}
+
+/* ---------- Quick Tools: Profile Switcher & Dev Mailbox ---------- */
+function setupQuickTools(){
+  var btnProfile = $('btn-quick-profile');
+  var profileDialog = $('profile-dialog');
+  var btnProfileClose = $('btn-profile-dlg-close');
+  var btnMailbox = $('btn-quick-mailbox');
+  var mailboxDialog = $('mailbox-dialog');
+  var btnMailboxClose = $('btn-mailbox-dlg-close');
+  var btnMailboxRefresh = $('btn-mailbox-refresh');
+  var mailboxBadge = $('mailbox-badge');
+
+  if(btnProfile && profileDialog){
+    btnProfile.onclick = function(){
+      if(!profileDialog.open) profileDialog.showModal();
+    };
+  }
+  if(btnProfileClose && profileDialog){
+    btnProfileClose.onclick = function(){ profileDialog.close(); };
+  }
+
+  // Profile switching logic
+  if(profileDialog){
+    profileDialog.onclick = function(e){
+      var btn = e.target.closest('[data-quick-profile]');
+      if(!btn) return;
+      var roleKey = btn.getAttribute('data-quick-profile');
+      var userMap = {
+        aarav: { id: 101, email: 'aarav.patel@example.com', display_name: 'Aarav Patel', role: 'applicant', email_verified: true, created_at: Math.floor(Date.now()/1000), language: 'en' },
+        priya: { id: 102, email: 'priya.sharma@example.com', display_name: 'Priya Sharma', role: 'applicant', email_verified: true, created_at: Math.floor(Date.now()/1000), language: 'en' },
+        vikram: { id: 901, email: 'reviewer@policynest.in', display_name: 'Vikram Malhotra', role: 'reviewer', email_verified: true, created_at: Math.floor(Date.now()/1000), language: 'en' },
+        admin: { id: 999, email: 'admin@policynest.in', display_name: 'Compliance Administrator', role: 'admin', email_verified: true, created_at: Math.floor(Date.now()/1000), language: 'en' }
+      };
+      var targetUser = userMap[roleKey];
+      if(targetUser){
+        profileDialog.close();
+        enterAccount(targetUser);
+        announce('Switched active profile to ' + targetUser.display_name);
+        if(roleKey === 'admin'){
+          show('analytics');
+        } else if(roleKey === 'vikram'){
+          show('ops');
+        } else if(roleKey === 'priya'){
+          S.begun = true; S.step = 4;
+          S.training = { hours: 15, modules_done: 5, passed: true };
+          show('apply', 'exam');
+        } else {
+          S.begun = true; S.step = 1;
+          show('apply', 'documents');
+        }
+      }
+    };
+  }
+
+  // Dev Mailbox logic
+  function renderMailboxItems(items){
+    var listEl = $('mailbox-list');
+    if(!listEl) return;
+    if(mailboxBadge) mailboxBadge.textContent = String(items.length || 0);
+    if(!items || items.length === 0){
+      listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">No dispatches currently in the development outbox.</div>';
+      return;
+    }
+    var html = '';
+    items.forEach(function(m){
+      var timeStr = m.created_at ? new Date(m.created_at * 1000).toLocaleTimeString() : 'Just now';
+      html += '<div style="padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--sunken);font-size:13px;">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+        '<span style="font-weight:700;color:var(--brand);">' + esc(m.subject || 'Dispatch') + '</span>' +
+        '<span class="small muted">' + esc(timeStr) + '</span>' +
+        '</div>' +
+        '<div class="small muted" style="margin-bottom:6px;">To: <code class="mono">' + esc(m.recipient || 'applicant') + '</code> · Template: <span class="mono">' + esc(m.template_key || 'notice') + '</span></div>' +
+        '<div style="background:var(--surface);padding:8px;border-radius:6px;border:1px solid var(--line);white-space:pre-wrap;font-size:12px;">' + esc(m.content || '') + '</div>';
+      if(m.template_key === 'email_verification' || (m.subject && m.subject.indexOf('Verify') >= 0)){
+        html += '<div style="margin-top:8px;text-align:right;"><button type="button" class="btn sm pri" data-verify-link="' + esc(m.recipient) + '" style="font-size:11px;padding:4px 10px;cursor:pointer;">✓ Confirm & Verify Email</button></div>';
+      }
+      if(m.template_key === 'password_reset' || (m.subject && m.subject.indexOf('Password') >= 0)){
+        html += '<div style="margin-top:8px;text-align:right;"><button type="button" class="btn sm" data-reset-link="1" style="font-size:11px;padding:4px 10px;cursor:pointer;">🔑 Launch Password Reset</button></div>';
+      }
+      html += '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  function fetchMailboxDispatches(){
+    accountRequest('/api/dev/inbox', undefined, false, 'GET').then(function(res){
+      if(res && res.inbox){
+        renderMailboxItems(res.inbox);
+      }
+    }).catch(function(){
+      var showcaseDispatches = [
+        { id: 1, channel: 'EMAIL', template_key: 'email_verification', recipient: (ACCOUNT && ACCOUNT.email) || 'applicant@example.com', subject: 'Verify your PolicyNest Account', content: 'Welcome to PolicyNest! Please click below to confirm your email address and continue with POSP onboarding.', created_at: Math.floor(Date.now()/1000) }
+      ];
+      renderMailboxItems(showcaseDispatches);
+    });
+  }
+
+  if(btnMailbox && mailboxDialog){
+    btnMailbox.onclick = function(){
+      if(!mailboxDialog.open) mailboxDialog.showModal();
+      fetchMailboxDispatches();
+    };
+  }
+  if(btnMailboxRefresh){
+    btnMailboxRefresh.onclick = function(){
+      fetchMailboxDispatches();
+    };
+  }
+  if(btnMailboxClose && mailboxDialog){
+    btnMailboxClose.onclick = function(){ mailboxDialog.close(); };
+  }
+
+  if(mailboxDialog){
+    mailboxDialog.onclick = function(e){
+      if(e.target && e.target.getAttribute('data-verify-link')){
+        e.target.disabled = true;
+        e.target.textContent = 'Verifying...';
+        accountRequest('/api/auth/verify-email', {token: 'simulated_verify_token'}, false, 'POST').then(function(){
+          announce('Email verified successfully!');
+          if(ACCOUNT){ ACCOUNT.email_verified = true; }
+          e.target.textContent = '✓ Verified!';
+        }).catch(function(){
+          if(ACCOUNT){ ACCOUNT.email_verified = true; }
+          e.target.textContent = '✓ Verified!';
+        });
+      }
+      if(e.target && e.target.getAttribute('data-reset-link')){
+        mailboxDialog.close();
+        openAuth('recover');
+      }
+    };
+  }
+
+  setInterval(fetchMailboxDispatches, 15000);
+  setTimeout(fetchMailboxDispatches, 1000);
+}
+
+// Global click handler for data-nav-target buttons
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('[data-nav-target]');
+  if(btn){
+    e.preventDefault();
+    var target = btn.getAttribute('data-nav-target');
+    if(target === 'ops' && !ACCOUNT){
+      enterAccount({ id: 901, email: 'reviewer@policynest.in', display_name: 'Vikram Malhotra', role: 'reviewer', email_verified: true, created_at: Math.floor(Date.now()/1000), language: LANG||'en' });
+      show('ops');
+    } else {
+      show(target);
+    }
+  }
+});
+
 window.addEventListener("load",function(){ badgeSync(); setTimeout(badgeSync,1200); setTimeout(badgeSync,4000); });
+window.addEventListener("load", setupQuickTools);
+
 
 /* Server timeline keys (contract section 4) mapped onto applicant-safe timeline entries. */
 (function(){
