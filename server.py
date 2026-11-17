@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parent
 SITE_DIR = ROOT / "policynest_mvp" / "site"
 API_DIR = ROOT / "policynest_mvp" / "copilot_api"
 
+os.environ.setdefault("JWT_SECRET", "policynest-local-dev-jwt-secret-key-min-32-bytes!")
 sys.path.insert(0, str(API_DIR))
 import main as api_module
 import config
@@ -36,7 +37,7 @@ class UnifiedHandler(api_module.H, SimpleHTTPRequestHandler):
         return SimpleHTTPRequestHandler.do_OPTIONS(self)
 
     def do_GET(self):
-        if self.path.startswith("/api/") or self.path == "/api":
+        if self.path.startswith("/api/") or self.path == "/api" or self.path in ("/health", "/ready"):
             return api_module.H.do_GET(self)
         # Serve index.html for root or client routes
         clean_path = self.path.split("?")[0].lstrip("/")

@@ -27,7 +27,7 @@ SYNTHETIC_EMAIL_DOMAIN = "@policynest.test"
 def _require_non_prod(actor: Optional[Dict[str, Any]] = None):
     if config.IS_PRODUCTION and os.environ.get("ENABLE_PROD_VERIFICATION") != "1":
         raise ValueError("qa_tools_disabled_in_production")
-    if actor and not (policy.is_admin(actor) or actor.get("role") in ("reviewer", "admin", "compliance")):
+    if actor and actor.get("role") not in ("admin", "reviewer", "compliance", "ops", "tech_admin"):
         raise ValueError("forbidden_qa_role_required")
 
 

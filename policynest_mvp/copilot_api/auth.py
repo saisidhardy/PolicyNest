@@ -51,6 +51,8 @@ def _unb64(value):
 def _secret():
     value = os.environ.get("JWT_SECRET", "")
     if len(value) < config.JWT_SECRET_MIN_LEN or value.startswith("your-"):
+        if not config.IS_PRODUCTION:
+            return b"policynest-local-dev-jwt-secret-key-min-32-bytes!"
         raise ValueError("auth_not_configured")
     return value.encode("utf-8")
 
@@ -100,6 +102,7 @@ def _public(row):
         "role": row["role"],
         "status": row["status"] if "status" in row.keys() else "active",
         "mfa_enabled": bool(row["mfa_enabled"]) if "mfa_enabled" in row.keys() else False,
+        "email_verified": bool(row["email_verified"]) if "email_verified" in row.keys() else False,
         "must_reset_password": bool(row["must_reset_password"]) if "must_reset_password" in row.keys() else False,
     }
 
@@ -107,6 +110,35 @@ def _public(row):
 # =====================================================================
 # 1. APPLICANT REGISTRATION & AUTHENTICATION
 # =====================================================================
+
+
+def create_verification_token(user_id, email):
+    token = secrets.token_urlsafe(32)
+    digest = _digest(token)
+    expires = int(time.time()) + 86400  # 24 hours
+    with _db() as db:
+        db.execute(
+            "INSERT INTO email_verification_tokens(token_hash, user_id, email, expires_at, used, created_at) VALUES(?,?,?,?,0,?)",
+            (digest, user_id, str(email).lower(), expires, int(time.time())),
+        )
+    return token
+
+
+def verify_email_token(token):
+    if not token or not isinstance(token, str):
+        return None
+    digest = _digest(token)
+    now = int(time.time())
+    with _db() as db:
+        row = db.execute(
+            "SELECT user_id, email, expires_at, used FROM email_verification_tokens WHERE token_hash=?",
+            (digest,),
+        ).fetchone()
+        if not row or row["used"] or row["expires_at"] < now:
+            return None
+        db.execute("UPDATE email_verification_tokens SET used=1 WHERE token_hash=?", (digest,))
+        db.execute("UPDATE users SET email_verified=1 WHERE id=?", (row["user_id"],))
+        return row["user_id"]
 
 def register(email, password, display_name):
     """Register a new applicant account. Always enforces role='applicant'."""
@@ -126,11 +158,22 @@ def register(email, password, display_name):
     try:
         with _db() as db:
             cur = db.execute(
-                """INSERT INTO users(email, display_name, password_hash, role, status, created_at)
-                   VALUES(?, ?, ?, 'applicant', 'active', ?)""",
+                """INSERT INTO users(email, display_name, password_hash, role, status, created_at, email_verified)
+                   VALUES(?, ?, ?, 'applicant', 'active', ?, 0)""",
                 (email, display_name, _hash(password), int(time.time())),
             )
-            row = db.execute("SELECT * FROM users WHERE id=?", (cur.lastrowid,)).fetchone()
+            user_id = cur.lastrowid
+            row = db.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+            try:
+                v_token = create_verification_token(user_id, email)
+                disp_id = f"disp_{secrets.token_hex(8)}"
+                v_url = f"http://localhost:8000/#verify-email={v_token}"
+                db.execute("""INSERT INTO communication_dispatches (
+                    id, user_id, channel, template_key, recipient, subject, content, status, created_at
+                ) VALUES (?, ?, 'EMAIL', 'email_verification', ?, 'Verify your PolicyNest email address', ?, 'DELIVERED', ?)""",
+                (disp_id, user_id, email, f"Welcome to PolicyNest! Click here to verify: {v_url}\nToken: {v_token}", int(time.time())))
+            except Exception:
+                pass
     except sqlite3.IntegrityError:
         raise ValueError("email_taken")
     return _public(row)

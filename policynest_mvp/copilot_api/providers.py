@@ -338,3 +338,160 @@ class Class10VerificationProvider:
             "response_digest": digest,
             "verified_at": int(time.time()),
         }
+
+
+class FaceMatchProvider:
+    """Facial Liveness and Photo Matching verification provider (Deterministic Sandbox)."""
+
+    @classmethod
+    def verify(
+        cls,
+        selfie_data: Optional[str] = None,
+        id_photo_data: Optional[str] = None,
+        test_scenario: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        scenario = str(test_scenario or "").upper()
+        if scenario == "MISMATCH" or (selfie_data and "mismatch" in selfie_data.lower()):
+            return {
+                "ok": False,
+                "status": "FAILED",
+                "is_sandbox": True,
+                "mode": "SANDBOX",
+                "status_label": "Sandbox mismatch — Facial similarity below 0.80",
+                "code": "FACE_MISMATCH",
+                "similarity_score": 0.42,
+                "liveness_score": 0.95,
+                "error": "Facial similarity between selfie and ID photo is below the 80% matching threshold.",
+                "verified_at": int(time.time()),
+            }
+        if scenario == "LIVENESS_FAIL" or (selfie_data and "static" in selfie_data.lower()):
+            return {
+                "ok": False,
+                "status": "FAILED",
+                "is_sandbox": True,
+                "mode": "SANDBOX",
+                "status_label": "Sandbox failure — Liveness detection not passed",
+                "code": "LIVENESS_FAILED",
+                "similarity_score": 0.0,
+                "liveness_score": 0.31,
+                "error": "Live movement and eye-blink detection failed. Please capture a live selfie.",
+                "verified_at": int(time.time()),
+            }
+        if scenario == "UNAVAILABLE":
+            return {
+                "ok": False,
+                "status": "UNAVAILABLE",
+                "is_sandbox": True,
+                "mode": "SANDBOX",
+                "status_label": "Sandbox unavailable — External facial matching service offline",
+                "code": "PROVIDER_UNAVAILABLE",
+                "error": "Facial matching provider temporarily unavailable. Please retry in 5 minutes.",
+                "verified_at": int(time.time()),
+            }
+
+        ref_id = f"FACE-{secrets.token_hex(6).upper()}"
+        return {
+            "ok": True,
+            "status": "VERIFIED",
+            "is_sandbox": True,
+            "mode": "SANDBOX",
+            "status_label": "Simulated match — Sandbox facial comparison",
+            "provider": "LOCAL_SANDBOX_BIOMETRICS",
+            "reference_id": ref_id,
+            "similarity_score": 0.94,
+            "liveness_score": 0.98,
+            "match_result": "PASS",
+            "verified_at": int(time.time()),
+        }
+
+
+class IrdaiRegistryProvider:
+    """Central IRDAI Agent Appointment Registry lookup provider (Deterministic Sandbox)."""
+
+    @classmethod
+    def check_appointments(
+        cls,
+        pan_number: str,
+        applicant_name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        clean_pan = mask_pan(pan_number)
+        clean_pan_raw = str(pan_number or "").strip().upper()
+        
+        # Test scenario: PAN ending in 9999 or containing CONFLICT produces active appointment
+        if clean_pan_raw.endswith("9999F") or "CONFLICT" in clean_pan_raw:
+            return {
+                "ok": False,
+                "status": "CONFLICT",
+                "is_sandbox": True,
+                "mode": "SANDBOX",
+                "status_label": "Sandbox conflict — Existing appointment found in registry",
+                "provider": "IRDAI_CENTRAL_REGISTRY_SANDBOX",
+                "pan_masked": clean_pan,
+                "active_appointments_count": 1,
+                "conflicting_insurer": "HDFC ERGO General Insurance Co. Ltd.",
+                "appointment_date": "2023-08-14",
+                "error": "Conflict: Candidate is currently appointed as an active agent with another insurer. Simultaneous POSP appointment prohibited by IRDAI regulations.",
+                "verified_at": int(time.time()),
+            }
+
+        return {
+            "ok": True,
+            "status": "CLEAR",
+            "is_sandbox": True,
+            "mode": "SANDBOX",
+            "status_label": "Simulated clear — Sandbox IRDAI registry check",
+            "provider": "IRDAI_CENTRAL_REGISTRY_SANDBOX",
+            "pan_masked": clean_pan,
+            "active_appointments_count": 0,
+            "existing_licenses": [],
+            "disciplinary_records": [],
+            "is_eligible_for_appointment": True,
+            "verified_at": int(time.time()),
+        }
+
+
+class MalwareScannerProvider:
+    """File Antivirus and Malware Scanning provider (Deterministic Sandbox)."""
+
+    EICAR_SIGNATURE = "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"
+
+    @classmethod
+    def scan_file(
+        cls,
+        filename: str,
+        file_bytes: bytes,
+    ) -> Dict[str, Any]:
+        fn = str(filename or "").lower()
+        if "virus" in fn or "infected" in fn or cls.EICAR_SIGNATURE.encode() in file_bytes:
+            return {
+                "ok": False,
+                "status": "INFECTED",
+                "is_sandbox": True,
+                "mode": "SANDBOX",
+                "status_label": "Sandbox threat detected — Malicious pattern identified",
+                "threat_name": "EICAR-Test-Signature.Simulated",
+                "error": "The uploaded file failed antivirus inspection and has been quarantined.",
+                "scanned_at": int(time.time()),
+            }
+        if "timeout" in fn:
+            return {
+                "ok": False,
+                "status": "UNAVAILABLE",
+                "is_sandbox": True,
+                "mode": "SANDBOX",
+                "status_label": "Sandbox scanner unavailable",
+                "error": "Antivirus scanning engine temporarily unreachable. Please retry.",
+                "scanned_at": int(time.time()),
+            }
+
+        return {
+            "ok": True,
+            "status": "CLEAN",
+            "is_sandbox": True,
+            "mode": "SANDBOX",
+            "status_label": "Sandbox clean — No threats detected",
+            "filename": filename,
+            "file_size": len(file_bytes),
+            "sha256": hashlib.sha256(file_bytes).hexdigest(),
+            "scanned_at": int(time.time()),
+        }

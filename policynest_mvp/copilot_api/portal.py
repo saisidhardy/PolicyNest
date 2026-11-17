@@ -1170,6 +1170,115 @@ def _handle_qa_reset(u, b, p):
 
 
 # ---------------------------------------------------------------- route table
+
+def _handle_dev_inbox(u, b, p):
+    limit = int(p.get("limit", ["50"])[0])
+    recipient = p.get("recipient", [None])[0] or p.get("email", [None])[0]
+    with auth._db() as db:
+        query = "SELECT id, user_id, channel, template_key, recipient, subject, content, status, created_at FROM communication_dispatches"
+        args = []
+        if u and u.get("role") in ("admin", "ops", "reviewer"):
+            if recipient:
+                query += " WHERE recipient=?"
+                args.append(recipient)
+        elif u:
+            query += " WHERE user_id=? OR recipient=?"
+            args.extend([u["id"], u.get("email", "")])
+        else:
+            if recipient:
+                query += " WHERE recipient=?"
+                args.append(recipient)
+        query += " ORDER BY created_at DESC LIMIT ?"
+        args.append(limit)
+        rows = db.execute(query, args).fetchall()
+        inbox = []
+        for r in rows:
+            d = dict(r)
+            d["body_preview"] = (d.get("content") or "")[:140]
+            inbox.append(d)
+        return 200, {"inbox": inbox, "total": len(inbox)}
+
+def _handle_email_verify(u, b, p):
+    token = (b.get("token") if isinstance(b, dict) else None) or p.get("token", [None])[0]
+    if not token:
+        raise PortalError(400, "token_required")
+    success = auth.verify_email_token(token)
+    if not success:
+        raise PortalError(400, "invalid_or_expired_token")
+    return 200, {"ok": True, "message": "Email verified successfully"}
+
+def _handle_analytics_events(u, b, p):
+    events = b.get("events", []) if isinstance(b, dict) else []
+    if not isinstance(events, list):
+        if isinstance(b, dict) and "event_name" in b:
+            events = [b]
+        else:
+            raise PortalError(400, "invalid_events_payload")
+
+    user_id = u["id"] if u else None
+    inserted = 0
+    with auth._db() as db:
+        for ev in events[:100]:
+            name = str(ev.get("event_name") or ev.get("name") or "unknown")[:64]
+            category = str(ev.get("category") or "general")[:32]
+            url = str(ev.get("url") or "")[:256]
+            session_id = str(ev.get("session_id") or "")[:64]
+            props = ev.get("properties") or {}
+            clean_props = {}
+            if isinstance(props, dict):
+                for k, v in props.items():
+                    k_str = str(k).lower()
+                    if any(bad in k_str for bad in ("password", "secret", "pan", "aadhaar", "otp", "token")):
+                        clean_props[k] = "[REDACTED]"
+                    else:
+                        clean_props[k] = v
+            ts = int(ev.get("timestamp") or time.time())
+            ev_id = f"EVT-{secrets.token_hex(8)}"
+            db.execute(
+                "INSERT INTO analytics_events (event_id, user_id, session_id, event_name, event_category, properties_json, url, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (ev_id, user_id, session_id, name, category, json.dumps(clean_props), url, ts),
+            )
+            inserted += 1
+    return 200, {"ok": True, "inserted": inserted}
+
+def _handle_analytics_dashboard(u, b, p):
+    with auth._db() as db:
+        users_count = db.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        verified_email_count = db.execute("SELECT COUNT(*) FROM users WHERE email_verified=1").fetchone()[0]
+        cases_count = db.execute("SELECT COUNT(*) FROM cases").fetchone()[0]
+        submitted_cases = db.execute("SELECT COUNT(*) FROM cases WHERE status NOT IN ('DRAFT', 'DOCUMENTS_PENDING')").fetchone()[0]
+        approved_cases = db.execute("SELECT COUNT(*) FROM cases WHERE status IN ('VERIFIED_PENDING_TRAINING', 'TRAINING_IN_PROGRESS', 'TRAINING_COMPLETED', 'EXAMINATION_IN_PROGRESS', 'EXAMINATION_PASSED', 'CERTIFIED')").fetchone()[0]
+        certified_cases = db.execute("SELECT COUNT(*) FROM cases WHERE status='CERTIFIED'").fetchone()[0]
+        
+        doc_count = db.execute("SELECT COUNT(*) FROM document_records").fetchone()[0]
+        
+        event_breakdown = [dict(r) for r in db.execute("SELECT event_name, COUNT(*) count FROM analytics_events GROUP BY event_name ORDER BY count DESC LIMIT 10").fetchall()]
+        recent_dispatches = db.execute("SELECT COUNT(*) FROM communication_dispatches").fetchone()[0]
+
+        return 200, {
+            "overview": {
+                "total_registered_applicants": users_count,
+                "email_verified_applicants": verified_email_count,
+                "total_applications_created": cases_count,
+                "applications_submitted": submitted_cases,
+                "applications_approved": approved_cases,
+                "posp_certified_agents": certified_cases,
+                "documents_uploaded_total": doc_count,
+                "dispatches_logged": recent_dispatches,
+            },
+            "conversion_funnel": [
+                {"stage": "Registration", "count": max(users_count, 1), "percentage": 100.0},
+                {"stage": "Email Verified", "count": verified_email_count, "percentage": round(verified_email_count / max(users_count, 1) * 100, 1)},
+                {"stage": "Documents Uploaded", "count": min(doc_count, cases_count), "percentage": round(min(doc_count, cases_count) / max(users_count, 1) * 100, 1)},
+                {"stage": "Submitted for Review", "count": submitted_cases, "percentage": round(submitted_cases / max(users_count, 1) * 100, 1)},
+                {"stage": "KYC Verified", "count": approved_cases, "percentage": round(approved_cases / max(users_count, 1) * 100, 1)},
+                {"stage": "POSP Certified", "count": certified_cases, "percentage": round(certified_cases / max(users_count, 1) * 100, 1)},
+            ],
+            "top_events": event_breakdown,
+            "is_dynamic": True,
+            "generated_at": int(time.time()),
+        }
+
 ROUTES = {
     ('GET', '/api/me'): lambda u, b, p: (200, get_profile(u)),
     ('PATCH', '/api/me'): lambda u, b, p: (200, patch_profile(u, b)),
@@ -1244,4 +1353,9 @@ ROUTES = {
     ('GET', '/api/verification'): _handle_verification,
     ('POST', '/api/qa/seed'): _handle_qa_seed,
     ('POST', '/api/qa/reset'): _handle_qa_reset,
+    ('GET', '/api/dev/inbox'): _handle_dev_inbox,
+    ('GET', '/api/auth/verify-email'): _handle_email_verify,
+    ('POST', '/api/auth/verify-email'): _handle_email_verify,
+    ('POST', '/api/analytics/events'): _handle_analytics_events,
+    ('GET', '/api/analytics/dashboard'): _handle_analytics_dashboard,
 }

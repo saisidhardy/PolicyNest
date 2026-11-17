@@ -566,6 +566,42 @@ def migrate_010_communications_and_compliance_audit_packs(db):
     db.execute("CREATE INDEX IF NOT EXISTS idx_compliance_pack_user ON compliance_audit_packs(user_id)")
 
 
+@migration(11, "011_email_verification_and_analytics_expansion")
+def migrate_011_email_verification_and_analytics_expansion(db):
+    """Add email_verification_tokens, analytics_events, and system_health_snapshots tables."""
+    cols = {r[1] for r in db.execute("PRAGMA table_info(users)")}
+    if "email_verified" not in cols:
+        db.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+    
+    db.execute("""CREATE TABLE IF NOT EXISTS email_verification_tokens (
+        token_hash TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        email TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS analytics_events (
+        event_id TEXT PRIMARY KEY,
+        event_name TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        user_id INTEGER,
+        persona TEXT NOT NULL,
+        session_id TEXT,
+        stage TEXT NOT NULL,
+        properties_json TEXT NOT NULL,
+        is_demo INTEGER NOT NULL DEFAULT 1
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS system_health_snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        checks_json TEXT NOT NULL
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_email_tokens_user ON email_verification_tokens(user_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_analytics_name_time ON analytics_events(event_name, timestamp)")
+
+
 def run_migrations(db):
     """Run all unapplied migrations in ascending order within a single transaction."""
     db.execute("""CREATE TABLE IF NOT EXISTS schema_migrations (

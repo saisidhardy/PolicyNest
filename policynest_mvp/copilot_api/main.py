@@ -14,6 +14,7 @@ import math
 import os
 import re
 import time
+START_TIME = time.time()
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from http.cookies import SimpleCookie
@@ -335,6 +336,24 @@ class H(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed=urlsplit(self.path);params=parse_qs(parsed.query);self.path=parsed.path
+        if self.path == '/api/dev/inbox':
+            user = None
+            try: user = self._identity()
+            except ValueError: pass
+            code, out = portal._handle_dev_inbox(user, {}, params)
+            return self._json(code, out)
+        if self.path == '/api/analytics/dashboard':
+            user = None
+            try: user = self._identity()
+            except ValueError: pass
+            code, out = portal._handle_analytics_dashboard(user, {}, params)
+            return self._json(code, out)
+        if self.path == '/api/verification':
+            user = None
+            try: user = self._identity()
+            except ValueError: pass
+            code, out = portal._handle_verification(user, {}, params)
+            return self._json(code, out)
         legacy=self.path=='/api/applications/me' and params.get('view',[''])[0]=='snapshot'
         if not legacy and self._portal('GET',None,params):return
         if self.path=='/api/reviewer/case':
@@ -345,7 +364,7 @@ class H(BaseHTTPRequestHandler):
                 workflows.init()
                 return self._json(200,telemetry.report(self._identity(),int(params.get('days',['30'])[0]),params.get('source',['demo'])[0],params.get('stage',[None])[0]))
             except ValueError:return self._json(403,{'error':'forbidden_or_invalid_filter'})
-        if self.path=='/api/ready':
+        if self.path in ('/ready', '/api/ready'):
             try:
                 auth._secret();workflows.init()
                 return self._json(200,{'ready':True,'database':True,'corpus':rag.INDEX.exists()})
@@ -416,11 +435,11 @@ class H(BaseHTTPRequestHandler):
             self.wfile.write(content_bytes)
             return
 
-        if self.path.startswith("/api/health") or self.path == "/":
+        if self.path in ("/health", "/api/health") or self.path.startswith("/api/health") or self.path == "/":
             xff = [p for p in (self.headers.get("X-Forwarded-For") or "").split(",") if p.strip()]
             # xff_hops lets us check how the edge builds X-Forwarded-For (no addresses are returned)
-            return self._json(200, {"ok": True, "llm": _key_ok(), "provider": llm.provider(), "model": llm.model() if _key_ok() else None, "daily_left": _daily_left(),
-                                    "daily_cap": DAILY_CAP, "xff_hops": len(xff)})
+            return self._json(200, {"status": "ok", "ok": True, "llm": _key_ok(), "provider": llm.provider(), "model": llm.model() if _key_ok() else None, "daily_left": _daily_left(),
+                                    "daily_cap": DAILY_CAP, "xff_hops": len(xff), "uptime": int(time.time() - START_TIME)})
         self._json(404, {"error": "not_found"})
 
     def do_POST(self):
@@ -439,6 +458,18 @@ class H(BaseHTTPRequestHandler):
             return self._json(400, {"error": "bad_json"})
         if not isinstance(body, dict):
             return self._json(400, {"error": "schema"})
+        if self.path == '/api/auth/verify-email':
+            user = None
+            try: user = self._identity()
+            except ValueError: pass
+            code, out = portal._handle_email_verify(user, body, {})
+            return self._json(code, out)
+        if self.path == '/api/analytics/events':
+            user = None
+            try: user = self._identity()
+            except ValueError: pass
+            code, out = portal._handle_analytics_events(user, body, {})
+            return self._json(code, out)
         if not (self.path=='/api/applications/me' and 'snapshot' in body) and self._portal('POST',body,{}):return
         if self.path=='/api/reviewer/decide':
             try:return self._json(200,workflows.review(self._identity(),body.get('case_id'),body.get('status'),body.get('note'),body.get('rule')))

@@ -1118,7 +1118,11 @@ body.simplified-view .vault-scan-beam {
 <a class="skip" id="skip-g" href="#main" data-t="skip.main">Skip to content</a>
 <div class="landing" id="view-welcome" hidden>
  <a class="skip" id="lp-skip" href="#lp-main">Skip to content</a>
- <header class="lp-top"><div class="lp-in lp-bar">
+ <aside id="showcase-banner" class="showcase-banner" role="complementary" aria-label="Environment Notice" style="display:none; background:#1e293b; color:#f8fafc; font-size:13px; padding:9px 16px; text-align:center; border-bottom:1px solid #334155; line-height:1.5;">
+  <span style="display:inline-block; margin-right:8px; background:#f59e0b; color:#0f172a; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px; text-transform:uppercase;">Showcase Mode</span>
+  Interactive product showcase. Regulated verification integrations are demonstrated in sandbox mode. For full persistent backend with SQLite database, run <code>python server.py</code>.
+</aside>
+<header class="lp-top"><div class="lp-in lp-bar">
   <div class="brand"><svg width="32" height="32" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 15a12 12 0 0 0 24 0" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><path d="M8 15a7 7 0 0 0 14 0" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="15" cy="9" r="3.4" fill="var(--brand)"/></svg><div><b>PolicyNest</b><span id="lp-tag"></span></div></div>
   <div class="tools"><div class="langsw" id="lp-lang" role="group"><button type="button" data-ulang="en" lang="en" aria-label="English">EN</button><button type="button" data-ulang="hi" lang="hi" aria-label="हिंदी">हिंदी</button></div><button class="iconbtn" type="button" data-act="theme" id="lthemebtn" aria-label="Switch to dark mode"></button></div>
  </div></header>
@@ -4679,6 +4683,20 @@ function authDraw(keepEmail){
   h+='<p class="okmsg" id="account-message" role="status" hidden></p>'+
     '<div class="actions"><button class="btn pri" type="submit" id="account-submit">'+TE(m==='login'?'lp.signin':m==='register'?'lp.create':'lp.submit.recover')+'</button><button class="btn" type="button" id="account-close">'+TE('lp.close')+'</button></div>'+
     '<div class="actions" style="justify-content:flex-start">'+(m!=='login'?'<button class="linkbtn" type="button" data-auth-mode="login">'+TE('lp.sw.login')+'</button>':'<button class="linkbtn" type="button" data-auth-mode="register">'+TE('lp.sw.register')+'</button><button class="linkbtn" type="button" data-auth-mode="recover">'+TE('lp.sw.recover')+'</button>')+'</div></form>';
+  
+  if(IS_STATIC_HOST){
+    h += '<div class="showcase-profiles" style="margin-top:14px; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">' +
+      '<div style="font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;">✨ Explore with Test Accounts (1-Click)</div>' +
+      '<div style="font-size:11px; color:#64748b; margin-bottom:8px;">Static showcase mode: Test without backend setup. Zero credentials stored.</div>' +
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">' +
+        '<button type="button" class="btn sec" data-demo-account="aarav" style="font-size:11px; padding:6px 8px; text-align:left; cursor:pointer;">👤 <b>Aarav</b> (Applicant)</button>' +
+        '<button type="button" class="btn sec" data-demo-account="priya" style="font-size:11px; padding:6px 8px; text-align:left; cursor:pointer;">📄 <b>Priya</b> (Under Review)</button>' +
+        '<button type="button" class="btn sec" data-demo-account="vikram" style="font-size:11px; padding:6px 8px; text-align:left; cursor:pointer;">🔍 <b>Vikram</b> (Reviewer)</button>' +
+        '<button type="button" class="btn sec" data-demo-account="admin" style="font-size:11px; padding:6px 8px; text-align:left; cursor:pointer;">🛡️ <b>Admin</b> (Compliance)</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   accountDialog.innerHTML=h;
   if(m==='login'&&AUTH.as==='reviewer'){ var rg=accountDialog.querySelector('[data-auth-mode="register"]'); if(rg){ var nt=document.createElement('span'); nt.className='small muted'; nt.textContent=T('lp.as.reviewer.note'); rg.replaceWith(nt); } }
   if(m==='login'&&AUTH.notice){ var om=$('account-message'); if(om){ om.hidden=false; om.textContent=T(AUTH.notice); } }
@@ -4800,25 +4818,39 @@ function localAccountFallback(path,body,method,originalErr){
       mobile_verified: false,
       mobile_masked: null,
       analytics_consent: false,
-      password: body&&body.password||''
+      is_showcase: true
     };
     users.push(newUser); setUsers(users); setCurrentUser(newUser);
     return Promise.resolve({user: newUser});
   }
 
   if(cleanPath==='/api/auth/login'){
-    var users=getUsers(), email=String(body&&body.email||'').trim().toLowerCase(), pw=String(body&&body.password||'');
-    if(AUTH.as==='reviewer'&&email.indexOf('rev')>=0){
-      var revUser={id:9999,email:email||'reviewer@policynest.in',display_name:'Senior Reviewer',role:'reviewer',created_at:Math.floor(Date.now()/1000),language:LANG||'en'};
-      setCurrentUser(revUser); return Promise.resolve({user: revUser});
+    var email=String(body&&body.email||'').trim().toLowerCase();
+    var DEMO_USERS = [
+      { id: 101, email: 'aarav.patel@example.com', display_name: 'Aarav Patel', role: 'applicant', email_verified: true, created_at: Math.floor(Date.now()/1000), language: 'en' },
+      { id: 102, email: 'priya.sharma@example.com', display_name: 'Priya Sharma', role: 'applicant', email_verified: true, created_at: Math.floor(Date.now()/1000), language: 'en' },
+      { id: 901, email: 'reviewer@policynest.in', display_name: 'Vikram Malhotra', role: 'reviewer', email_verified: true, created_at: Math.floor(Date.now()/1000), language: 'en' },
+      { id: 999, email: 'admin@policynest.in', display_name: 'Compliance Administrator', role: 'admin', email_verified: true, created_at: Math.floor(Date.now()/1000), language: 'en' }
+    ];
+    var matched = DEMO_USERS.find(function(u){ return u.email.toLowerCase() === email; });
+    if(matched){
+      setCurrentUser(matched);
+      return Promise.resolve({user: matched});
     }
-    var matched=users.find(function(u){ return u.email.toLowerCase()===email&&u.password===pw; });
-    if(!matched&&email&&pw&&pw.length>=12){
-      matched={id:Date.now(),email:email,display_name:email.split('@')[0]||'Applicant',role:'applicant',created_at:Math.floor(Date.now()/1000),language:LANG||'en',email_verified:true,mobile_verified:false,mobile_masked:null,analytics_consent:false,password:pw};
-      users.push(matched); setUsers(users);
-    }
-    if(matched){ setCurrentUser(matched); return Promise.resolve({user: matched}); }
-    var er=new Error('invalid_credentials'); er.status=401; return Promise.reject(er);
+    // Allow custom applicant session in showcase
+    var targetRole = (AUTH.as === 'reviewer') ? 'reviewer' : 'applicant';
+    var newUser = {
+      id: Date.now(),
+      email: email || (targetRole + '@policynest.in'),
+      display_name: email.split('@')[0] || (targetRole === 'reviewer' ? 'Reviewer' : 'Applicant'),
+      role: targetRole,
+      created_at: Math.floor(Date.now()/1000),
+      language: LANG||'en',
+      email_verified: true,
+      is_showcase: true
+    };
+    setCurrentUser(newUser);
+    return Promise.resolve({user: newUser});
   }
 
   if(cleanPath==='/api/auth/me'){
