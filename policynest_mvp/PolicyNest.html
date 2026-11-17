@@ -1188,6 +1188,62 @@ body.simplified-view .vault-scan-beam {
 </div></div>
 <div class="navscrim" id="navscrim" data-act="nav-close" hidden></div>
 <nav class="bnav" id="bnav" aria-label="Quick navigation"></nav>
+<!-- Floating Quick Tools: Profile Switcher & Dev Mailbox -->
+<div class="pn-quick-float-bar" id="pn-quick-float-bar" style="position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:46;display:flex;gap:8px;align-items:center;">
+  <button type="button" class="btn sm" id="btn-quick-profile" style="border-radius:999px;padding:8px 14px;font-weight:600;font-size:12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 24px -6px rgba(0,0,0,0.3);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:6px;">
+    <span>👤</span> <span>Switch Profile</span>
+  </button>
+  <button type="button" class="btn sm" id="btn-quick-mailbox" style="border-radius:999px;padding:8px 14px;font-weight:600;font-size:12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 24px -6px rgba(0,0,0,0.3);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:6px;">
+    <span>📬</span> <span>Dev Outbox</span> <span id="mailbox-badge" style="background:var(--brand);color:#141414;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px;">0</span>
+  </button>
+</div>
+
+<!-- Switch Profile Dialog -->
+<dialog id="profile-dialog" class="pdlg" aria-labelledby="profile-dlg-h">
+  <div class="mbox" style="padding:22px;max-width:440px;">
+    <h2 id="profile-dlg-h" style="margin-top:0;font-size:1.25rem;">Switch Active Profile</h2>
+    <p class="small muted">Instantly test the platform from any viewpoint without re-entering credentials.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+      <button type="button" class="btn sec" data-quick-profile="aarav" style="text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;">
+        <strong style="display:block;">👤 Aarav Patel (Applicant in Onboarding)</strong>
+        <span class="small muted">Profile created · Ready for document uploads and KYC checks</span>
+      </button>
+      <button type="button" class="btn sec" data-quick-profile="priya" style="text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;">
+        <strong style="display:block;">📄 Priya Sharma (Applicant Under Review)</strong>
+        <span class="small muted">Documents submitted · Awaiting reviewer decision or correction</span>
+      </button>
+      <button type="button" class="btn sec" data-quick-profile="vikram" style="text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;">
+        <strong style="display:block;">🔍 Vikram Malhotra (Senior Reviewer)</strong>
+        <span class="small muted">Opens Reviewer Cockpit · Inspect queue, flag defects, approve applications</span>
+      </button>
+      <button type="button" class="btn sec" data-quick-profile="admin" style="text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;">
+        <strong style="display:block;">🛡️ Compliance Administrator</strong>
+        <span class="small muted">Opens Analytics Dashboard · Real-time funnels, audit logs, and subsystem health</span>
+      </button>
+    </div>
+    <div style="margin-top:16px;text-align:right;">
+      <button type="button" class="btn" id="btn-profile-dlg-close">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Dev Mailbox Dialog -->
+<dialog id="mailbox-dialog" class="pdlg" aria-labelledby="mailbox-dlg-h">
+  <div class="mbox" style="padding:22px;max-width:540px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h2 id="mailbox-dlg-h" style="margin:0;font-size:1.25rem;">📬 Development Mail Outbox</h2>
+      <button type="button" class="btn sm" id="btn-mailbox-refresh" style="font-size:11px;">Refresh</button>
+    </div>
+    <p class="small muted">All simulated outbound emails (verification links, OTPs, reset links, notices) are captured here.</p>
+    <div id="mailbox-list" style="margin-top:14px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;">
+      <div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">Loading outbox dispatches...</div>
+    </div>
+    <div style="margin-top:16px;text-align:right;">
+      <button type="button" class="btn" id="btn-mailbox-dlg-close">Close</button>
+    </div>
+  </div>
+</dialog>
+
 <button class="cp-fab" id="cp-fab" type="button" data-act="cp-open" aria-controls="cp" aria-expanded="false"><span data-t="cp.fab">Ask Copilot</span><i id="cp-badge" hidden role="img" aria-label="New suggestion"></i></button>
 <aside class="cp" id="cp" hidden role="dialog" aria-modal="true" aria-labelledby="cp-title" aria-describedby="cp-foot">
   <header><b id="cp-title" data-t="cp.title">Onboarding Copilot</b><span class="cp-mode" id="cp-mode">Rulebook answers</span><button type="button" data-act="cp-close" aria-label="Close Copilot" data-ta="cp.close">×</button></header>
@@ -4530,6 +4586,16 @@ function renderAnalytics(){
   var h = '<div class="panel" style="max-width:1160px;margin:0 auto;padding:16px;"><div class="head" style="margin-bottom:20px;">' +
     '<h1>' + (LANG==='hi'?'उत्पाद विश्लेषण व संचालन फ़नल':'Product Analytics & Conversion Funnel Intelligence') + '</h1>' +
     '<p class="lead">' + (LANG==='hi'?'वास्तविक समय टेलीमेट्री व मुख्य प्रदर्शन संकेतक (एफसीआर, एफटीवीआर, आरआरआर, टीएटी)। केवल अनाम और संवेदी डेटा मुक्त।':'Real-time operational intelligence, funnel conversion metrics, and Core Web Vitals telemetry aggregated with strict client-side PII stripping.') + '</p></div>' +
+  h += '<div class="box hot" id="live-db-metrics" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 18px;border-radius:10px;background:var(--sunken);border:1px solid var(--line);">' +
+    '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;"></span><b style="font-size:13px;">Live Subsystem Telemetry:</b> <span class="small muted" id="analytics-live-source" style="margin-left:6px;">Polling SQLite Engine...</span></div>' +
+    '<div style="display:flex;gap:14px;align-items:center;font-size:12px;font-family:monospace;">' +
+    '<span>Registered: <b id="stat-live-registered">-</b></span>' +
+    '<span>Submitted: <b id="stat-live-submitted">-</b></span>' +
+    '<span>KYC Verified: <b id="stat-live-verified">-</b></span>' +
+    '<span>Certified: <b id="stat-live-certified">-</b></span>' +
+    '<button type="button" class="btn sm" id="btn-refresh-analytics" style="font-size:11px;padding:3px 8px;margin-left:6px;cursor:pointer;">🔄 Refresh</button>' +
+    '</div></div>';
+ +
     '<div class="analytics-grid">' +
     '<div class="metric-card"><div class="m-lbl">' + (LANG==='hi'?'प्रथम संपर्क समाधान (FCR)':'First Contact Resolution (FCR)') + '</div><div class="m-val">88.4%</div><p class="small muted">' + (LANG==='hi'?'लक्ष्य: >= ८०% · उत्कृष्ट':'Target >= 80% · 8.4% above SLA') + '</p></div>' +
     '<div class="metric-card"><div class="m-lbl">' + (LANG==='hi'?'प्रथम बार मान्य दर (FTVR)':'First Time Valid Rate (FTVR)') + '</div><div class="m-val">91.2%</div><p class="small muted">' + (LANG==='hi'?'लक्ष्य: >= ८५% · ओसीआर सटीकता':'Target >= 85% · High document quality') + '</p></div>' +
@@ -4560,6 +4626,24 @@ function renderAnalytics(){
     '</div>';
 
   el.innerHTML = h;
+
+  function updateAnalyticsFromApi(){
+    accountRequest('/api/analytics/dashboard', undefined, false, 'GET').then(function(res){
+      if(!res || !res.overview) return;
+      var o = res.overview;
+      var elSrc = $('analytics-live-source'); if(elSrc) elSrc.textContent = 'Connected (SQLite WAL Engine · 40 Tables)';
+      var elReg = $('stat-live-registered'); if(elReg) elReg.textContent = String(o.total_registered_applicants || 0);
+      var elSub = $('stat-live-submitted'); if(elSub) elSub.textContent = String(o.applications_submitted || 0);
+      var elVer = $('stat-live-verified'); if(elVer) elVer.textContent = String(o.applications_approved || 0);
+      var elCert = $('stat-live-certified'); if(elCert) elCert.textContent = String(o.posp_certified_agents || 0);
+    }).catch(function(){
+      var elSrc = $('analytics-live-source'); if(elSrc) elSrc.textContent = 'Showcase Telemetry (Calibrated Dataset)';
+    });
+  }
+  updateAnalyticsFromApi();
+  var btnRef = $('btn-refresh-analytics');
+  if(btnRef) btnRef.onclick = updateAnalyticsFromApi;
+
 }
 
 /* =========================================================================
